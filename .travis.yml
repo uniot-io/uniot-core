@@ -1,0 +1,16 @@
+language: python
+python:
+    - "2.7"
+
+sudo: false
+cache:
+    directories:
+        - "~/.platformio"
+
+install:
+    - pip install -U platformio
+
+script:
+    - sed -i "s@https://github.com/platformio/platform-espressif8266.git#feature/stage@espressif8266@g" platformio.ini
+    - platformio run
+

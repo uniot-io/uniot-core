@@ -1,0 +1,17 @@
+[submodule "lib/WebPages/web-pages"]
+	path = lib/WebPages/web-pages
+	url = https://github.com/uniot-io/web-pages.git
+[submodule "lib/microcoap"]
+	path = lib/_module_microcoap
+	url = https://github.com/uniot-io/microcoap.git
+[submodule "lib/cn-cbor"]
+	path = lib/_module_cn-cbor
+	url = https://github.com/uniot-io/cn-cbor.git
+	branch = uniot
+[submodule "lib/pubsubclient"]
+	path = lib/_module_pubsubclient
+	url = https://github.com/uniot-io/pubsubclient.git
+[submodule "lib/_module_libminilisp"]
+	path = lib/_module_libminilisp
+	url = https://github.com/uniot-io/uniot-lisp.git
+	branch = uniot

@@ -1,0 +1,9 @@
+.pio
+.piolibdeps
+.pioenvs
+.tags
+.tags_sorted_by_file
+platformio.sublime-project
+platformio.sublime-workspace
+.vscode/*
+.vscode/c_cpp_properties.json
