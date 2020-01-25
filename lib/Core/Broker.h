@@ -20,6 +20,10 @@
 
 #include <IExecutor.h>
 #include <ClearQueue.h>
+#include <IBrokerKitConnection.h>
+
+namespace uniot
+{
 
 template<class T_topic, class T_msg>
 class Subscriber;
@@ -36,10 +40,15 @@ class Broker : public uniot::IExecutor
 public:
   virtual ~Broker();
 
+  void connect(IBrokerKitConnection<T_topic, T_msg> *connection);
+  void disconnect(IBrokerKitConnection<T_topic, T_msg> *connection);
+
   void connect(Publisher<T_topic, T_msg>* publisher);
   void disconnect(Publisher<T_topic, T_msg>* publisher);
+
   void connect(Subscriber<T_topic, T_msg>* subscriber);
   void disconnect(Subscriber<T_topic, T_msg>* subscriber);
+
   void publish(T_topic topic, T_msg msg);
   virtual uint8_t execute() override;
 
@@ -48,3 +57,5 @@ private:
   ClearQueue<Publisher<T_topic, T_msg>*> mPublishers;
   ClearQueue<std::pair<T_topic, T_msg>> mEvents;
 };
+
+}

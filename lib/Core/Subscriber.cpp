@@ -20,6 +20,9 @@
 #include "Subscriber.h"
 #include "Broker.h"
 
+namespace uniot
+{
+
 template<class T_topic, class T_msg>
 Subscriber<T_topic, T_msg>::~Subscriber() {
   mBrokerQueue.forEach( [this](Broker<T_topic, T_msg>* broker){ broker->mSubscribers.removeOne(this); } );
@@ -56,4 +59,6 @@ void Subscriber<T_topic, T_msg>::disconnect(Broker<T_topic, T_msg>* broker) {
   }
 }
 
-template class Subscriber<int, int>;
+}
+
+template class uniot::Subscriber<int, int>;

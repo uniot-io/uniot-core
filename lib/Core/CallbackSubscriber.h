@@ -21,6 +21,9 @@
 #include <functional>
 #include <Subscriber.h>
 
+namespace uniot
+{
+
 template<class T_topic, class T_msg>
 class CallbackSubscriber : public Subscriber<T_topic, T_msg>
 {
@@ -33,3 +36,5 @@ public:
 private:
   SubscriberCallback mCallback;
 };
+
+}

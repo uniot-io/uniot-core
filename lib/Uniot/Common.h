@@ -16,20 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "CallbackSubscriber.h"
+#pragma once
 
-namespace uniot
+template <int a, int b, int c, int d>
+struct FourCC
 {
+  static const unsigned int Value = (((((d << 8) | c) << 8) | b) << 8) | a;
+};
 
-template<class T_topic, class T_msg>
-CallbackSubscriber<T_topic, T_msg>::CallbackSubscriber(SubscriberCallback callback) 
-: mCallback(callback) {}
-
-template<class T_topic, class T_msg>
-void CallbackSubscriber<T_topic, T_msg>::onPublish(T_topic topic, T_msg msg) {
-  mCallback(topic, msg);
-}
-
-}
-
-template class uniot::CallbackSubscriber<int, int>;
+#define COUNT_OF(arr) (sizeof(arr) / sizeof(arr[0]))
+#define ARRAY_ELEMENT_SAFE(arr, index) ((arr)[(((index) < COUNT_OF(arr)) ? (index) : (COUNT_OF(arr) - 1))])
+#define FOURCC(name) FourCC<ARRAY_ELEMENT_SAFE(#name, 0), ARRAY_ELEMENT_SAFE(#name, 1), ARRAY_ELEMENT_SAFE(#name, 2), ARRAY_ELEMENT_SAFE(#name, 3)>::Value

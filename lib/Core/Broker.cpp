@@ -21,10 +21,23 @@
 #include "Publisher.h"
 #include "Broker.h"
 
+namespace uniot
+{
+
 template<class T_topic, class T_msg>
 Broker<T_topic, T_msg>::~Broker() {
   mSubscribers.forEach( [this](Subscriber<T_topic, T_msg>* subscriber){ subscriber->mBrokerQueue.removeOne(this); } );
   mPublishers.forEach( [this](Publisher<T_topic, T_msg>* publisher){ publisher->mBrokerQueue.removeOne(this); } );
+}
+
+template<class T_topic, class T_msg>
+void Broker<T_topic, T_msg>::connect(IBrokerKitConnection<T_topic, T_msg> *connection) {
+  connection->connect(this);
+}
+
+template<class T_topic, class T_msg>
+void Broker<T_topic, T_msg>::disconnect(IBrokerKitConnection<T_topic, T_msg> *connection) {
+  connection->disconnect(this);
 }
 
 template<class T_topic, class T_msg>
@@ -77,4 +90,6 @@ uint8_t Broker<T_topic, T_msg>::execute() {
   }
 }
 
-template class Broker<int, int>;
+}
+
+template class uniot::Broker<int, int>;

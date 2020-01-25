@@ -20,6 +20,9 @@
 
 #include <ClearQueue.h>
 
+namespace uniot
+{
+
 template<class T_topic, class T_msg>
 class Broker;
 
@@ -43,3 +46,4 @@ private:
   ClearQueue<T_topic> mTopics;
 };
 
+}

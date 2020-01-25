@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <Common.h>
 #include <TaskScheduler.h>
 #include <ILightPrint.h>
 #include <Publisher.h>
@@ -43,7 +44,7 @@ namespace uniot {
   class NetworkScheduler : public TaskScheduler, public Publisher<int, int>
   {
   public:
-    enum Topic { CONNECTION = 16176 };
+    enum Topic { CONNECTION = FOURCC(netw) };
     enum Msg { FAILED = 0, SUCCESS, CONNECTING, DISCONNECTED };
 
     NetworkScheduler()

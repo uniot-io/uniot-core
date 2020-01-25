@@ -19,10 +19,14 @@
 #pragma once
 
 #include <TaskScheduler.h>
+#include <Broker.h>
 
 #define PRINT_HEAP() Serial.println(ESP.getFreeHeap())
 
 uniot::TaskScheduler Scheduler;
+uniot::Broker<int, int> MainBroker;
+
+auto taskHandleBroker = uniot::TaskScheduler::make(&MainBroker);
 
 void loop() {
   Scheduler.execute();

@@ -16,20 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "CallbackSubscriber.h"
+#pragma once
+
+#include "Broker.h"
 
 namespace uniot
 {
 
-template<class T_topic, class T_msg>
-CallbackSubscriber<T_topic, T_msg>::CallbackSubscriber(SubscriberCallback callback) 
-: mCallback(callback) {}
+template <class T_topic, class T_msg>
+class Broker;
 
-template<class T_topic, class T_msg>
-void CallbackSubscriber<T_topic, T_msg>::onPublish(T_topic topic, T_msg msg) {
-  mCallback(topic, msg);
-}
+template <class T_topic, class T_msg>
+class IBrokerKitConnection
+{
+public:
+  virtual ~IBrokerKitConnection() {}
+  virtual void connect(Broker<T_topic, T_msg> *broker) = 0;
+  virtual void disconnect(Broker<T_topic, T_msg> *broker) = 0;
+};
 
-}
-
-template class uniot::CallbackSubscriber<int, int>;
+} // namespace uniot

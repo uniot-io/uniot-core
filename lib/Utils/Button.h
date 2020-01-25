@@ -20,6 +20,8 @@
 
 #include <TaskScheduler.h>
 
+namespace uniot
+{
 class Button
 {
 public:
@@ -62,5 +64,6 @@ private:
   uint8_t mLongPressTicks;
   uint8_t mPin;
   uint8_t mActiveLevel;
-  uniot::SchedulerTask::SchedulerTaskCallback mTaskCallback;
+  SchedulerTask::SchedulerTaskCallback mTaskCallback;
 };
+} // namespace uniot

@@ -20,6 +20,9 @@
 #include "Publisher.h"
 #include "Broker.h"
 
+namespace uniot
+{
+
 template<class T_topic, class T_msg>
 Publisher<T_topic, T_msg>::~Publisher() {
   mBrokerQueue.forEach( [this](Broker<T_topic, T_msg>* broker) { broker->mPublishers.removeOne(this); } );
@@ -44,4 +47,6 @@ void Publisher<T_topic, T_msg>::disconnect(Broker<T_topic, T_msg>* broker) {
   }
 }
 
-template class Publisher<int, int>;
+}
+
+template class uniot::Publisher<int, int>;

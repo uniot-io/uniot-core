@@ -26,7 +26,7 @@
 #include <Bytes.h>
 #include "MQTTDevice.h"
 
-class MQTTKit : public uniot::IExecutor, public Publisher<int, int>
+class MQTTKit : public uniot::IExecutor, public uniot::Publisher<int, int>
 {
   friend class MQTTDevice;
 
