@@ -18,10 +18,10 @@
 
 #pragma once
 
-#include <memory>
-#include <IExecutor.h>
 #include <ESP8266WebServer.h>
 #include <DNSServer.h>
+#include <Common.h>
+#include <IExecutor.h>
 #include <config.min.h>
 
 #define DNS_PORT      53
@@ -32,7 +32,7 @@ namespace uniot {
   class ConfigCaptivePortal : public IExecutor
   {
   public:
-    ConfigCaptivePortal(std::shared_ptr<IPAddress> apIp)
+    ConfigCaptivePortal(SharedPointer<IPAddress> apIp)
     : mIsStarted(false),
     mpApIp(std::move(apIp)),
     mpDnsServer(new DNSServer()),
@@ -81,8 +81,8 @@ namespace uniot {
   private:
     bool mIsStarted;
 
-    std::shared_ptr<IPAddress> mpApIp;
-    std::unique_ptr<DNSServer> mpDnsServer;
-    std::unique_ptr<ESP8266WebServer> mpWebServer;
+    SharedPointer<IPAddress> mpApIp;
+    UniquePointer<DNSServer> mpDnsServer;
+    UniquePointer<ESP8266WebServer> mpWebServer;
   };
 }

@@ -18,12 +18,11 @@
 
 #pragma once
 
-#include <NetworkScheduler.h>
 #include <Broker.h>
+#include <NetworkScheduler.h>
 #include <CallbackSubscriber.h>
 #include <IBrokerKitConnection.h>
 #include <ISchedulerKitConnection.h>
-#include <TaskScheduler.h>
 #include <Button.h>
 
 namespace uniot
@@ -142,6 +141,6 @@ private:
   TaskScheduler::TaskPtr mpTaskSignalLed;
   TaskScheduler::TaskPtr mpTaskConfigBtn;
 
-  std::unique_ptr<GeneralSubscriber> mpSubscriberNetwork;
+  UniquePointer<GeneralSubscriber> mpSubscriberNetwork;
 };
 } // namespace uniot

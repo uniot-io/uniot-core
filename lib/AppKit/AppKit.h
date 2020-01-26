@@ -18,10 +18,10 @@
 
 #pragma once
 
-#include <MQTTKit.h>
-#include <CallbackSubscriber.h>
-#include <NetworkDevice.h>
 #include <Broker.h>
+#include <NetworkDevice.h>
+#include <CallbackSubscriber.h>
+#include <MQTTKit.h>
 #include <unLisp.h>
 #include <IBrokerKitConnection.h>
 #include <ISchedulerKitConnection.h>
@@ -128,7 +128,7 @@ private:
 
   TaskScheduler::TaskPtr mTaskMQTT;
 
-  std::unique_ptr<GeneralSubscriber> mpSubscriberNetwork;
-  std::unique_ptr<GeneralSubscriber> mpSubscriberLisp;
+  UniquePointer<GeneralSubscriber> mpSubscriberNetwork;
+  UniquePointer<GeneralSubscriber> mpSubscriberLisp;
 };
 } // namespace uniot

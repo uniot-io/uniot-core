@@ -18,17 +18,15 @@
 
 #pragma once
 
+#include <ESP8266WiFi.h>
+
 #include <Common.h>
 #include <TaskScheduler.h>
-#include <ILightPrint.h>
 #include <Publisher.h>
-#include <config.min.h>
-#include <WifiStorage.h>
-
-#include <memory>
-
-#include <ESP8266WiFi.h>
 #include <ConfigCaptivePortal.h>
+#include <WifiStorage.h>
+#include <ILightPrint.h>
+#include <config.min.h>
 
 namespace uniot {
 //---------------------------------------------"________________"
@@ -215,9 +213,9 @@ namespace uniot {
     WifiStorage mWifiStorage;
     String mApName;
 
-    std::shared_ptr<IPAddress> mpApIp;
-    std::unique_ptr<IPAddress> mpApSubnet;
-    std::unique_ptr<ConfigCaptivePortal> mpConfigServer;
+    SharedPointer<IPAddress> mpApIp;
+    UniquePointer<IPAddress> mpApSubnet;
+    UniquePointer<ConfigCaptivePortal> mpConfigServer;
 
     TaskPtr mTaskStart;
     TaskPtr mTaskServe;
