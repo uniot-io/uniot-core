@@ -27,10 +27,10 @@
 using namespace uniot;
 using namespace std::placeholders;
 
-class unLisp : public Publisher<int, int>
+class unLisp : public GeneralPublisher
 {
 public:
-  enum Topic { OUTPUT_BUF = 53942 };
+  enum Topic { OUTPUT_BUF = FOURCC(lisp) };
   enum Msg { ADDED, REPLACED };
 
   unLisp(unLisp const &) = delete;

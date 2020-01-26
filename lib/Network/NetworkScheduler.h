@@ -41,7 +41,7 @@ namespace uniot {
   const char text[]                PROGMEM = "text";
 
 //TODO: improve by public methods as needed
-  class NetworkScheduler : public TaskScheduler, public Publisher<int, int>
+  class NetworkScheduler : public TaskScheduler, public GeneralPublisher
   {
   public:
     enum Topic { CONNECTION = FOURCC(netw) };

@@ -22,28 +22,24 @@
 
 namespace uniot
 {
-
-template<class T_topic, class T_msg>
+template <class T_topic, class T_msg>
 class Broker;
 
-template<class T_topic, class T_msg>
-class Subscriber
+template <class T_topic, class T_msg>
+class Publisher
 {
   friend class Broker<T_topic, T_msg>;
 
 public:
-  virtual ~Subscriber();
+  virtual ~Publisher();
 
-  Subscriber* subscribe(T_topic topic);
-  Subscriber* unsubscribe(T_topic topic);
-  bool isSubscribed(T_topic topic);
-  void connect(Broker<T_topic, T_msg>* broker);
-  void disconnect(Broker<T_topic, T_msg>* broker);
-  virtual void onPublish(T_topic topic, T_msg msg) = 0;
-  
+  void publish(T_topic topic, T_msg msg);
+  void connect(Broker<T_topic, T_msg> *broker);
+  void disconnect(Broker<T_topic, T_msg> *broker);
+
 private:
-  ClearQueue<Broker<T_topic, T_msg>*> mBrokerQueue;
-  ClearQueue<T_topic> mTopics;
+  ClearQueue<Broker<T_topic, T_msg> *> mBrokerQueue;
 };
 
-}
+using GeneralPublisher = Publisher<unsigned int, int>;
+} // namespace uniot

@@ -22,43 +22,49 @@
 
 namespace uniot
 {
-
-template<class T_topic, class T_msg>
-Subscriber<T_topic, T_msg>::~Subscriber() {
-  mBrokerQueue.forEach( [this](Broker<T_topic, T_msg>* broker){ broker->mSubscribers.removeOne(this); } );
+template <class T_topic, class T_msg>
+Subscriber<T_topic, T_msg>::~Subscriber()
+{
+  mBrokerQueue.forEach([this](Broker<T_topic, T_msg> *broker) { broker->mSubscribers.removeOne(this); });
 }
 
-template<class T_topic, class T_msg>
-Subscriber<T_topic, T_msg>* Subscriber<T_topic, T_msg>::subscribe(T_topic topic) {
+template <class T_topic, class T_msg>
+Subscriber<T_topic, T_msg> *Subscriber<T_topic, T_msg>::subscribe(T_topic topic)
+{
   mTopics.pushUnique(topic);
   return this;
 }
 
-template<class T_topic, class T_msg>
-Subscriber<T_topic, T_msg>* Subscriber<T_topic, T_msg>::unsubscribe(T_topic topic) {
+template <class T_topic, class T_msg>
+Subscriber<T_topic, T_msg> *Subscriber<T_topic, T_msg>::unsubscribe(T_topic topic)
+{
   mTopics.removeOne(topic);
   return this;
 }
 
-template<class T_topic, class T_msg>
-bool Subscriber<T_topic, T_msg>::isSubscribed(T_topic topic) {
+template <class T_topic, class T_msg>
+bool Subscriber<T_topic, T_msg>::isSubscribed(T_topic topic)
+{
   return mTopics.contains(topic);
 }
 
-template<class T_topic, class T_msg>
-void Subscriber<T_topic, T_msg>::connect(Broker<T_topic, T_msg>* broker) {
-  if(broker) {
+template <class T_topic, class T_msg>
+void Subscriber<T_topic, T_msg>::connect(Broker<T_topic, T_msg> *broker)
+{
+  if (broker)
+  {
     broker->connect(this);
   }
 }
 
-template<class T_topic, class T_msg>
-void Subscriber<T_topic, T_msg>::disconnect(Broker<T_topic, T_msg>* broker) {
-  if(broker) {
+template <class T_topic, class T_msg>
+void Subscriber<T_topic, T_msg>::disconnect(Broker<T_topic, T_msg> *broker)
+{
+  if (broker)
+  {
     broker->disconnect(this);
   }
 }
+} // namespace uniot
 
-}
-
-template class uniot::Subscriber<int, int>;
+template class uniot::Subscriber<unsigned int, int>;

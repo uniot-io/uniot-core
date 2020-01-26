@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <Common.h>
 #include <IExecutor.h>
 #include <Publisher.h>
 #include <ClearQueue.h>
@@ -26,12 +27,12 @@
 #include <Bytes.h>
 #include "MQTTDevice.h"
 
-class MQTTKit : public uniot::IExecutor, public uniot::Publisher<int, int>
+class MQTTKit : public uniot::IExecutor, public uniot::GeneralPublisher
 {
   friend class MQTTDevice;
 
 public:
-  enum Topic { CONNECTION = 14572 };
+  enum Topic { CONNECTION = FOURCC(mqtt) };
   enum Msg { FAILED = 0, SUCCESS };
 
   MQTTKit() : mPubSubClient(mWiFiClient), mConnectionId(random(0xffff)), mClientId(random(0xffffff)) {

@@ -28,7 +28,7 @@
 
 namespace uniot
 {
-class NetworkDevice : public IBrokerKitConnection<int, int>, public ISchedulerKitConnection
+class NetworkDevice : public IGeneralBrokerKitConnection, public ISchedulerKitConnection
 {
 public:
   NetworkDevice(uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
@@ -54,13 +54,13 @@ public:
     return mNetwork;
   }
 
-  void connect(Broker<int, int> *broker)
+  void connect(GeneralBroker *broker)
   {
     broker->connect(&mNetwork);
     broker->connect(mpSubscriberNetwork->subscribe(NetworkScheduler::CONNECTION));
   }
 
-  void disconnect(Broker<int, int> *broker)
+  void disconnect(GeneralBroker *broker)
   {
     broker->disconnect(&mNetwork);
     broker->disconnect(mpSubscriberNetwork->unsubscribe(NetworkScheduler::CONNECTION));
@@ -105,7 +105,7 @@ public:
 private:
   void _initSubscribers()
   {
-    mpSubscriberNetwork = std::unique_ptr<Subscriber<int, int>>(new CallbackSubscriber<int, int>([&](int topic, int msg) {
+    mpSubscriberNetwork = std::unique_ptr<GeneralSubscriber>(new GeneralCallbackSubscriber([&](int topic, int msg) {
       if (NetworkScheduler::CONNECTION == topic)
       {
         switch (msg)
@@ -142,6 +142,6 @@ private:
   TaskScheduler::TaskPtr mpTaskSignalLed;
   TaskScheduler::TaskPtr mpTaskConfigBtn;
 
-  std::unique_ptr<Subscriber<int, int>> mpSubscriberNetwork;
+  std::unique_ptr<GeneralSubscriber> mpSubscriberNetwork;
 };
 } // namespace uniot

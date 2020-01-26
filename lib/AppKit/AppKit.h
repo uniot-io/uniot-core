@@ -28,7 +28,7 @@
 
 namespace uniot
 {
-class AppKit : public IBrokerKitConnection<int, int>, public ISchedulerKitConnection
+class AppKit : public IGeneralBrokerKitConnection, public ISchedulerKitConnection
 {
 public:
   AppKit(uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
@@ -64,7 +64,7 @@ public:
     mNetworkDevice.attach();
   }
 
-  void connect(Broker<int, int> *broker)
+  void connect(GeneralBroker *broker)
   {
     broker->connect(&mNetworkDevice);
     broker->connect(&unLisp::getInstance());
@@ -72,7 +72,7 @@ public:
     broker->connect(mpSubscriberLisp->subscribe(unLisp::OUTPUT_BUF));
   }
 
-  void disconnect(Broker<int, int> *broker)
+  void disconnect(GeneralBroker *broker)
   {
     broker->disconnect(&mNetworkDevice);
     broker->disconnect(&unLisp::getInstance());
@@ -83,7 +83,7 @@ public:
 private:
   void _initSubscribers()
   {
-    mpSubscriberNetwork = std::unique_ptr<Subscriber<int, int>>(new CallbackSubscriber<int, int>([&](int topic, int msg) {
+    mpSubscriberNetwork = std::unique_ptr<GeneralSubscriber>(new GeneralCallbackSubscriber([&](int topic, int msg) {
       if (NetworkScheduler::CONNECTION == topic)
       {
         switch (msg)
@@ -109,7 +109,7 @@ private:
         }
       }
     }));
-    mpSubscriberLisp = std::unique_ptr<Subscriber<int, int>>(new CallbackSubscriber<int, int>([&](int topic, int msg) {
+    mpSubscriberLisp = std::unique_ptr<GeneralSubscriber>(new GeneralCallbackSubscriber([&](int topic, int msg) {
       auto size = unLisp::getInstance().sizeOutput();
       auto result = unLisp::getInstance().popOutput();
       if (msg == unLisp::ADDED)
@@ -128,7 +128,7 @@ private:
 
   TaskScheduler::TaskPtr mTaskMQTT;
 
-  std::unique_ptr<Subscriber<int, int>> mpSubscriberNetwork;
-  std::unique_ptr<Subscriber<int, int>> mpSubscriberLisp;
+  std::unique_ptr<GeneralSubscriber> mpSubscriberNetwork;
+  std::unique_ptr<GeneralSubscriber> mpSubscriberLisp;
 };
 } // namespace uniot

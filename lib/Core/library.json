@@ -1,0 +1,7 @@
+{
+    "build": {
+        "includeDir": "Broker",
+        "srcDir": ".",
+        "srcFilter": "-<*> +<Broker/*>"
+    }
+}

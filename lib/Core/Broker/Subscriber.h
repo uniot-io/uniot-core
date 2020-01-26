@@ -18,23 +18,32 @@
 
 #pragma once
 
-#include <functional>
-#include <Subscriber.h>
+#include <ClearQueue.h>
 
 namespace uniot
 {
+template <class T_topic, class T_msg>
+class Broker;
 
-template<class T_topic, class T_msg>
-class CallbackSubscriber : public Subscriber<T_topic, T_msg>
+template <class T_topic, class T_msg>
+class Subscriber
 {
-public:
-  using SubscriberCallback = std::function<void(T_topic, T_msg)>;
+  friend class Broker<T_topic, T_msg>;
 
-  CallbackSubscriber(SubscriberCallback callback);
-  virtual void onPublish(T_topic topic, T_msg msg);
+public:
+  virtual ~Subscriber();
+
+  Subscriber *subscribe(T_topic topic);
+  Subscriber *unsubscribe(T_topic topic);
+  bool isSubscribed(T_topic topic);
+  void connect(Broker<T_topic, T_msg> *broker);
+  void disconnect(Broker<T_topic, T_msg> *broker);
+  virtual void onPublish(T_topic topic, T_msg msg) = 0;
 
 private:
-  SubscriberCallback mCallback;
+  ClearQueue<Broker<T_topic, T_msg> *> mBrokerQueue;
+  ClearQueue<T_topic> mTopics;
 };
 
-}
+using GeneralSubscriber = Subscriber<unsigned int, int>;
+} // namespace uniot

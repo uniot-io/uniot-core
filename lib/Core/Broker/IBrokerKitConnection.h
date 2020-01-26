@@ -18,28 +18,21 @@
 
 #pragma once
 
-#include <ClearQueue.h>
+#include "Broker.h"
 
 namespace uniot
 {
-
-template<class T_topic, class T_msg>
+template <class T_topic, class T_msg>
 class Broker;
 
-template<class T_topic, class T_msg>
-class Publisher
+template <class T_topic, class T_msg>
+class IBrokerKitConnection
 {
-  friend class Broker<T_topic, T_msg>;
-
 public:
-  virtual ~Publisher();
-
-  void publish(T_topic topic, T_msg msg);
-  void connect(Broker<T_topic, T_msg>* broker);
-  void disconnect(Broker<T_topic, T_msg>* broker);
-  
-private:
-  ClearQueue<Broker<T_topic, T_msg>*> mBrokerQueue;
+  virtual ~IBrokerKitConnection() {}
+  virtual void connect(Broker<T_topic, T_msg> *broker) = 0;
+  virtual void disconnect(Broker<T_topic, T_msg> *broker) = 0;
 };
 
-}
+using IGeneralBrokerKitConnection = IBrokerKitConnection<unsigned int, int>;
+} // namespace uniot

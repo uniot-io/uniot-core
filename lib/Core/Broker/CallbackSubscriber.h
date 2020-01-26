@@ -18,11 +18,23 @@
 
 #pragma once
 
-#include <Arduino.h>
-#include <TaskScheduler.h>
-#include <Broker.h>
+#include <functional>
+#include "Subscriber.h"
 
-void inject();
+namespace uniot
+{
+template <class T_topic, class T_msg>
+class CallbackSubscriber : public Subscriber<T_topic, T_msg>
+{
+public:
+  using SubscriberCallback = std::function<void(T_topic, T_msg)>;
 
-extern uniot::TaskScheduler Scheduler;
-extern uniot::GeneralBroker MainBroker;
+  CallbackSubscriber(SubscriberCallback callback);
+  virtual void onPublish(T_topic topic, T_msg msg);
+
+private:
+  SubscriberCallback mCallback;
+};
+
+using GeneralCallbackSubscriber = CallbackSubscriber<unsigned int, int>;
+} // namespace uniot

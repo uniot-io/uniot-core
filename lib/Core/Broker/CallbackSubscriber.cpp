@@ -20,16 +20,15 @@
 
 namespace uniot
 {
+template <class T_topic, class T_msg>
+CallbackSubscriber<T_topic, T_msg>::CallbackSubscriber(SubscriberCallback callback)
+    : mCallback(callback) {}
 
-template<class T_topic, class T_msg>
-CallbackSubscriber<T_topic, T_msg>::CallbackSubscriber(SubscriberCallback callback) 
-: mCallback(callback) {}
-
-template<class T_topic, class T_msg>
-void CallbackSubscriber<T_topic, T_msg>::onPublish(T_topic topic, T_msg msg) {
+template <class T_topic, class T_msg>
+void CallbackSubscriber<T_topic, T_msg>::onPublish(T_topic topic, T_msg msg)
+{
   mCallback(topic, msg);
 }
+} // namespace uniot
 
-}
-
-template class uniot::CallbackSubscriber<int, int>;
+template class uniot::CallbackSubscriber<unsigned int, int>;

@@ -16,23 +16,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
+#include <Arduino.h>
+#include "Publisher.h"
 #include "Broker.h"
 
 namespace uniot
 {
-
 template <class T_topic, class T_msg>
-class Broker;
-
-template <class T_topic, class T_msg>
-class IBrokerKitConnection
+Publisher<T_topic, T_msg>::~Publisher()
 {
-public:
-  virtual ~IBrokerKitConnection() {}
-  virtual void connect(Broker<T_topic, T_msg> *broker) = 0;
-  virtual void disconnect(Broker<T_topic, T_msg> *broker) = 0;
-};
+  mBrokerQueue.forEach([this](Broker<T_topic, T_msg> *broker) { broker->mPublishers.removeOne(this); });
+}
 
+template <class T_topic, class T_msg>
+void Publisher<T_topic, T_msg>::publish(T_topic topic, T_msg msg)
+{
+  mBrokerQueue.forEach([&](Broker<T_topic, T_msg> *broker) { broker->publish(topic, msg); yield(); });
+}
+
+template <class T_topic, class T_msg>
+void Publisher<T_topic, T_msg>::connect(Broker<T_topic, T_msg> *broker)
+{
+  if (broker)
+  {
+    broker->connect(this);
+  }
+}
+
+template <class T_topic, class T_msg>
+void Publisher<T_topic, T_msg>::disconnect(Broker<T_topic, T_msg> *broker)
+{
+  if (broker)
+  {
+    broker->disconnect(this);
+  }
+}
 } // namespace uniot
+
+template class uniot::Publisher<unsigned int, int>;

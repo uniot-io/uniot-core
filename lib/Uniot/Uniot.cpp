@@ -19,7 +19,7 @@
 #include <Uniot.h>
 
 uniot::TaskScheduler Scheduler;
-uniot::Broker<int, int> MainBroker;
+uniot::GeneralBroker MainBroker;
 
 void setup()
 {
