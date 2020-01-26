@@ -22,12 +22,13 @@
 #include <Broker.h>
 #include <CallbackSubscriber.h>
 #include <IBrokerKitConnection.h>
+#include <ISchedulerKitConnection.h>
 #include <TaskScheduler.h>
 #include <Button.h>
 
 namespace uniot
 {
-class NetworkDevice : public IExecutor, public IBrokerKitConnection<int, int>
+class NetworkDevice : public IBrokerKitConnection<int, int>, public ISchedulerKitConnection
 {
 public:
   NetworkDevice(uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
@@ -45,13 +46,12 @@ public:
           }
         })
   {
-    _initTasks();
     _initSubscribers();
   }
 
-  uint8_t execute()
+  NetworkScheduler &getNetworkScheduler()
   {
-    return mNetwork.execute();
+    return mNetwork;
   }
 
   void connect(Broker<int, int> *broker)
@@ -66,40 +66,43 @@ public:
     broker->disconnect(mpSubscriberNetwork->unsubscribe(NetworkScheduler::CONNECTION));
   }
 
-  NetworkScheduler &getNetworkScheduler()
-  {
-    return mNetwork;
+  void pushTo(TaskScheduler *scheduler) {
+    scheduler->push(mpTaskNetwork = TaskScheduler::make(&mNetwork));
+    scheduler->push(mpTaskSignalLed = TaskScheduler::make([&](short t) {
+      static bool pinLevel = true;
+      digitalWrite(mPinLed, pinLevel = (!pinLevel && t));
+    }));
+    scheduler->push(mpTaskConfigBtn = TaskScheduler::make(mConfigBtn.getTaskCallback()));
   }
 
-  void attach() {
-    mTaskConfigBtn->attach(100);
+  void attach()
+  {
+    mpTaskNetwork->attach(1);
+    mpTaskConfigBtn->attach(100);
+  }
+
+  void begin()
+  {
+    mNetwork.begin();
+    statusBusy();
   }
 
   void statusBusy()
   {
-    mTaskSignalLed->attach(500);
+    mpTaskSignalLed->attach(500);
   }
 
   void statusAlarm()
   {
-    mTaskSignalLed->attach(200);
+    mpTaskSignalLed->attach(200);
   }
 
   void statusIdle()
   {
-    mTaskSignalLed->attach(200, 1);
+    mpTaskSignalLed->attach(200, 1);
   }
 
 private:
-  void _initTasks()
-  {
-    mNetwork.push(mTaskSignalLed = TaskScheduler::make([&](short t) {
-      static bool pinLevel = true;
-      digitalWrite(mPinLed, pinLevel = (!pinLevel && t));
-    }));
-    mNetwork.push(mTaskConfigBtn = TaskScheduler::make(mConfigBtn.getTaskCallback()));
-  }
-
   void _initSubscribers()
   {
     mpSubscriberNetwork = std::unique_ptr<Subscriber<int, int>>(new CallbackSubscriber<int, int>([&](int topic, int msg) {
@@ -135,8 +138,9 @@ private:
 
   NetworkScheduler mNetwork;
 
-  TaskScheduler::TaskPtr mTaskSignalLed;
-  TaskScheduler::TaskPtr mTaskConfigBtn;
+  TaskScheduler::TaskPtr mpTaskNetwork;
+  TaskScheduler::TaskPtr mpTaskSignalLed;
+  TaskScheduler::TaskPtr mpTaskConfigBtn;
 
   std::unique_ptr<Subscriber<int, int>> mpSubscriberNetwork;
 };

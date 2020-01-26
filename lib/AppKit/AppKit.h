@@ -24,16 +24,16 @@
 #include <Broker.h>
 #include <unLisp.h>
 #include <IBrokerKitConnection.h>
+#include <ISchedulerKitConnection.h>
 
 namespace uniot
 {
-class AppKit : public IBrokerKitConnection<int, int>
+class AppKit : public IBrokerKitConnection<int, int>, public ISchedulerKitConnection
 {
 public:
-  AppKit(TaskScheduler &scheduler)
-      : mpScheduler(&scheduler), mNetworkDevice(D2, LOW, D7)
+  AppKit(uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
+      : mNetworkDevice(pinBtn, activeLevelBtn, pinLed)
   {
-    _initTasks();
     _initSubscribers();
   }
 
@@ -47,14 +47,20 @@ public:
     return mMQTT;
   }
 
-  NetworkDevice &getNetworkDevice()
+  void begin()
   {
-    return mNetworkDevice;
+    mNetworkDevice.begin();
+  }
+
+  void pushTo(TaskScheduler *scheduler)
+  {
+    scheduler->push(&mNetworkDevice);
+    scheduler->push(mTaskMQTT = TaskScheduler::make(&mMQTT));
+    scheduler->push(unLisp::getInstance().getTask());
   }
 
   void attach()
   {
-    mTaskNetwork->attach(1);
     mNetworkDevice.attach();
   }
 
@@ -75,12 +81,6 @@ public:
   }
 
 private:
-  void _initTasks() {
-    mpScheduler->push(mTaskNetwork = TaskScheduler::make(&mNetworkDevice));
-    mpScheduler->push(mTaskMQTT = TaskScheduler::make(&mMQTT));
-    mpScheduler->push(unLisp::getInstance().getTask());
-  }
-
   void _initSubscribers()
   {
     mpSubscriberNetwork = std::unique_ptr<Subscriber<int, int>>(new CallbackSubscriber<int, int>([&](int topic, int msg) {
@@ -124,11 +124,8 @@ private:
   }
 
   MQTTKit mMQTT;
-  TaskScheduler *mpScheduler;
   NetworkDevice mNetworkDevice;
 
-  TaskScheduler::TaskPtr mTaskHandleBroker;
-  TaskScheduler::TaskPtr mTaskNetwork;
   TaskScheduler::TaskPtr mTaskMQTT;
 
   std::unique_ptr<Subscriber<int, int>> mpSubscriberNetwork;

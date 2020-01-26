@@ -20,6 +20,7 @@
 
 #include <functional>
 #include <IExecutor.h>
+#include <ISchedulerKitConnection.h>
 #include <ClearQueue.h>
 #include <memory>
 #include "Task.h"
@@ -80,6 +81,11 @@ namespace uniot {
 
     TaskScheduler* push(TaskPtr task){
       mTasks.push(task);
+      return this;
+    }
+
+    TaskScheduler* push(ISchedulerKitConnection *connection) {
+      connection->pushTo(this);
       return this;
     }
 

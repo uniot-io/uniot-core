@@ -16,13 +16,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <Uniot.h>
 
-#include <Arduino.h>
-#include <TaskScheduler.h>
-#include <Broker.h>
+uniot::TaskScheduler Scheduler;
+uniot::Broker<int, int> MainBroker;
 
-void inject();
+void setup()
+{
+  auto taskHandleBroker = uniot::TaskScheduler::make(&MainBroker);
+  Scheduler.push(taskHandleBroker);
+  taskHandleBroker->attach(100);
 
-extern uniot::TaskScheduler Scheduler;
-extern uniot::Broker<int, int> MainBroker;
+  inject();
+}
+
+void loop()
+{
+  Scheduler.execute();
+}

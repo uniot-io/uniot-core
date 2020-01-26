@@ -50,7 +50,7 @@ MQTTKit mqtt;
 auto taskHandleBroker = TaskScheduler::make(&MainBrocker);
 auto taskNetwork = TaskScheduler::make(&Network);
 auto taskPrintHeap = TaskScheduler::make([&](short t) {
-  PRINT_HEAP();
+  Serial.println(ESP.getFreeHeap());
   // Serial.println(WiFi.status());
   // Serial.println(analogRead(LDR));
 });
@@ -170,7 +170,7 @@ struct Obj *user_prim_ldr(void *root, struct Obj **env, struct Obj **list)
   return *objLdr;
 }
 
-void setup()
+void init()
 {
   Serial.begin(9600);
 

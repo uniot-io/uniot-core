@@ -1,6 +1,3 @@
-#ifndef _SKETCH_SELECTED_
-#define _SKETCH_SELECTED_
-
 // uLisp
 // (def odd (n) (= 1 (% n 2))) (def color (n) (% n 3)) (task 30 200 '(led (color (t-get env 't_pass)) (odd (t-get env 't_pass))))
 // (def color (n) (% n 3))(task 0 500 '( (print (ldr)) (led 0 0) (led 1 0) (led 2 0) (led ( - (/ (ldr) 100) 1) 1)))
@@ -9,9 +6,8 @@
 // (defun odd (n) (= 1 (% n 2))) (defun color (n) (% n 3)) (task 30 200 '(led (color #t_pass) (odd #t_pass)))
 // (defun color (n) (% n 3))(task 0 500 '(list (print (ldr)) (led 0 0) (led 1 0) (led 2 0) (led ( - (/ (ldr) 100) 1) 1)))
 
-#include <Wire.h>
-#include <Arduino.h>
 #include <Uniot.h>
+#include <Wire.h>
 #include <Board-WittyCloud.h>
 #include <NetworkScheduler.h>
 #include <MQTTKit.h>
@@ -26,7 +22,7 @@
 
 using namespace uniot;
 
-AppKit MainAppKit(Scheduler);
+AppKit MainAppKit(PIN_BUTTON, LOW, RED);
 
 String DeviceId = String(ESP.getChipId(), HEX); // TODO: CBOR: implement storage for dynamic values 
 
@@ -48,7 +44,7 @@ MQTTDevice mqttDevice([](const String &topic, const Bytes &pa) {
 });
 
 auto taskPrintHeap = TaskScheduler::make([&](short t) {
-  PRINT_HEAP();
+  Serial.println(ESP.getFreeHeap());
   // Serial.println(WiFi.status());
   // Serial.println(analogRead(LDR));
 });
@@ -99,7 +95,7 @@ struct Obj *user_prim_ldr(void *root, struct Obj **env, struct Obj **list)
   return *objLdr;
 }
 
-void setup()
+void inject()
 {
   Serial.begin(9600);
 
@@ -113,21 +109,15 @@ void setup()
   mqttDevice.subscribe("bits/TEST/online/request");
   mqttDevice.subscribe("bits/TEST/script");
 
-  // MainAppKit.connect(&MainBroker);
   MainBroker.connect(&MainAppKit);
+  Scheduler.push(&MainAppKit)
+      ->push(taskPrintHeap);
 
-  Scheduler.push(taskPrintHeap)
-      ->push(taskHandleBroker);
-
-  MainAppKit.attach();
-  taskHandleBroker->attach(500);
   taskPrintHeap->attach(500);
 
-  MainAppKit.getNetworkDevice().getNetworkScheduler().begin();
-  MainAppKit.getNetworkDevice().statusBusy();
+  MainAppKit.attach();
+  MainAppKit.begin();
 
   unLisp::getInstance().pushPrimitive("led", user_prim_led);
   unLisp::getInstance().pushPrimitive("ldr", user_prim_ldr);
 }
-
-#endif // _SKETCH_SELECTED_

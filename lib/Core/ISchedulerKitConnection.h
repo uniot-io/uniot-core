@@ -18,11 +18,17 @@
 
 #pragma once
 
-#include <Arduino.h>
-#include <TaskScheduler.h>
-#include <Broker.h>
+namespace uniot
+{
 
-void inject();
+class TaskScheduler;
 
-extern uniot::TaskScheduler Scheduler;
-extern uniot::Broker<int, int> MainBroker;
+class ISchedulerKitConnection
+{
+public:
+  virtual ~ISchedulerKitConnection() {}
+  virtual void pushTo(TaskScheduler *scheduler) = 0;
+  virtual void attach() = 0;
+};
+
+} // namespace uniot
