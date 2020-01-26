@@ -20,15 +20,10 @@
 
 namespace uniot
 {
-
-class TaskScheduler;
-
-class ISchedulerKitConnection
+class IExecutor
 {
 public:
-  virtual ~ISchedulerKitConnection() {}
-  virtual void pushTo(TaskScheduler *scheduler) = 0;
-  virtual void attach() = 0;
+  virtual ~IExecutor() {}
+  virtual uint8_t execute() = 0;
 };
-
 } // namespace uniot

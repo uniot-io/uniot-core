@@ -18,12 +18,15 @@
 
 #pragma once
 
-namespace uniot {
+namespace uniot
+{
+class TaskScheduler;
 
-  class IExecutor {
-  public:
-    virtual ~IExecutor() {}
-    virtual uint8_t execute() = 0;
-  };
-
-}
+class ISchedulerKitConnection
+{
+public:
+  virtual ~ISchedulerKitConnection() {}
+  virtual void pushTo(TaskScheduler *scheduler) = 0;
+  virtual void attach() = 0;
+};
+} // namespace uniot

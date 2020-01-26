@@ -1,7 +1,19 @@
 {
     "build": {
-        "includeDir": "Broker",
+        "flags": [
+            "-I Broker",
+            "-I Scheduler",
+            "-I Network",
+            "-I Storage",
+            "-I Utils"
+        ],
         "srcDir": ".",
-        "srcFilter": "-<*> +<Broker/*>"
+        "srcFilter": [
+            "+<Broker/*>",
+            "+<Scheduler/*>",
+            "+<Network/*>",
+            "+<Storage/*>",
+            "+<Utils/*>"
+        ]
     }
 }
