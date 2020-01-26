@@ -27,7 +27,9 @@
 #include <Bytes.h>
 #include "MQTTDevice.h"
 
-class MQTTKit : public uniot::IExecutor, public uniot::GeneralPublisher
+namespace uniot
+{
+class MQTTKit : public IExecutor, public GeneralPublisher
 {
   friend class MQTTDevice;
 
@@ -35,23 +37,28 @@ public:
   enum Topic { CONNECTION = FOURCC(mqtt) };
   enum Msg { FAILED = 0, SUCCESS };
 
-  MQTTKit() : mPubSubClient(mWiFiClient), mConnectionId(random(0xffff)), mClientId(random(0xffffff)) {
-    mPubSubClient.setCallback([this](char* topic, uint8_t* payload, unsigned int length) {
-      mDevices.forEach([&](MQTTDevice* device) {
+  MQTTKit() : mPubSubClient(mWiFiClient), mConnectionId(random(0xffff)), mClientId(random(0xffffff))
+  {
+    mPubSubClient.setCallback([this](char *topic, uint8_t *payload, unsigned int length) {
+      mDevices.forEach([&](MQTTDevice *device) {
         MQTTDevice::Handler callbackHandler = device->handler();
-        if(callbackHandler && device->isSubscribed(String(topic))) {
+        if (callbackHandler && device->isSubscribed(String(topic)))
+        {
           callbackHandler(topic, Bytes(payload, length));
         }
       });
     });
   }
 
-  void setServer(const char* domain, uint16_t port) {
+  void setServer(const char *domain, uint16_t port)
+  {
     mPubSubClient.setServer(domain, port);
   }
 
-  void addDevice(MQTTDevice* device) {
-    if(mDevices.pushUnique(device)) {
+  void addDevice(MQTTDevice *device)
+  {
+    if (mDevices.pushUnique(device))
+    {
       device->kit(this);
       device->topics()->forEach([this](String topic) {
         mPubSubClient.subscribe(topic.c_str());
@@ -59,8 +66,10 @@ public:
     }
   }
 
-  void removeDevice(MQTTDevice* device) {
-    if(mDevices.removeOne(device)) {
+  void removeDevice(MQTTDevice *device)
+  {
+    if (mDevices.removeOne(device))
+    {
       device->kit(nullptr);
       device->topics()->forEach([this](String topic) {
         mPubSubClient.unsubscribe(topic.c_str());
@@ -68,27 +77,33 @@ public:
     }
   }
 
-  virtual uint8_t execute() override {
-    if (!mPubSubClient.connected()) {
+  virtual uint8_t execute() override
+  {
+    if (!mPubSubClient.connected())
+    {
       Serial.print("Attempting MQTT connection...    ");
       Serial.println(mConnectionId);
-      if (mPubSubClient.connect(String(mClientId, HEX).c_str(), "service", 0, true, (String("disconnected ") + String(mConnectionId)).c_str())) {
-        mPubSubClient.publish("service", (String("connected ") + String(mConnectionId++)).c_str(), true); // publish an announcement    
-        mDevices.forEach([this](MQTTDevice* device) {
+      if (mPubSubClient.connect(String(mClientId, HEX).c_str(), "service", 0, true, (String("disconnected ") + String(mConnectionId)).c_str()))
+      {
+        mPubSubClient.publish("service", (String("connected ") + String(mConnectionId++)).c_str(), true); // publish an announcement
+        mDevices.forEach([this](MQTTDevice *device) {
           device->topics()->forEach([this](String topic) {
             mPubSubClient.subscribe(topic.c_str());
           });
         });
         publish(Topic::CONNECTION, Msg::SUCCESS);
-      } else {
+      }
+      else
+      {
         publish(Topic::CONNECTION, Msg::FAILED);
       }
     }
     mPubSubClient.loop();
   }
-  
+
 protected:
-  PubSubClient* client() {
+  PubSubClient *client()
+  {
     return &mPubSubClient;
   }
 
@@ -99,5 +114,6 @@ private:
   long mClientId;
 
   WiFiClient mWiFiClient;
-  ClearQueue<MQTTDevice*> mDevices;
+  ClearQueue<MQTTDevice *> mDevices;
 };
+} // namespace uniot

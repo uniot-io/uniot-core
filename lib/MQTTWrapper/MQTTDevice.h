@@ -22,33 +22,39 @@
 #include <ClearQueue.h>
 #include <Bytes.h>
 
+namespace uniot
+{
 class MQTTKit;
 class MQTTDevice
 {
   friend class MQTTKit;
-  using Handler = std::function<void(const String& topic, const Bytes& payload)>;
+  using Handler = std::function<void(const String &topic, const Bytes &payload)>;
 
 public:
-  MQTTDevice(Handler handler = nullptr) : mpKit(nullptr), mHandler(handler) { }
+  MQTTDevice(Handler handler = nullptr) : mpKit(nullptr), mHandler(handler) {}
   virtual ~MQTTDevice();
   void subscribe(const String &topic);
   void publish(const String &topic, const Bytes &payload);
   bool isSubscribed(const String &topic);
 
 protected:
-  ClearQueue<String>* topics() {
+  ClearQueue<String> *topics()
+  {
     return &mTopics;
   }
 
-  void kit(MQTTKit* kit) {
+  void kit(MQTTKit *kit)
+  {
     mpKit = kit;
   }
 
-  Handler handler() {
+  Handler handler()
+  {
     return mHandler;
   }
 
   ClearQueue<String> mTopics;
   Handler mHandler;
-  MQTTKit* mpKit;
+  MQTTKit *mpKit;
 };
+} // namespace uniot

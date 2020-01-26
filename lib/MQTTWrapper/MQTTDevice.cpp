@@ -20,26 +20,36 @@
 #include "MQTTKit.h"
 #include "MQTTDevice.h"
 
-MQTTDevice::~MQTTDevice() {
-  if(mpKit) {
+namespace uniot
+{
+MQTTDevice::~MQTTDevice()
+{
+  if (mpKit)
+  {
     mpKit->removeDevice(this);
     mpKit = nullptr;
   }
 }
 
-void MQTTDevice::subscribe(const String &topic) {
+void MQTTDevice::subscribe(const String &topic)
+{
   mTopics.push(topic);
-  if(mpKit) {
+  if (mpKit)
+  {
     mpKit->client()->subscribe(topic.c_str());
   }
 }
 
-void MQTTDevice::publish(const String &topic, const Bytes &payload) {
-  if(mpKit) {
+void MQTTDevice::publish(const String &topic, const Bytes &payload)
+{
+  if (mpKit)
+  {
     mpKit->client()->publish(topic.c_str(), payload.raw(), payload.size());
   }
 }
 
-bool MQTTDevice::isSubscribed(const String &topic) {
+bool MQTTDevice::isSubscribed(const String &topic)
+{
   return mTopics.contains(topic);
 }
+} // namespace uniot
