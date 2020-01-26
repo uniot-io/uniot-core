@@ -101,7 +101,7 @@ void inject()
   mqttDevice.subscribe("bits/TEST/script");
 
   MainBroker.connect(&MainAppKit);
-  Scheduler.push(&MainAppKit)
+  MainScheduler.push(&MainAppKit)
       ->push(taskPrintHeap);
 
   taskPrintHeap->attach(500);
@@ -111,4 +111,9 @@ void inject()
 
   unLisp::getInstance().pushPrimitive("led", user_prim_led);
   unLisp::getInstance().pushPrimitive("ldr", user_prim_ldr);
+
+  Serial.print("CHIP_ID: ");
+  Serial.println(String(ESP.getChipId(), HEX));
+  Serial.print("DEVICE_ID: ");
+  Serial.println(MyCredentials.getDeviceId());
 }

@@ -19,12 +19,48 @@
 #pragma once
 
 #include <Arduino.h>
-#include <TaskScheduler.h>
-#include <Broker.h>
-#include <Credentials.h>
+#include <user_interface.h>
 
-void inject();
+namespace uniot
+{
+  class Credentials
+  {
+  public:
+    Credentials()
+    {
+      mCreatorId = UNIOT_CREATOR_ID;
+      mOwnerId = "NULL";
+      mDeviceId = _calcDeviceId();
+    }
+    
+    String getOwnerId()
+    {
+      return mOwnerId;
+    }
 
-extern uniot::TaskScheduler MainScheduler;
-extern uniot::GeneralBroker MainBroker;
-extern uniot::Credentials MyCredentials;
+    String getCreatorId()
+    {
+      return mCreatorId;
+    }
+
+    String getDeviceId()
+    {
+      return mDeviceId;
+    }
+
+  private:
+    String _calcDeviceId()
+    {
+      uint8_t mac[6];
+      char macStr[13] = {0};
+      wifi_get_macaddr(STATION_IF, mac);
+
+      sprintf(macStr, "%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+      return String(macStr);
+    }
+
+    String mOwnerId;
+    String mCreatorId;
+    String mDeviceId;
+  };
+}

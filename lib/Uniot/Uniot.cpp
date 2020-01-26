@@ -18,13 +18,14 @@
 
 #include <Uniot.h>
 
-uniot::TaskScheduler Scheduler;
+uniot::TaskScheduler MainScheduler;
 uniot::GeneralBroker MainBroker;
+uniot::Credentials MyCredentials;
 
 void setup()
 {
   auto taskHandleBroker = uniot::TaskScheduler::make(&MainBroker);
-  Scheduler.push(taskHandleBroker);
+  MainScheduler.push(taskHandleBroker);
   taskHandleBroker->attach(100);
 
   inject();
@@ -32,5 +33,5 @@ void setup()
 
 void loop()
 {
-  Scheduler.execute();
+  MainScheduler.execute();
 }

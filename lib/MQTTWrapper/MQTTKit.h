@@ -93,9 +93,11 @@ protected:
   }
 
 private:
-  WiFiClient mWiFiClient;
   PubSubClient mPubSubClient;
-  ClearQueue<MQTTDevice*> mDevices;
-  long mClientId;
+
   long mConnectionId;
+  long mClientId;
+
+  WiFiClient mWiFiClient;
+  ClearQueue<MQTTDevice*> mDevices;
 };
