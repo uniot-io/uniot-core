@@ -25,7 +25,9 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Bytes.h>
+#include <CBOR.h>
 #include "MQTTDevice.h"
+#include "MQTTPath.h"
 
 namespace uniot
 {
@@ -37,14 +39,18 @@ public:
   enum Topic { CONNECTION = FOURCC(mqtt) };
   enum Msg { FAILED = 0, SUCCESS };
 
-  MQTTKit() : mPubSubClient(mWiFiClient), mConnectionId(random(0xffff)), mClientId(random(0xffffff))
+  MQTTKit(const Credentials &credentials)
+      : mPath(credentials),
+        mPubSubClient(mWiFiClient),
+        mConnectionId(0),
+        mClientId(credentials.getShortDeviceId())
   {
     mPubSubClient.setCallback([this](char *topic, uint8_t *payload, unsigned int length) {
       mDevices.forEach([&](MQTTDevice *device) {
         MQTTDevice::Handler callbackHandler = device->handler();
         if (callbackHandler && device->isSubscribed(String(topic)))
         {
-          callbackHandler(topic, Bytes(payload, length));
+          callbackHandler(device, topic, Bytes(payload, length));
         }
       });
     });
@@ -83,9 +89,27 @@ public:
     {
       Serial.print("Attempting MQTT connection...    ");
       Serial.println(mConnectionId);
-      if (mPubSubClient.connect(String(mClientId, HEX).c_str(), "service", 0, true, (String("disconnected ") + String(mConnectionId)).c_str()))
+      auto offlinePacket = CBOR()
+                  .put("state", 0)
+                  .put("id", mConnectionId)
+                  .build();
+      if (mPubSubClient.connect(
+              mPath.getCredentials()->getDeviceId().c_str(),
+              mPath.buildDevicePath("online").c_str(),
+              0,
+              true,
+              offlinePacket.raw(),
+              offlinePacket.size()))
       {
-        mPubSubClient.publish("service", (String("connected ") + String(mConnectionId++)).c_str(), true); // publish an announcement
+        auto onlinePacket = CBOR()
+                .put("state", 1)
+                .put("id", mConnectionId++)
+                .build();
+        mPubSubClient.publish(
+            mPath.buildDevicePath("online").c_str(),
+            onlinePacket.raw(),
+            onlinePacket.size(),
+            true); // publish an announcement
         mDevices.forEach([this](MQTTDevice *device) {
           device->topics()->forEach([this](String topic) {
             mPubSubClient.subscribe(topic.c_str());
@@ -99,6 +123,7 @@ public:
       }
     }
     mPubSubClient.loop();
+    return 0;
   }
 
 protected:
@@ -108,6 +133,7 @@ protected:
   }
 
 private:
+  MQTTPath mPath;
   PubSubClient mPubSubClient;
 
   long mConnectionId;

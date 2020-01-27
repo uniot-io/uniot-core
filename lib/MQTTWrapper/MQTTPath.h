@@ -18,45 +18,44 @@
 
 #pragma once
 
-#include <functional>
-#include <ClearQueue.h>
-#include <Bytes.h>
+#include <Credentials.h>
 
 namespace uniot
 {
-class MQTTKit;
-
-class MQTTDevice
+class MQTTPath
 {
-  friend class MQTTKit;
-
-protected:
-  using Handler = std::function<void(MQTTDevice *device, const String &topic, const Bytes &payload)>;
-
-  ClearQueue<String> *topics()
-  {
-    return &mTopics;
-  }
-
-  void kit(MQTTKit *kit)
-  {
-    mpKit = kit;
-  }
-
-  Handler handler()
-  {
-    return mHandler;
-  }
-
-  ClearQueue<String> mTopics;
-  MQTTKit *mpKit;
-  Handler mHandler;
-
 public:
-  MQTTDevice(Handler handler = nullptr) : mpKit(nullptr), mHandler(handler) {}
-  virtual ~MQTTDevice();
-  void subscribe(const String &topic);
-  void publish(const String &topic, const Bytes &payload);
-  bool isSubscribed(const String &topic);
+  MQTTPath(const Credentials &credentials) : mPrefix("PUBLIC_UNIOT"), mpCredentials(&credentials)
+  {
+  }
+
+  String buildDevicePath(const String &topic)
+  {
+    return mPrefix + "/"
+            + mpCredentials->getOwnerId() + "/"
+            + mpCredentials->getDeviceId() + "/"
+            + topic;
+  }
+
+  String buildGroupPath(const String &topic)
+  {
+    return mPrefix + "/"
+            + mpCredentials->getOwnerId() + "/"
+            + topic;
+  }
+
+  String buildPublicPath(const String &topic)
+  {
+    return mPrefix + "/"
+            + topic;
+  }
+
+  const Credentials *getCredentials() const {
+    return mpCredentials;
+  }
+
+private:
+  const String mPrefix;
+  const Credentials *mpCredentials;
 };
 } // namespace uniot

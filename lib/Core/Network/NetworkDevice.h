@@ -116,14 +116,17 @@ private:
           break;
 
         case NetworkScheduler::CONNECTING:
+          Serial.println("NetworkDevice Subscriber, CONNECTING ");
           statusBusy();
           break;
 
         case NetworkScheduler::DISCONNECTED:
+          Serial.println("NetworkDevice Subscriber, DISCONNECTED ");
           mNetwork.reconnect();
           break;
 
         case NetworkScheduler::FAILED:
+          Serial.println("NetworkDevice Subscriber, FAILED ");
         default:
           statusAlarm();
           break;

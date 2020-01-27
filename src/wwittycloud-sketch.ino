@@ -13,11 +13,11 @@
 
 using namespace uniot;
 
-AppKit MainAppKit(PIN_BUTTON, LOW, RED);
+AppKit MainAppKit(MyCredentials, PIN_BUTTON, LOW, RED);
 
 String DeviceId = String(ESP.getChipId(), HEX); // TODO: CBOR: implement storage for dynamic values 
 
-MQTTDevice mqttDevice([](const String &topic, const Bytes &pa) {
+MQTTDevice mqttDevice([](MQTTDevice *device, const String &topic, const Bytes &pa) {
   Serial.println(topic);
   Serial.write(pa.raw(), pa.size());
   Serial.println();
@@ -27,10 +27,11 @@ MQTTDevice mqttDevice([](const String &topic, const Bytes &pa) {
   }
 
   if (topic.endsWith("online/request")) {
-    CBOR packet;
-    packet.put("id", DeviceId.c_str()); // TODO: CBOR: implement storage for dynamic values
-    packet.put("type", "rgb");
-    mqttDevice.publish("bits/TEST/online/response", packet.write());
+    // CBOR packet;
+    // packet.put("id", DeviceId.c_str()); // TODO: CBOR: implement storage for dynamic values
+    // packet.put("type", "rgb");
+
+    mqttDevice.publish("bits/TEST/online/response", CBOR().put("id", DeviceId.c_str()).put("type", "relay").build());
   }
 });
 

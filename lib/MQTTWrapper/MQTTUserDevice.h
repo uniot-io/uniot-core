@@ -18,45 +18,24 @@
 
 #pragma once
 
-#include <functional>
-#include <ClearQueue.h>
-#include <Bytes.h>
+#include <MQTTDevice.h>
 
 namespace uniot
 {
-class MQTTKit;
-
-class MQTTDevice
+class MQTTUserDevice : public MQTTDevice
 {
-  friend class MQTTKit;
-
-protected:
-  using Handler = std::function<void(MQTTDevice *device, const String &topic, const Bytes &payload)>;
-
-  ClearQueue<String> *topics()
-  {
-    return &mTopics;
-  }
-
-  void kit(MQTTKit *kit)
-  {
-    mpKit = kit;
-  }
-
-  Handler handler()
-  {
-    return mHandler;
-  }
-
-  ClearQueue<String> mTopics;
-  MQTTKit *mpKit;
-  Handler mHandler;
-
 public:
-  MQTTDevice(Handler handler = nullptr) : mpKit(nullptr), mHandler(handler) {}
-  virtual ~MQTTDevice();
-  void subscribe(const String &topic);
-  void publish(const String &topic, const Bytes &payload);
-  bool isSubscribed(const String &topic);
+  MQTTUserDevice(Handler handler = nullptr) : MQTTDevice(handler)
+  {
+  }
+
+  void subscribeDevice(const String &topic)
+  {
+  }
+
+  void subscribeGroup(const String &topic)
+  {
+  }
+  virtual ~MQTTUserDevice() {}
 };
 } // namespace uniot

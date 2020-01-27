@@ -23,44 +23,56 @@
 
 namespace uniot
 {
-  class Credentials
+class Credentials
+{
+public:
+  Credentials()
   {
-  public:
-    Credentials()
-    {
-      mCreatorId = UNIOT_CREATOR_ID;
-      mOwnerId = "NULL";
-      mDeviceId = _calcDeviceId();
-    }
-    
-    String getOwnerId()
-    {
-      return mOwnerId;
-    }
+    mCreatorId = UNIOT_CREATOR_ID;
+    mOwnerId = "NULL";
+    mDeviceId = _calcDeviceId();
+  }
 
-    String getCreatorId()
-    {
-      return mCreatorId;
-    }
+  String getOwnerId() const
+  {
+    return mOwnerId;
+  }
 
-    String getDeviceId()
-    {
-      return mDeviceId;
-    }
+  String getCreatorId() const
+  {
+    return mCreatorId;
+  }
 
-  private:
-    String _calcDeviceId()
-    {
-      uint8_t mac[6];
-      char macStr[13] = {0};
-      wifi_get_macaddr(STATION_IF, mac);
+  String getDeviceId() const
+  {
+    return mDeviceId;
+  }
 
-      sprintf(macStr, "%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-      return String(macStr);
-    }
+  uint32_t getShortDeviceId() const
+  {
+    return ESP.getChipId();
+  }
 
-    String mOwnerId;
-    String mCreatorId;
-    String mDeviceId;
-  };
-}
+  long random(long howbig = 0xffffff) const
+  {
+    return random(howbig);
+  }
+
+private:
+  String _calcDeviceId()
+  {
+    uint8_t mac[6];
+    char macStr[13] = {0};
+    wifi_get_macaddr(STATION_IF, mac);
+
+    for (uint8_t i = 0; i < 6; i++)
+      sprintf(macStr + i * 2, "%02x", mac[i]);
+
+    return String(macStr);
+  }
+
+  String mOwnerId;
+  String mCreatorId;
+  String mDeviceId;
+};
+} // namespace uniot

@@ -125,7 +125,7 @@ namespace uniot {
       }));
       push(mTaskConnectSta = make([this](short t) { 
         WiFi.disconnect(true);
-        bool disconect = true; WiFi.softAPdisconnect(true);
+        bool disconect = true; WiFi.softAPdisconnect(true); // !!!!!!!!!!!!
         bool connect = WiFi.begin(mWifiStorage.getWifiArgs()->ssid.c_str(), mWifiStorage.getWifiArgs()->pass.c_str()) != WL_CONNECT_FAILED;
         if (disconect && connect)
         {

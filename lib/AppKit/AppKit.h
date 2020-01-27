@@ -31,8 +31,8 @@ namespace uniot
 class AppKit : public IGeneralBrokerKitConnection, public ISchedulerKitConnection
 {
 public:
-  AppKit(uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
-      : mNetworkDevice(pinBtn, activeLevelBtn, pinLed)
+  AppKit(const Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
+      : mMQTT(credentials), mNetworkDevice(pinBtn, activeLevelBtn, pinLed)
   {
     _initSubscribers();
   }
@@ -95,15 +95,18 @@ private:
           break;
 
         case NetworkScheduler::CONNECTING:
+          Serial.println("AppKit Subscriber, CONNECTING ");
           mTaskMQTT->detach();
           break;
 
         case NetworkScheduler::DISCONNECTED:
+          Serial.println("AppKit Subscriber, DISCONNECTED ");
           mTaskMQTT->detach();
           break;
 
         case NetworkScheduler::FAILED:
         default:
+          Serial.println("AppKit Subscriber, FAILED ");
           mTaskMQTT->detach();
           break;
         }
