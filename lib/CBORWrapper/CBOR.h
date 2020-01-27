@@ -55,20 +55,24 @@ public:
     return std::unique_ptr<CBORArray>(new CBORArray(this, mpMapNode, cn_cbor_string_create(key, &mErr)));
   }
 
-  void put(int key, int value) {
+  CBOR &put(int key, int value) {
     cn_cbor_mapput_int(mpMapNode, key, cn_cbor_int_create(value, &mErr), &mErr);
+    return *this;
   }
 
-  void put(int key, const char* value) {
+  CBOR &put(int key, const char* value) {
     cn_cbor_mapput_int(mpMapNode, key, cn_cbor_string_create(value, &mErr), &mErr);
+    return *this;
   }
 
-  void put(const char* key, int value) {
+  CBOR &put(const char* key, int value) {
     cn_cbor_mapput_string(mpMapNode, key, cn_cbor_int_create(value, &mErr), &mErr);
+    return *this;
   }
 
-  void put(const char* key, const char* value) {
+  CBOR &put(const char* key, const char* value) {
     cn_cbor_mapput_string(mpMapNode, key, cn_cbor_string_create(value, &mErr), &mErr);
+    return *this;
   }
 
   int getInt(int key) {
@@ -87,10 +91,6 @@ public:
     return _getString(cn_cbor_mapget_string(mpMapNode, key));
   }
 
-  String build() {
-    return "not implemented yet";
-  }
-
   void read(const Bytes &buf) {
     _clean();
     mpMapNode = cn_cbor_decode(buf.raw(), buf.size(), &mErr);
@@ -99,7 +99,7 @@ public:
     }
   }
 
-  Bytes write() {
+  Bytes build() {
     uint8_t buf[MAX_CBOR_BUF_SIZE];
     size_t size = cn_cbor_encoder_write(buf, 0, MAX_CBOR_BUF_SIZE, mpMapNode);
     return Bytes(buf, size);

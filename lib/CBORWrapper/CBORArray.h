@@ -46,9 +46,9 @@ public:
     return this;
   } 
 
-  CBOR* closeArray() {
+  CBOR &closeArray() {
     cn_cbor_map_put(mpMapNode, mpKey, mpArrayNode, &mErr);
-    return mpContext;
+    return *mpContext;
   }
 private:
   CBORArray(CBOR* context, cn_cbor* mapNode, cn_cbor* key)
