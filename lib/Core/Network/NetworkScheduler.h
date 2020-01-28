@@ -43,7 +43,7 @@ namespace uniot {
   {
   public:
     enum Topic { CONNECTION = FOURCC(netw) };
-    enum Msg { FAILED = 0, SUCCESS, CONNECTING, DISCONNECTED };
+    enum Msg { FAILED = 0, SUCCESS, CONNECTING, DISCONNECTED, ACCESS_POINT };
 
     NetworkScheduler()
     : NetworkScheduler(nullptr) {}
@@ -54,7 +54,7 @@ namespace uniot {
     mpApSubnet(new IPAddress(255, 255, 255, 0)),
     mpConfigServer(new ConfigCaptivePortal(mpApIp))
     {
-      mApName = "BITS-" + String(ESP.getChipId(), HEX);
+      mApName = "UNIOT-" + String(ESP.getChipId(), HEX);
       mApName.toUpperCase();
       
       // default wifi persistent storage brings unexpected behavior, I turn it off
@@ -76,6 +76,11 @@ namespace uniot {
       } else {
         mTaskConfigAp->attach(500, 1);  
       }
+    }
+
+    void forget() {
+      mWifiStorage.clean();
+      mTaskConfigAp->attach(500, 1);
     }
 
     bool reconnect() {
@@ -121,6 +126,10 @@ namespace uniot {
           _printp(strApCreated);
           _print(mApName.c_str());
           mTaskStart->attach(500, 1);
+          publish(Topic::CONNECTION, Msg::ACCESS_POINT);
+        } else {
+          Serial.println("DEBUG: NetworkScheduler, mTaskConfigAp failed");
+          mTaskConfigAp->attach(500, 1);
         }
       }));
       push(mTaskConnectSta = make([this](short t) { 
@@ -139,7 +148,7 @@ namespace uniot {
           case WL_CONNECTED:
           mTaskConnecting->detach();
           mTaskStop->attach(500, 1);
-          mTaskMonitoring->attach(3000);
+          mTaskMonitoring->attach(2000);
           mWifiStorage.store();
           _printp(strSuccess);
           publish(Topic::CONNECTION, Msg::SUCCESS);

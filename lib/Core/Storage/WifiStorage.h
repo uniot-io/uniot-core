@@ -51,6 +51,8 @@ public:
   }
 
   void clean() {
+    mWifiArgs.ssid = "";
+    mWifiArgs.pass = "";
     EEPROM.begin(2 * STRING_SIZE);
     uint8_t* data = EEPROM.getDataPtr();
     memset(data, 0, 2 * STRING_SIZE);

@@ -93,6 +93,10 @@ private:
           Serial.println(WiFi.localIP());
           mTaskMQTT->attach(10);
           break;
+        case NetworkScheduler::ACCESS_POINT:
+          Serial.println("AppKit Subscriber, ACCESS_POINT ");
+          mTaskMQTT->detach();
+          break;
 
         case NetworkScheduler::CONNECTING:
           Serial.println("AppKit Subscriber, CONNECTING ");

@@ -31,15 +31,21 @@ class NetworkDevice : public IGeneralBrokerKitConnection, public ISchedulerKitCo
 {
 public:
   NetworkDevice(uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
-      : mPinLed(pinLed),
+      : mClickCounter(0),
+        mPinLed(pinLed),
         mConfigBtn(pinBtn, activeLevelBtn, 30, [&](Button *btn, Button::Event event) {
           switch (event)
           {
           case Button::LONG_PRESS:
-            mNetwork.reconnect();
-            statusBusy();
+            if (mClickCounter > 3)
+              mNetwork.forget();
+            else
+              mNetwork.reconnect();
             break;
           case Button::CLICK:
+            if (!mClickCounter)
+              mpTaskResetClickCounter->attach(5000, 1);
+            mClickCounter++;
           default:
             break;
           }
@@ -72,6 +78,11 @@ public:
       digitalWrite(mPinLed, pinLevel = (!pinLevel && t));
     }));
     scheduler->push(mpTaskConfigBtn = TaskScheduler::make(mConfigBtn.getTaskCallback()));
+    scheduler->push(mpTaskResetClickCounter = TaskScheduler::make([&](short t) {
+      Serial.print("ClickCounter = ");
+      Serial.println(mClickCounter);
+      mClickCounter = 0;
+    }));
   }
 
   void attach()
@@ -84,6 +95,11 @@ public:
   {
     mNetwork.begin();
     statusBusy();
+  }
+
+  void statusWaiting()
+  {
+    mpTaskSignalLed->attach(1000);
   }
 
   void statusBusy()
@@ -109,6 +125,11 @@ private:
       {
         switch (msg)
         {
+        case NetworkScheduler::ACCESS_POINT:
+          Serial.println("NetworkDevice Subscriber, ACCESS_POINT ");
+          statusWaiting();
+          break;
+
         case NetworkScheduler::SUCCESS:
           Serial.print("NetworkDevice Subscriber, ip: ");
           Serial.println(WiFi.localIP());
@@ -135,6 +156,7 @@ private:
     }));
   }
 
+  uint8_t mClickCounter;
   uint8_t mPinLed;
   Button mConfigBtn;
 
@@ -143,6 +165,7 @@ private:
   TaskScheduler::TaskPtr mpTaskNetwork;
   TaskScheduler::TaskPtr mpTaskSignalLed;
   TaskScheduler::TaskPtr mpTaskConfigBtn;
+  TaskScheduler::TaskPtr mpTaskResetClickCounter;
 
   UniquePointer<GeneralSubscriber> mpSubscriberNetwork;
 };
