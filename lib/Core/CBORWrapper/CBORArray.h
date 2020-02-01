@@ -20,8 +20,8 @@
 
 #include <cn-cbor.h>
 
-// #include "CBOR.h"
-
+namespace uniot
+{
 class CBOR;
 class CBORArray
 {
@@ -62,3 +62,4 @@ private:
   cn_cbor* mpArrayNode;
   cn_cbor_errback mErr;
 };
+} // namespace uniot

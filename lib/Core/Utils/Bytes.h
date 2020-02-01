@@ -65,6 +65,15 @@ public:
     return *this;
   }
 
+  Bytes & operator =(const String &rhs) {
+    if(rhs.length()) {
+      _copy((const uint8_t *)rhs.c_str(), rhs.length());
+    } else {
+      _invalidate();
+    }
+    return *this;
+  }
+
   template <typename T>
   operator T() {
     return *((T *)mBuffer);

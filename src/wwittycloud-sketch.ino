@@ -10,6 +10,7 @@
 #include <Board-WittyCloud.h>
 #include <CBOR.h>
 #include <AppKit.h>
+#include <Storage.h>
 
 using namespace uniot;
 
@@ -125,4 +126,7 @@ void inject()
   Serial.println(String(ESP.getChipId(), HEX));
   Serial.print("DEVICE_ID: ");
   Serial.println(MyCredentials.getDeviceId());
+  Storage MainStorage("new");
+  MainStorage.store();
+  MainStorage.restore();
 }

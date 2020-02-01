@@ -5,7 +5,8 @@
             "-I Scheduler",
             "-I Network",
             "-I Storage",
-            "-I Utils"
+            "-I Utils",
+            "-I CBORWrapper"
         ],
         "srcDir": ".",
         "srcFilter": [
@@ -13,7 +14,8 @@
             "+<Scheduler/*>",
             "+<Network/*>",
             "+<Storage/*>",
-            "+<Utils/*>"
+            "+<Utils/*>",
+            "+<CBORWrapper/*>"
         ]
     }
 }

@@ -25,20 +25,28 @@
 
 #include "CBORArray.h"
 
+#ifndef MAX_CBOR_BUF_SIZE
 #define MAX_CBOR_BUF_SIZE 256
+#endif
 
+namespace uniot
+{
 class CBOR
 {
   friend class CBORArray;
 public:
-  CBOR(const Bytes &buf) : mpMapNode(nullptr) {
+  CBOR(const Bytes &buf)
+      : mpMapNode(nullptr),
+        mDirty(false)
+  {
     read(buf);
   }
 
-  CBOR() {
+  CBOR() : mDirty(false)
+  {
     _create();
   }
-  
+
   ~CBOR() {
     _clean();
   }
@@ -48,29 +56,35 @@ public:
   }
 
   std::unique_ptr<CBORArray> putArray(int key) {
+    mDirty = true;
     return std::unique_ptr<CBORArray>(new CBORArray(this, mpMapNode, cn_cbor_int_create(key, &mErr)));
   }
 
   std::unique_ptr<CBORArray> putArray(const char* key) {
+    mDirty = true;
     return std::unique_ptr<CBORArray>(new CBORArray(this, mpMapNode, cn_cbor_string_create(key, &mErr)));
   }
 
   CBOR &put(int key, int value) {
+    mDirty = true;
     cn_cbor_mapput_int(mpMapNode, key, cn_cbor_int_create(value, &mErr), &mErr);
     return *this;
   }
 
   CBOR &put(int key, const char* value) {
+    mDirty = true;
     cn_cbor_mapput_int(mpMapNode, key, cn_cbor_string_create(value, &mErr), &mErr);
     return *this;
   }
 
   CBOR &put(const char* key, int value) {
+    mDirty = true;
     cn_cbor_mapput_string(mpMapNode, key, cn_cbor_int_create(value, &mErr), &mErr);
     return *this;
   }
 
   CBOR &put(const char* key, const char* value) {
+    mDirty = true;
     cn_cbor_mapput_string(mpMapNode, key, cn_cbor_string_create(value, &mErr), &mErr);
     return *this;
   }
@@ -105,8 +119,13 @@ public:
     return Bytes(buf, size);
   }
 
+  bool dirty() {
+    return mDirty;
+  }
+
 private:
   void _create() {
+    mDirty = false;
     mpMapNode = cn_cbor_map_create(&mErr);
   }
 
@@ -140,4 +159,6 @@ private:
   String mInputBuf;
   cn_cbor* mpMapNode;
   cn_cbor_errback mErr;
+  bool mDirty;
 };
+} // namespace uniot
