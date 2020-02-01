@@ -31,8 +31,8 @@ namespace uniot
 class AppKit : public IGeneralBrokerKitConnection, public ISchedulerKitConnection
 {
 public:
-  AppKit(const Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
-      : mMQTT(credentials), mNetworkDevice(pinBtn, activeLevelBtn, pinLed)
+  AppKit(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
+      : mMQTT(credentials), mNetworkDevice(credentials, pinBtn, activeLevelBtn, pinLed)
   {
     _initSubscribers();
   }

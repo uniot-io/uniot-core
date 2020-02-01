@@ -45,16 +45,17 @@ namespace uniot {
     enum Topic { CONNECTION = FOURCC(netw) };
     enum Msg { FAILED = 0, SUCCESS, CONNECTING, DISCONNECTED, ACCESS_POINT };
 
-    NetworkScheduler()
-    : NetworkScheduler(nullptr) {}
+    NetworkScheduler(Credentials &credentials)
+        : NetworkScheduler(credentials, nullptr) {}
 
-    NetworkScheduler(ILightPrint *printer)
-    : mpPrinter(printer),
-    mpApIp(std::make_shared<IPAddress>(1, 1, 1, 1)),
-    mpApSubnet(new IPAddress(255, 255, 255, 0)),
-    mpConfigServer(new ConfigCaptivePortal(mpApIp))
+    NetworkScheduler(Credentials &credentials, ILightPrint *printer)
+        : mpCredentials(&credentials),
+          mpPrinter(printer),
+          mpApIp(std::make_shared<IPAddress>(1, 1, 1, 1)),
+          mpApSubnet(new IPAddress(255, 255, 255, 0)),
+          mpConfigServer(new ConfigCaptivePortal(mpApIp))
     {
-      mApName = "UNIOT-" + String(ESP.getChipId(), HEX);
+      mApName = "UNIOT-" + String(mpCredentials->getShortDeviceId(), HEX);
       mApName.toUpperCase();
       
       // default wifi persistent storage brings unexpected behavior, I turn it off
@@ -206,7 +207,7 @@ namespace uniot {
         mpConfigServer->get()->send(200, text, networks);
       });
 
-      mpConfigServer->get()->on("/wifi", [this] {
+      mpConfigServer->get()->on("/config", [this] {
         mWifiStorage.getWifiArgs()->ssid = mpConfigServer->get()->arg("ssid");
         mWifiStorage.getWifiArgs()->pass = mpConfigServer->get()->arg("pass");
         mpConfigServer->get()->sendHeader("Location", "/", true);
@@ -215,10 +216,13 @@ namespace uniot {
           _printp(strStaConnecting);
           _print(mWifiStorage.getWifiArgs()->ssid.c_str());
           mTaskConnectSta->attach(500, 1);
+
+          mpCredentials->setOwnerId(mpConfigServer->get()->arg("acc"));
         }
       });
     }
 
+    Credentials *mpCredentials;
     WifiStorage mWifiStorage;
     String mApName;
 

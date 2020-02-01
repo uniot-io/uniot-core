@@ -30,8 +30,9 @@ namespace uniot
 class NetworkDevice : public IGeneralBrokerKitConnection, public ISchedulerKitConnection
 {
 public:
-  NetworkDevice(uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
-      : mClickCounter(0),
+  NetworkDevice(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
+      : mNetwork(credentials),
+        mClickCounter(0),
         mPinLed(pinLed),
         mConfigBtn(pinBtn, activeLevelBtn, 30, [&](Button *btn, Button::Event event) {
           switch (event)
@@ -156,11 +157,11 @@ private:
     }));
   }
 
+  NetworkScheduler mNetwork;
+
   uint8_t mClickCounter;
   uint8_t mPinLed;
   Button mConfigBtn;
-
-  NetworkScheduler mNetwork;
 
   TaskScheduler::TaskPtr mpTaskNetwork;
   TaskScheduler::TaskPtr mpTaskSignalLed;

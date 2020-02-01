@@ -33,6 +33,11 @@ public:
     mDeviceId = _calcDeviceId();
   }
 
+  void setOwnerId(const String &id)
+  {
+    mOwnerId = id;
+  }
+
   String getOwnerId() const
   {
     return mOwnerId;
@@ -51,11 +56,6 @@ public:
   uint32_t getShortDeviceId() const
   {
     return ESP.getChipId();
-  }
-
-  long random(long howbig = 0xffffff) const
-  {
-    return random(howbig);
   }
 
 private:

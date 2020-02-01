@@ -41,6 +41,12 @@ auto taskPrintHeap = TaskScheduler::make([&](short t) {
   // Serial.println(analogRead(LDR));
 });
 
+auto taskPrintOwner = TaskScheduler::make([&](short t) {
+  Serial.println("Owner: " + MyCredentials.getOwnerId());
+  // Serial.println(WiFi.status());
+  // Serial.println(analogRead(LDR));
+});
+
 struct Obj *user_prim_led(void *root, struct Obj **env, struct Obj **list)
 {
   auto args = eval_list(root, env, list);
@@ -103,9 +109,11 @@ void inject()
 
   MainBroker.connect(&MainAppKit);
   MainScheduler.push(&MainAppKit)
-      ->push(taskPrintHeap);
+      ->push(taskPrintHeap)
+      ->push(taskPrintOwner);
 
   taskPrintHeap->attach(500);
+  taskPrintOwner->attach(500);
 
   MainAppKit.attach();
   MainAppKit.begin();
