@@ -33,8 +33,15 @@ public:
 
   virtual ~CBORStorage() {}
 
+  CBOR &object()
+  {
+    return mCborFrom;
+  }
+
   bool store()
   {
+    migrate(mCborFrom, mCborTo);
+
     auto *cbor = mCborTo.dirty() ? &mCborTo : &mCborFrom;
     if (cbor->dirty()) // nothing to store if mCborFrom does not dirty
     {
@@ -54,6 +61,9 @@ public:
     return success;
   }
 
+  // D o not be afraid to use to.copyStrPtr(from, key), it is safe.
+  // All strings are stored in mData buffer.
+  // The mData buffer will be replaced by newly created Bytes when storing data.
   virtual void migrate(const CBOR &from, CBOR &to) = 0;
 
 protected:

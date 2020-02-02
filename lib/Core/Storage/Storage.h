@@ -124,7 +124,4 @@ private:
   static bool sMounted;
   static unsigned int sInstancesCount;
 };
-
-bool Storage::sMounted = false;
-unsigned int Storage::sInstancesCount = 0;
 } // namespace uniot

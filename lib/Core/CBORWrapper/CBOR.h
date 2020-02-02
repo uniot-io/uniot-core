@@ -89,20 +89,40 @@ public:
     return *this;
   }
 
-  int getInt(int key) {
+  int getInt(int key) const {
     return _getInt(cn_cbor_mapget_int(mpMapNode, key));
   }
 
-  int getInt(const char* key) {
+  int getInt(const char* key) const {
     return _getInt(cn_cbor_mapget_string(mpMapNode, key));
   }
 
-  String getString(int key) {
+  String getString(int key) const {
     return _getString(cn_cbor_mapget_int(mpMapNode, key));
   }
 
-  String getString(const char* key) {
+  String getString(const char* key) const {
     return _getString(cn_cbor_mapget_string(mpMapNode, key));
+  }
+
+  CBOR &copyInt(const CBOR &from, int key) {
+    return put(key, from.getInt(key));
+  }
+
+  CBOR &copyInt(const CBOR &from, const char* key) {
+    return put(key, from.getInt(key));
+  }
+
+  CBOR &copyStrPtr(const CBOR &from, int key) {
+    auto cb = cn_cbor_mapget_int(from.mpMapNode, key);
+    // TODO: check types, set Err
+    return put(key, cb->v.str);
+  }
+
+  CBOR &copyStrPtr(const CBOR &from, const char* key) {
+    auto cb = cn_cbor_mapget_string(from.mpMapNode, key);
+    // TODO: check types, set Err
+    return put(key, cb->v.str);
   }
 
   void read(const Bytes &buf) {
@@ -136,7 +156,7 @@ private:
     }
   }
 
-  long _getInt(cn_cbor* cb) {
+  long _getInt(cn_cbor* cb) const {
     // if(!cb) throw "error"; // TODO: ???
     if(cb && CN_CBOR_INT == cb->type) {
       return cb->v.sint;
@@ -146,7 +166,7 @@ private:
     return 0;
   }
 
-  String _getString(cn_cbor* cb) {
+  String _getString(cn_cbor* cb) const {
     // if(!cb) throw "error"; // TODO: ???
     if(cb && CN_CBOR_TEXT == cb->type) {
       auto bytes = Bytes(cb->v.bytes, cb->length + 1);

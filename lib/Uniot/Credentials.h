@@ -21,21 +21,32 @@
 #include <Arduino.h>
 #include <user_interface.h>
 
+#include <CBORStorage.h>
+
 namespace uniot
 {
-class Credentials
+class Credentials : public CBORStorage
 {
 public:
-  Credentials()
+  Credentials() : CBORStorage("credentials.cbor")
   {
+    restore();
+
     mCreatorId = UNIOT_CREATOR_ID;
-    mOwnerId = "NULL";
+    mOwnerId = object().getString("account");
     mDeviceId = _calcDeviceId();
+  }
+
+  void migrate(const CBOR &from, CBOR &to)
+  {
+    to.copyStrPtr(from, "account");
   }
 
   void setOwnerId(const String &id)
   {
     mOwnerId = id;
+    object().put("account", mOwnerId.c_str());
+    store();
   }
 
   String getOwnerId() const

@@ -126,7 +126,4 @@ void inject()
   Serial.println(String(ESP.getChipId(), HEX));
   Serial.print("DEVICE_ID: ");
   Serial.println(MyCredentials.getDeviceId());
-  Storage MainStorage("new");
-  MainStorage.store();
-  MainStorage.restore();
 }
