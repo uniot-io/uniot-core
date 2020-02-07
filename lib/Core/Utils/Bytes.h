@@ -100,6 +100,10 @@ public:
     return mSize;
   }
 
+  void clean() {
+    _invalidate();
+  }
+
 private:
 
   inline void _init(void) {

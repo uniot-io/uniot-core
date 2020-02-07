@@ -78,7 +78,7 @@ public:
     // free space but is unable to write additional data to a file
     if (!SPIFFS.gc())
     {
-      Serial.println("Error: SPIFFS gc failed");
+      Serial.println("Error: SPIFFS gc failed. Caller: " + mPath);
     }
     return true;
   }
@@ -92,6 +92,18 @@ public:
       return false;
     }
     mData = _readSmallFile(file);
+    file.close();
+    return true;
+  }
+
+  bool clean()
+  {
+    mData.clean();
+    if (!SPIFFS.remove(mPath))
+    {
+      Serial.println("Error: Failed to remove " + mPath);
+      return false;
+    }
     return true;
   }
 
