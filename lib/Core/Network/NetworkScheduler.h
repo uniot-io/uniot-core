@@ -27,7 +27,7 @@
 #include <ConfigCaptivePortal.h>
 #include <WifiStorage.h>
 #include <ILightPrint.h>
-#include <config.min.h>
+#include <config.min.html.gz.h>
 
 namespace uniot {
 //---------------------------------------------"________________"
@@ -193,7 +193,8 @@ namespace uniot {
       });
 
       mpConfigServer->get()->on("/", [this] {
-        mpConfigServer->get()->send_P(200, text_html, CONFIG_HTML);
+        mpConfigServer->get()->sendHeader("Content-Encoding", "gzip");
+        mpConfigServer->get()->send_P(200, text_html, CONFIG_MIN_HTML_GZ, CONFIG_MIN_HTML_GZ_LENGTH);
       });
 
       mpConfigServer->get()->on("/scan", [this] {

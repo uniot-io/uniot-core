@@ -22,7 +22,6 @@
 #include <DNSServer.h>
 #include <Common.h>
 #include <IExecutor.h>
-#include <config.min.h>
 
 #define DNS_PORT      53
 #define HTTP_PORT     80
