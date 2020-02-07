@@ -19,73 +19,55 @@
 #pragma once
 
 #include <EEPROM.h>
+#include <CBORStorage.h>
 
-struct WifiArgs {
+struct WifiArgs
+{
   String ssid;
   String pass;
 
-  bool isValid() {
+  bool isValid()
+  {
     return ssid.length() + pass.length();
   }
 };
 
-class WifiStorage
+namespace uniot
+{
+class WifiStorage : public CBORStorage
 {
 public:
-  WifiArgs* getWifiArgs() {
+  WifiStorage() : CBORStorage("wifi.cbor")
+  {
+  }
+
+  WifiArgs *getWifiArgs()
+  {
     return &mWifiArgs;
   }
 
-  void store() {
-    EEPROM.begin(2 * STRING_SIZE);
-    _write(0, mWifiArgs.ssid);
-    _write(1, mWifiArgs.pass);
-    EEPROM.end();
+  void store()
+  {
+    object().put("ssid", mWifiArgs.ssid.c_str());
+    object().put("pass", mWifiArgs.pass.c_str());
+    CBORStorage::store();
   }
 
-  void restore() {
-    EEPROM.begin(2 * STRING_SIZE);
-    mWifiArgs.ssid = _read(0);
-    mWifiArgs.pass = _read(1);
-    EEPROM.end();
+  void restore()
+  {
+    CBORStorage::restore();
+    mWifiArgs.ssid = object().getString("ssid");
+    mWifiArgs.pass = object().getString("pass");
   }
 
-  void clean() {
+  void clean()
+  {
+    CBORStorage::clean();
     mWifiArgs.ssid = "";
     mWifiArgs.pass = "";
-    EEPROM.begin(2 * STRING_SIZE);
-    uint8_t* data = EEPROM.getDataPtr();
-    memset(data, 0, 2 * STRING_SIZE);
-    EEPROM.end();
   }
 
 private:
-
-  bool _write(uint8_t index, String str) {
-    uint8_t* data = EEPROM.getDataPtr();
-    if(data && str.length() < STRING_SIZE - 1) {
-      // '-1' in if guarantees place for the '\0' character
-      memcpy(data + index * STRING_SIZE, (const uint8_t*) str.c_str(), str.length());
-      memset(data + index * STRING_SIZE + str.length(), 0, STRING_SIZE - str.length());
-      return true;
-    }
-    return false;
-  }
-
-  String _read(uint8_t index) {
-    if(!EEPROM.read((index + 1) * STRING_SIZE - 1)) {
-      // String in storage must be terminated by the '\0' character
-      // also EEPROMClass::read(int address) returns 0 if internal error occurs
-      // EEPROM.getDataPtr() marks data as dirty and EEPROM commits at closing
-      uint8_t* data = EEPROM.getDataPtr();
-      if(data) { 
-        return String((const char*)(data + index * STRING_SIZE));
-      }
-    }
-    return String();
-  }
-
-//TODO: offset
-  const uint8_t STRING_SIZE = 64;
   WifiArgs mWifiArgs;
 };
+} // namespace uniot

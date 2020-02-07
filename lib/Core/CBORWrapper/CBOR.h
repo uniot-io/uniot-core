@@ -66,26 +66,43 @@ public:
   }
 
   CBOR &put(int key, int value) {
-    mDirty = true;
-    cn_cbor_mapput_int(mpMapNode, key, cn_cbor_int_create(value, &mErr), &mErr);
+    auto existing = cn_cbor_mapget_int(mpMapNode, key);
+    if (existing) {
+      mDirty = cn_cbor_int_update(existing, value);
+    } else {
+      mDirty = cn_cbor_mapput_int(mpMapNode, key, cn_cbor_int_create(value, &mErr), &mErr);
+    }
     return *this;
   }
 
   CBOR &put(int key, const char* value) {
-    mDirty = true;
-    cn_cbor_mapput_int(mpMapNode, key, cn_cbor_string_create(value, &mErr), &mErr);
+    auto existing = cn_cbor_mapget_int(mpMapNode, key);
+    if (existing) {
+      mDirty = cn_cbor_string_update(existing, value);
+    } else {
+      mDirty = cn_cbor_mapput_int(mpMapNode, key, cn_cbor_string_create(value, &mErr), &mErr);
+    }
     return *this;
   }
 
   CBOR &put(const char* key, int value) {
-    mDirty = true;
-    cn_cbor_mapput_string(mpMapNode, key, cn_cbor_int_create(value, &mErr), &mErr);
+    auto existing = cn_cbor_mapget_string(mpMapNode, key);
+    if (existing) {
+      mDirty = cn_cbor_int_update(existing, value);
+    } else {
+      mDirty = cn_cbor_mapput_string(mpMapNode, key, cn_cbor_int_create(value, &mErr), &mErr);
+    }
     return *this;
   }
 
   CBOR &put(const char* key, const char* value) {
-    mDirty = true;
-    cn_cbor_mapput_string(mpMapNode, key, cn_cbor_string_create(value, &mErr), &mErr);
+    auto existing = cn_cbor_mapget_string(mpMapNode, key);
+    if (existing) {
+      mDirty = cn_cbor_string_update(existing, value);
+    } else {
+      mDirty = cn_cbor_mapput_string(mpMapNode, key, cn_cbor_string_create(value, &mErr), &mErr);
+    }
+
     return *this;
   }
 
@@ -143,6 +160,11 @@ public:
     return mDirty;
   }
 
+  void clean() {
+    _clean();
+    _create();
+  }
+
 private:
   void _create() {
     mDirty = false;
@@ -169,14 +191,13 @@ private:
   String _getString(cn_cbor* cb) const {
     // if(!cb) throw "error"; // TODO: ???
     if(cb && CN_CBOR_TEXT == cb->type) {
-      auto bytes = Bytes(cb->v.bytes, cb->length + 1);
-      bytes.raw()[cb->length] = 0; // finalize string
+      auto bytes = Bytes(cb->v.bytes, cb->length);
+      bytes.terminate();
       return String(bytes.c_str());
     }
     return "";
   }
 
-  String mInputBuf;
   cn_cbor* mpMapNode;
   cn_cbor_errback mErr;
   bool mDirty;

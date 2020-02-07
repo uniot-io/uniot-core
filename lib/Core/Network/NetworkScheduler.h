@@ -21,6 +21,7 @@
 #include <ESP8266WiFi.h>
 
 #include <Common.h>
+#include <Credentials.h>
 #include <TaskScheduler.h>
 #include <Publisher.h>
 #include <ConfigCaptivePortal.h>
@@ -151,6 +152,7 @@ namespace uniot {
           mTaskStop->attach(500, 1);
           mTaskMonitoring->attach(2000);
           mWifiStorage.store();
+          mpCredentials->store();
           _printp(strSuccess);
           publish(Topic::CONNECTION, Msg::SUCCESS);
           break;

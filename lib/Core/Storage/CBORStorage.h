@@ -35,17 +35,14 @@ public:
 
   CBOR &object()
   {
-    return mCborFrom;
+    return mCbor;
   }
 
   bool store()
   {
-    migrate(mCborFrom, mCborTo);
-
-    auto *cbor = mCborTo.dirty() ? &mCborTo : &mCborFrom;
-    if (cbor->dirty()) // nothing to store if mCborFrom does not dirty
+    if (mCbor.dirty())
     {
-      mData = cbor->build();
+      mData = mCbor.build();
       return Storage::store();
     }
     return true;
@@ -56,18 +53,17 @@ public:
     auto success = Storage::restore();
     if (success)
     {
-      mCborFrom.read(mData);
+      mCbor.read(mData);
     }
     return success;
   }
 
-  // D o not be afraid to use to.copyStrPtr(from, key), it is safe.
-  // All strings are stored in mData buffer.
-  // The mData buffer will be replaced by newly created Bytes when storing data.
-  virtual void migrate(const CBOR &from, CBOR &to) = 0;
+  bool clean() {
+    mCbor.clean();
+    return Storage::clean();
+  }
 
 protected:
-  CBOR mCborFrom;
-  CBOR mCborTo;
+  CBOR mCbor;
 };
 } // namespace uniot

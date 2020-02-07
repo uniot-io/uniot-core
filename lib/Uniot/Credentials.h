@@ -30,23 +30,22 @@ class Credentials : public CBORStorage
 public:
   Credentials() : CBORStorage("credentials.cbor")
   {
-    restore();
+    CBORStorage::restore();
 
     mCreatorId = UNIOT_CREATOR_ID;
     mOwnerId = object().getString("account");
     mDeviceId = _calcDeviceId();
   }
 
-  void migrate(const CBOR &from, CBOR &to)
+  bool store()
   {
-    to.copyStrPtr(from, "account");
+    object().put("account", mOwnerId.c_str());
+    CBORStorage::store();
   }
 
   void setOwnerId(const String &id)
   {
     mOwnerId = id;
-    object().put("account", mOwnerId.c_str());
-    store();
   }
 
   String getOwnerId() const
