@@ -21,51 +21,50 @@
 #include <EEPROM.h>
 #include <CBORStorage.h>
 
-struct WifiArgs {
+struct WifiArgs
+{
   String ssid;
   String pass;
 
-  bool isValid() {
+  bool isValid()
+  {
     return ssid.length() + pass.length();
   }
 };
 
-//TODO
 namespace uniot
 {
-class WifiStorage: public CBORStorage
+class WifiStorage : public CBORStorage
 {
 public:
-  WifiStorage() : CBORStorage("wifi.cbor") {
-    CBORStorage::restore();
-
+  WifiStorage() : CBORStorage("wifi.cbor")
+  {
   }
 
-  void migrate(const CBOR &from, CBOR &to) override {
-    to.copyStrPtr(from, "ssid");
-    to.copyStrPtr(from, "pass");
-  }
-
-  WifiArgs* getWifiArgs() {
+  WifiArgs *getWifiArgs()
+  {
     return &mWifiArgs;
   }
 
-  void store() {
+  void store()
+  {
     object().put("ssid", mWifiArgs.ssid.c_str());
     object().put("pass", mWifiArgs.pass.c_str());
     CBORStorage::store();
   }
 
-  void restore() {
+  void restore()
+  {
     CBORStorage::restore();
     mWifiArgs.ssid = object().getString("ssid");
     mWifiArgs.pass = object().getString("pass");
   }
 
-  void clean() {
+  void clean()
+  {
+    CBORStorage::clean();
     mWifiArgs.ssid = "";
     mWifiArgs.pass = "";
-    //TODO: clean CBORStorage
   }
 
 private:
