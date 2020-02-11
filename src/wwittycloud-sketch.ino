@@ -122,8 +122,6 @@ void inject()
   unLisp::getInstance().pushPrimitive("led", user_prim_led);
   unLisp::getInstance().pushPrimitive("ldr", user_prim_ldr);
 
-  Serial.print("CHIP_ID: ");
-  Serial.println(String(ESP.getChipId(), HEX));
-  Serial.print("DEVICE_ID: ");
-  Serial.println(MyCredentials.getDeviceId());
+  UNIOT_LOG_INFO("%s: %s", "CHIP_ID", String(ESP.getChipId(), HEX).c_str());
+  UNIOT_LOG_INFO("%s: %s", "DEVICE_ID", MyCredentials.getDeviceId().c_str());
 }
