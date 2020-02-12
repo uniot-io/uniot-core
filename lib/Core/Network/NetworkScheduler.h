@@ -200,7 +200,7 @@ namespace uniot {
       mpConfigServer->get()->on("/scan", [this] {
         auto n = WiFi.scanNetworks();
         String networks = "[";
-        for (size_t i = 0; i < n; ++i) {
+        for (auto i = 0; i < n; ++i) {
           networks += '"' + WiFi.SSID(i) + '"';
           if (i < n - 1)
             networks += ',';
@@ -229,6 +229,8 @@ namespace uniot {
     WifiStorage mWifiStorage;
     String mApName;
 
+    ILightPrint* mpPrinter;
+
     SharedPointer<IPAddress> mpApIp;
     UniquePointer<IPAddress> mpApSubnet;
     UniquePointer<ConfigCaptivePortal> mpConfigServer;
@@ -240,6 +242,5 @@ namespace uniot {
     TaskPtr mTaskConnectSta;
     TaskPtr mTaskConnecting;
     TaskPtr mTaskMonitoring;
-    ILightPrint* mpPrinter;
   };
 }

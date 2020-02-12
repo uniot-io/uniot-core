@@ -75,6 +75,7 @@ namespace uniot {
         mpDnsServer->processNextRequest(); 
         mpWebServer->handleClient();
       }
+      return 0;
     }
 
   private:

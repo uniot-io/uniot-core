@@ -57,13 +57,14 @@ public:
     return mTaskCallback;
   }
 
+protected:
+  uint8_t mPin;
+  uint8_t mActiveLevel;
+  uint8_t mLongPressTicks;
+
   ButtonCallback OnLongPress;
   ButtonCallback OnClick;
 
-private:
-  uint8_t mLongPressTicks;
-  uint8_t mPin;
-  uint8_t mActiveLevel;
   SchedulerTask::SchedulerTaskCallback mTaskCallback;
 };
 } // namespace uniot
