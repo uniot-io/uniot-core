@@ -96,8 +96,6 @@ struct Obj *user_prim_ldr(void *root, struct Obj **env, struct Obj **list)
 
 void inject()
 {
-  Serial.begin(9600);
-
   pinMode(RED, OUTPUT);
   pinMode(GREEN, OUTPUT);
   pinMode(BLUE, OUTPUT);

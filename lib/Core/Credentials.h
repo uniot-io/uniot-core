@@ -40,7 +40,7 @@ public:
   bool store()
   {
     object().put("account", mOwnerId.c_str());
-    CBORStorage::store();
+    return CBORStorage::store();
   }
 
   void setOwnerId(const String &id)

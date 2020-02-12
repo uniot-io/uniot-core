@@ -21,6 +21,7 @@
 // doc: https://arduino-esp8266.readthedocs.io/en/latest/filesystem.html
 #include <FS.h>
 #include <Bytes.h>
+#include <Logger.h>
 
 namespace uniot
 {
@@ -32,16 +33,13 @@ public:
     setPath(path);
 
     sInstancesCount++;
+
     if (!sMounted)
     {
       sMounted = SPIFFS.begin();
-      if (!sMounted)
-      {
-        // By default, SPIFFS will autoformat the filesystem if SPIFFS cannot mount it.
-        // Use SPIFFSConfig to prevent this behavior.
-        Serial.println("Error: failed to mount the file system");
-        return;
-      }
+      // By default, SPIFFS will autoformat the filesystem if SPIFFS cannot mount it.
+      // Use SPIFFSConfig to prevent this behavior.
+      UNIOT_LOG_WARN_IF(!sMounted, "Failed to mount the file system");
     }
   }
 
@@ -69,17 +67,14 @@ public:
     auto file = SPIFFS.open(mPath, "w");
     if (!file)
     {
-      Serial.println("Error: Failed to open " + mPath);
+      UNIOT_LOG_WARN("Failed to open %s", mPath.c_str());
       return false;
     }
     file.write(mData.raw(), mData.size());
     file.close();
-    // using this call can avoid or reduce issues where SPIFFS reports
+    // using SPIFFS.gc() can avoid or reduce issues where SPIFFS reports
     // free space but is unable to write additional data to a file
-    if (!SPIFFS.gc())
-    {
-      Serial.println("Error: SPIFFS gc failed. Caller: " + mPath);
-    }
+    UNIOT_LOG_WARN_IF(!SPIFFS.gc(), "SPIFFS gc failed. Caller: %s", mPath.c_str());
     return true;
   }
 
@@ -88,7 +83,7 @@ public:
     auto file = SPIFFS.open(mPath, "r");
     if (!file)
     {
-      Serial.println("Error: Failed to open " + mPath);
+      UNIOT_LOG_WARN("Failed to open %s", mPath.c_str());
       return false;
     }
     mData = _readSmallFile(file);
@@ -101,7 +96,7 @@ public:
     mData.clean();
     if (!SPIFFS.remove(mPath))
     {
-      Serial.println("Error: Failed to remove " + mPath);
+      UNIOT_LOG_WARN("Failed to remove %s", mPath.c_str());
       return false;
     }
     return true;
@@ -114,12 +109,9 @@ protected:
   void setPath(const String &path)
   {
     mPath = path;
-    if (path.length() > 31)
-    {
-      // There is a limit of 32 chars in total for filenames.
-      // One '\0' char is reserved for string termination.
-      Serial.println("Warning: path length > 31 chars");
-    }
+    // There is a limit of 32 chars in total for filenames.
+    // One '\0' char is reserved for string termination.
+    UNIOT_LOG_WARN_IF(path.length() > 31, "Path length of '%s' > 31 chars", mPath.c_str());
   }
 
 private:
