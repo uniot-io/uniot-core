@@ -22,6 +22,8 @@
 
 #include <CBOR.h>
 
+using namespace uniot;
+
 const unsigned char cbor_object_1[] = {
   0xA2,                                   // map(2)
     0x66,                                 // text(6)
@@ -36,20 +38,20 @@ const unsigned char cbor_object_1[] = {
 void test_function_cbor_read_string(void)
 {
   auto bytes = Bytes(cbor_object_1, sizeof(cbor_object_1));
-  uniot::CBOR cbor(bytes);
+  CBOR cbor(bytes);
   TEST_ASSERT_EQUAL_STRING("simple", cbor.getString("object").c_str());
 }
 
 void test_function_cbor_read_int(void)
 {
   auto bytes = Bytes(cbor_object_1, sizeof(cbor_object_1));
-  uniot::CBOR cbor(bytes);
+  CBOR cbor(bytes);
   TEST_ASSERT_EQUAL(42, cbor.getInt("number"));
 }
 
 void test_function_cbor_put(void)
 {
-  uniot::CBOR cbor;
+  CBOR cbor;
   cbor.put("object", "simple");
   cbor.put("number", 42);
   TEST_ASSERT_EQUAL_MEMORY(cbor_object_1, cbor.build().raw(), sizeof(cbor_object_1));

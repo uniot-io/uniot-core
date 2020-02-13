@@ -43,7 +43,8 @@ void process()
   RUN_TEST(test_function_cbor_put);
   // test_data_lisp.h
   RUN_TEST(test_function_lisp_simple);
-  RUN_TEST(test_function_lisp_primitive);
+  RUN_TEST(test_function_lisp_native_primitive);
+  RUN_TEST(test_function_lisp_user_primitive);
   RUN_TEST(test_function_lisp_full_cycle);
 
   UNITY_END();

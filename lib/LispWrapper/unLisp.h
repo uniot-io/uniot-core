@@ -25,9 +25,19 @@
 #include <Bytes.h>
 #include <Common.h>
 
-using namespace uniot;
-using namespace std::placeholders;
+namespace uniot
+{
 
+namespace lisp
+{
+using Object = struct Obj *;
+using VarObject = struct Obj **;
+using Root = void *;
+Object TRUE = True;
+Object NIL = Nil;
+} // namespace lisp
+
+using namespace lisp;
 class unLisp : public GeneralPublisher
 {
 public:
@@ -102,8 +112,8 @@ private:
     mOutputBuffer.limit(10);
 
     mTaskLispEval = TaskScheduler::make([this](short t) {
-      void *root = mLispRoot;
-      Obj **env = mLispEnv;
+      auto root = mLispRoot;
+      auto env = mLispEnv;
 
       DEFINE2(t_obj, t_pass);
       *t_pass = get_variable(root, env, "#t_pass");
@@ -148,15 +158,15 @@ private:
     lisp_destroy();
   }
 
-  inline struct Obj *_primTask(void *root, struct Obj **env, struct Obj **list)
+  inline Object _primTask(Root root, VarObject env, VarObject list)
   {
-    Obj *args = eval_list(root, env, list);
+    auto args = eval_list(root, env, list);
     if (length(args) != 3)
       error("Malformed task");
 
-    Obj *times = args->car;
-    Obj *ms = args->cdr->car;
-    Obj *obj = args->cdr->cdr->car;
+    auto times = args->car;
+    auto ms = args->cdr->car;
+    auto obj = args->cdr->cdr->car;
 
     // TODO: check types
 
@@ -182,9 +192,11 @@ private:
   TaskScheduler::TaskPtr mTaskLispEval;
   ClearQueue<std::pair<String, Primitive*>> mUserPrimitives;
 
-  const Primitive *mPrimitiveTask = [](void *root, struct Obj **env, struct Obj **list) { return getInstance()._primTask(root, env, list); };
+  const Primitive *mPrimitiveTask = [](Root root, VarObject env, VarObject list) { return getInstance()._primTask(root, env, list); };
 
   void *mLispEnvConstructor[3];
-  void *mLispRoot;
-  Obj **mLispEnv;
+  Root mLispRoot;
+  VarObject mLispEnv;
 };
+
+} // namespace uniot

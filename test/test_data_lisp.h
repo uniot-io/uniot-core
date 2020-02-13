@@ -21,8 +21,11 @@
 #include <unity.h>
 
 #include <unLisp.h>
+#include <UserPrimitive.h>
 #include <Broker.h>
 #include <CallbackSubscriber.h>
+
+using namespace uniot;
 
 // (simple_plus <integer> <integer>)
 static Obj *user_prim_simple_plus(void *root, Obj **env, Obj **list)
@@ -45,10 +48,25 @@ void test_function_lisp_simple(void)
   TEST_ASSERT_EQUAL_STRING("3", result.c_str());
 }
 
-void test_function_lisp_primitive(void)
+void test_function_lisp_native_primitive(void)
 {
   unLisp::getInstance().pushPrimitive("simple_plus", user_prim_simple_plus);
   unLisp::getInstance().runCode("(simple_plus 2 3)");
+  auto result = unLisp::getInstance().popOutput();
+
+  TEST_ASSERT_EQUAL_STRING("5", result.c_str());
+}
+
+void test_function_lisp_user_primitive(void)
+{
+  unLisp::getInstance().pushPrimitive("user", [](Root root, VarObject env, VarObject list) {
+    UserPrimitive primitive("user", root, env, list);
+    primitive.assertArgs(3, BoolInt, Int, Bool);
+
+    return TRUE;
+  });
+
+  unLisp::getInstance().runCode("(user 2 3 #t)");
   auto result = unLisp::getInstance().popOutput();
 
   TEST_ASSERT_EQUAL_STRING("5", result.c_str());
@@ -60,11 +78,11 @@ void test_function_lisp_full_cycle(void)
   String lastLispResult = "?";
 
   // env global variables
-  uniot::TaskScheduler scheduler;
-  uniot::GeneralBroker broker;
+  TaskScheduler scheduler;
+  GeneralBroker broker;
 
   // simple lisp output subscriber
-  uniot::GeneralCallbackSubscriber subscriber([&](int topic, int msg) {
+  GeneralCallbackSubscriber subscriber([&](int topic, int msg) {
     lastLispResult = unLisp::getInstance().popOutput();
   });
 
@@ -78,7 +96,7 @@ void test_function_lisp_full_cycle(void)
   scheduler.push(unLisp::getInstance().getTask());
 
   // create a broker task, push it to the scheduler and attach it manually
-  auto brokerTask = uniot::TaskScheduler::make(&broker);
+  auto brokerTask = TaskScheduler::make(&broker);
   scheduler.push(brokerTask);
   brokerTask->attach(1);
 
