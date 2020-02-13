@@ -23,6 +23,7 @@
 #include <LimitedQueue.h>
 #include <Publisher.h>
 #include <Bytes.h>
+#include <Common.h>
 
 using namespace uniot;
 using namespace std::placeholders;

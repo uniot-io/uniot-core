@@ -18,6 +18,10 @@
 
 #pragma once
 
+#include <unity.h>
+
+#include <CBOR.h>
+
 const unsigned char cbor_object_1[] = {
   0xA2,                                   // map(2)
     0x66,                                 // text(6)
@@ -28,3 +32,25 @@ const unsigned char cbor_object_1[] = {
       0x6E, 0x75, 0x6D, 0x62, 0x65, 0x72, // "number"
     0x18, 0x2A                            // unsigned(42)
 };
+
+void test_function_cbor_read_string(void)
+{
+  auto bytes = Bytes(cbor_object_1, sizeof(cbor_object_1));
+  uniot::CBOR cbor(bytes);
+  TEST_ASSERT_EQUAL_STRING("simple", cbor.getString("object").c_str());
+}
+
+void test_function_cbor_read_int(void)
+{
+  auto bytes = Bytes(cbor_object_1, sizeof(cbor_object_1));
+  uniot::CBOR cbor(bytes);
+  TEST_ASSERT_EQUAL(42, cbor.getInt("number"));
+}
+
+void test_function_cbor_put(void)
+{
+  uniot::CBOR cbor;
+  cbor.put("object", "simple");
+  cbor.put("number", 42);
+  TEST_ASSERT_EQUAL_MEMORY(cbor_object_1, cbor.build().raw(), sizeof(cbor_object_1));
+}

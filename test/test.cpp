@@ -16,11 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <unity.h>
 #include <Arduino.h>
 #include <Board-WittyCloud.h>
-#include <CBOR.h>
+
+#include "test_data_bytes.h"
 #include "test_data_cbor.h"
+#include "test_data_lisp.h"
 
 // void setUp(void) {
 // // set stuff up here
@@ -30,42 +31,21 @@
 // // clean stuff up here
 // }
 
-void test_function_bytes_terminate(void)
-{
-  const unsigned char raw[] = {0x6F, 0x62, 0x6A, 0x65, 0x63, 0x74}; // "object"
-  Bytes bytes(raw, sizeof(raw));
-  TEST_ASSERT_EQUAL_MEMORY("object", bytes.terminate().c_str(), sizeof(raw) + 1);
-}
-
-void test_function_cbor_read_string(void)
-{
-  auto bytes = Bytes(cbor_object_1, sizeof(cbor_object_1));
-  uniot::CBOR cbor(bytes);
-  TEST_ASSERT_EQUAL_STRING("simple", cbor.getString("object").c_str());
-}
-
-void test_function_cbor_read_int(void)
-{
-  auto bytes = Bytes(cbor_object_1, sizeof(cbor_object_1));
-  uniot::CBOR cbor(bytes);
-  TEST_ASSERT_EQUAL(42, cbor.getInt("number"));
-}
-
-void test_function_cbor_put(void)
-{
-  uniot::CBOR cbor;
-  cbor.put("object", "simple");
-  cbor.put("number", 42);
-  TEST_ASSERT_EQUAL_MEMORY(cbor_object_1, cbor.build().raw(), sizeof(cbor_object_1));
-}
-
 void process()
 {
   UNITY_BEGIN();
+
+  // test_data_bytes.h
   RUN_TEST(test_function_bytes_terminate);
+  // test_data_cbor.h
   RUN_TEST(test_function_cbor_read_string);
   RUN_TEST(test_function_cbor_read_int);
   RUN_TEST(test_function_cbor_put);
+  // test_data_lisp.h
+  RUN_TEST(test_function_lisp_simple);
+  RUN_TEST(test_function_lisp_primitive);
+  RUN_TEST(test_function_lisp_full_cycle);
+
   UNITY_END();
 }
 
@@ -76,6 +56,7 @@ void setup()
   delay(2000);
 
   pinMode(RED, OUTPUT);
+  pinMode(BLUE, OUTPUT);
 
   process();
 }
@@ -83,7 +64,9 @@ void setup()
 void loop()
 {
   digitalWrite(RED, HIGH);
+  digitalWrite(BLUE, HIGH);
   delay(100);
   digitalWrite(RED, LOW);
+  digitalWrite(BLUE, LOW);
   delay(500);
 }
