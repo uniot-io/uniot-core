@@ -24,20 +24,12 @@
 #include <Publisher.h>
 #include <Bytes.h>
 #include <Common.h>
+#include <LispHelper.h>
 
 namespace uniot
 {
-
-namespace lisp
-{
-using Object = struct Obj *;
-using VarObject = struct Obj **;
-using Root = void *;
-Object TRUE = True;
-Object NIL = Nil;
-} // namespace lisp
-
 using namespace lisp;
+
 class unLisp : public GeneralPublisher
 {
 public:

@@ -63,13 +63,13 @@ void test_function_lisp_user_primitive(void)
     UserPrimitive primitive("user", root, env, list);
     primitive.assertArgs(3, BoolInt, Int, Bool);
 
-    return TRUE;
+    return primitive.makeBool(true);
   });
 
   unLisp::getInstance().runCode("(user 2 3 #t)");
   auto result = unLisp::getInstance().popOutput();
 
-  TEST_ASSERT_EQUAL_STRING("5", result.c_str());
+  TEST_ASSERT_EQUAL_STRING("#t", result.c_str());
 }
 
 void test_function_lisp_full_cycle(void)

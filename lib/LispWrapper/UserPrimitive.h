@@ -18,19 +18,11 @@
 
 #pragma once
 
-#include <functional>
-#include <unLisp.h>
 #include <Arduino.h>
+#include <LispHelper.h>
 
 namespace uniot
 {
-enum LispType
-{
-  Int,
-  Bool,
-  BoolInt,
-  Symbol
-};
 
 class UserPrimitive
 {
@@ -101,6 +93,11 @@ public:
         error("[%s] Invalid type of %d parameter", mName.c_str(), i + 1);
     }
     va_end(args);
+  }
+
+  Object makeBool(bool value)
+  {
+    return value ? True : Nil;
   }
 
 private:
