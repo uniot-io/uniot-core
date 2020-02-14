@@ -19,9 +19,11 @@
 #include <Arduino.h>
 #include <Board-WittyCloud.h>
 
+#include "test_data_map.h"
 #include "test_data_bytes.h"
 #include "test_data_cbor.h"
 #include "test_data_lisp.h"
+#include "test_data_links_register.h"
 
 // void setUp(void) {
 // // set stuff up here
@@ -35,6 +37,9 @@ void process()
 {
   UNITY_BEGIN();
 
+  // test_data_map.h
+  RUN_TEST(test_function_map_get);
+  RUN_TEST(test_function_map_check_replace);
   // test_data_bytes.h
   RUN_TEST(test_function_bytes_terminate);
   // test_data_cbor.h
@@ -45,7 +50,10 @@ void process()
   RUN_TEST(test_function_lisp_simple);
   RUN_TEST(test_function_lisp_native_primitive);
   RUN_TEST(test_function_lisp_user_primitive);
+  RUN_TEST(test_function_lisp_user_primitive_register);
   RUN_TEST(test_function_lisp_full_cycle);
+  // test_data_links_register.h
+  RUN_TEST(test_function_links_register);
 
   UNITY_END();
 }

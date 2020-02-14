@@ -72,6 +72,26 @@ void test_function_lisp_user_primitive(void)
   TEST_ASSERT_EQUAL_STRING("#t", result.c_str());
 }
 
+void test_function_lisp_user_primitive_register(void)
+{
+  int number = 100500;
+  UserPrimitive::getGlobalRegister().link("external", &number);
+
+  unLisp::getInstance().pushPrimitive("external", [](Root root, VarObject env, VarObject list) {
+    UserPrimitive primitive("external", root, env, list);
+    primitive.assertArgs(0);
+
+    auto value = primitive.getCurrentRegister().first<int>();
+
+    return primitive.makeInt(*value);
+  });
+
+  unLisp::getInstance().runCode("(external)");
+  auto result = unLisp::getInstance().popOutput();
+
+  TEST_ASSERT_EQUAL_STRING("100500", result.c_str());
+}
+
 void test_function_lisp_full_cycle(void)
 {
   // test variables
