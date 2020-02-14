@@ -20,7 +20,7 @@
 
 #include <Arduino.h>
 
-#if defined( ESP8266 )
+#ifdef __cplusplus
 #include <functional>
 #endif
 
@@ -31,11 +31,14 @@ template<typename T>
  class ClearQueue {
  public:
 
-#if defined( ESP8266 )
+#ifdef __cplusplus
   typedef std::function<void(T)> VoidCallback;
 #else
   typedef void (*VoidCallback)(T);
 #endif
+
+  ClearQueue(ClearQueue const &) = delete;
+  void operator=(ClearQueue const &) = delete;
 
   ClearQueue();
   virtual ~ClearQueue();

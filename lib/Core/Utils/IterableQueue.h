@@ -27,6 +27,7 @@ public:
   void begin();
   bool isEnd();
   T next();
+  T current();
 
 protected:
   typename ClearQueue<T>::pnode mCurrent;
@@ -47,4 +48,9 @@ T IterableQueue<T>::next() {
   auto prevCurrent = mCurrent;
   mCurrent = mCurrent->next;
   return prevCurrent->value;
+}
+
+template<typename T>
+T IterableQueue<T>::current() {
+  return mCurrent->value;
 }

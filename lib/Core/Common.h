@@ -19,12 +19,7 @@
 #pragma once
 
 #include <memory>
-
-template <typename T>
-using UniquePointer = std::unique_ptr<T>;
-
-template <typename T>
-using SharedPointer = std::shared_ptr<T>;
+#include <utility>
 
 template <int a, int b, int c, int d>
 struct FourCC
@@ -35,3 +30,28 @@ struct FourCC
 #define COUNT_OF(arr) (sizeof(arr) / sizeof(arr[0]))
 #define ARRAY_ELEMENT_SAFE(arr, index) ((arr)[(((index) < COUNT_OF(arr)) ? (index) : (COUNT_OF(arr) - 1))])
 #define FOURCC(name) FourCC<ARRAY_ELEMENT_SAFE(#name, 0), ARRAY_ELEMENT_SAFE(#name, 1), ARRAY_ELEMENT_SAFE(#name, 2), ARRAY_ELEMENT_SAFE(#name, 3)>::Value
+
+#define ALIAS_FUNCTION(high, low)                                               \
+  template <typename... Args>                                                   \
+  inline auto high(Args &&... args)->decltype(low(std::forward<Args>(args)...)) \
+  {                                                                             \
+    return low(std::forward<Args>(args)...);                                    \
+  }
+
+namespace uniot
+{
+
+template <typename T>
+using UniquePointer = std::unique_ptr<T>;
+
+template <typename T>
+using SharedPointer = std::shared_ptr<T>;
+
+template <typename T_First, typename T_Second>
+using Pair = std::pair<T_First, T_Second>;
+
+ALIAS_FUNCTION(MakePair, std::make_pair)
+
+ALIAS_FUNCTION(MakeShared, std::make_shared)
+
+} // namespace uniot
