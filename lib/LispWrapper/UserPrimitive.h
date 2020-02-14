@@ -20,6 +20,7 @@
 
 #include <Arduino.h>
 #include <LispHelper.h>
+#include <LinksRegisterProxy.h>
 
 namespace uniot
 {
@@ -28,8 +29,20 @@ class UserPrimitive
 {
 public:
   UserPrimitive(const String &name, Root root, VarObject env, VarObject list)
-      : mName(name), mRoot(root), mEnv(env), mList(list), mEvalList(nullptr)
+      : mName(name), mRoot(root), mEnv(env), mList(list),
+        mEvalList(nullptr),
+        mRegisterProxy(name, &sRegister)
   {
+  }
+
+  static LinksRegister &getGlobalRegister()
+  {
+    return sRegister;
+  }
+
+  LinksRegisterProxy &getCurrentRegister()
+  {
+    return mRegisterProxy;
   }
 
   int getArgsLength()
@@ -68,7 +81,8 @@ public:
     return false;
   }
 
-  Object evalList() {
+  Object evalList()
+  {
     if (!mEvalList)
       mEvalList = eval_list(mRoot, mEnv, mList);
     return mEvalList;
@@ -78,6 +92,9 @@ public:
   {
     if (getArgsLength() != length)
       error("[%s] Wrong number of params", mName.c_str());
+
+    if (length <= 0)
+      return;
 
     va_list args;
     va_start(args, length);
@@ -100,12 +117,22 @@ public:
     return value ? True : Nil;
   }
 
+  Object makeInt(int value)
+  {
+    return make_int(mRoot, value);
+  }
+
 private:
   String mName;
   Root mRoot;
   VarObject mEnv;
   VarObject mList;
   Object mEvalList;
+
+  LinksRegisterProxy mRegisterProxy;
+  static LinksRegister sRegister;
 };
+
+LinksRegister UserPrimitive::sRegister;
 
 } // namespace uniot
