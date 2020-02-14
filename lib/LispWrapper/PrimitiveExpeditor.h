@@ -25,10 +25,10 @@
 namespace uniot
 {
 
-class UserPrimitive
+class PrimitiveExpeditor
 {
 public:
-  UserPrimitive(const String &name, Root root, VarObject env, VarObject list)
+  PrimitiveExpeditor(const String &name, Root root, VarObject env, VarObject list)
       : mName(name), mRoot(root), mEnv(env), mList(list),
         mEvalList(nullptr),
         mRegisterProxy(name, &sRegister)
@@ -133,6 +133,6 @@ private:
   static LinksRegister sRegister;
 };
 
-LinksRegister UserPrimitive::sRegister;
+LinksRegister PrimitiveExpeditor::sRegister;
 
 } // namespace uniot

@@ -21,7 +21,7 @@
 #include <unity.h>
 
 #include <unLisp.h>
-#include <UserPrimitive.h>
+#include <PrimitiveExpeditor.h>
 #include <Broker.h>
 #include <CallbackSubscriber.h>
 
@@ -60,7 +60,7 @@ void test_function_lisp_native_primitive(void)
 void test_function_lisp_user_primitive(void)
 {
   unLisp::getInstance().pushPrimitive("user", [](Root root, VarObject env, VarObject list) {
-    UserPrimitive primitive("user", root, env, list);
+    PrimitiveExpeditor primitive("user", root, env, list);
     primitive.assertArgs(3, BoolInt, Int, Bool);
 
     return primitive.makeBool(true);
@@ -75,10 +75,10 @@ void test_function_lisp_user_primitive(void)
 void test_function_lisp_user_primitive_register(void)
 {
   int number = 100500;
-  UserPrimitive::getGlobalRegister().link("external", &number);
+  PrimitiveExpeditor::getGlobalRegister().link("external", &number);
 
   unLisp::getInstance().pushPrimitive("external", [](Root root, VarObject env, VarObject list) {
-    UserPrimitive primitive("external", root, env, list);
+    PrimitiveExpeditor primitive("external", root, env, list);
     primitive.assertArgs(0);
 
     auto value = primitive.getCurrentRegister().first<int>();
