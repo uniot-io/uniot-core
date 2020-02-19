@@ -24,6 +24,7 @@
 #include "test_data_cbor.h"
 #include "test_data_lisp.h"
 #include "test_data_links_register.h"
+#include "test_data_lisp_primitives.h"
 
 // void setUp(void) {
 // // set stuff up here
@@ -50,10 +51,14 @@ void process()
   RUN_TEST(test_function_lisp_simple);
   RUN_TEST(test_function_lisp_native_primitive);
   RUN_TEST(test_function_lisp_user_primitive);
+  RUN_TEST(test_function_lisp_user_primitive_inline);
+  RUN_TEST(test_function_lisp_user_primitive_without_check);
   RUN_TEST(test_function_lisp_user_primitive_register);
   RUN_TEST(test_function_lisp_full_cycle);
   // test_data_links_register.h
   RUN_TEST(test_function_links_register);
+  // test_data_lisp_primitives.h
+  RUN_TEST(test_function_lisp_primitive_led);
 
   UNITY_END();
 }
@@ -66,16 +71,17 @@ void setup()
 
   pinMode(RED, OUTPUT);
   pinMode(BLUE, OUTPUT);
+  pinMode(GREEN, OUTPUT);
 
   process();
 }
 
 void loop()
 {
-  digitalWrite(RED, HIGH);
-  digitalWrite(BLUE, HIGH);
-  delay(100);
-  digitalWrite(RED, LOW);
-  digitalWrite(BLUE, LOW);
-  delay(500);
+  // digitalWrite(RED, HIGH);
+  // digitalWrite(BLUE, HIGH);
+  // delay(100);
+  // digitalWrite(RED, LOW);
+  // digitalWrite(BLUE, LOW);
+  // delay(500);
 }

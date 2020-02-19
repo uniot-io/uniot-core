@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <Arduino.h>
 #include <unity.h>
 
 #include <unLisp.h>
@@ -60,16 +61,49 @@ void test_function_lisp_native_primitive(void)
 void test_function_lisp_user_primitive(void)
 {
   unLisp::getInstance().pushPrimitive("user", [](Root root, VarObject env, VarObject list) {
-    PrimitiveExpeditor primitive("user", root, env, list);
-    primitive.assertArgs(3, BoolInt, Int, Bool);
+    PrimitiveExpeditor expeditor("user", root, env, list);
+    expeditor.assertArgs(3, Lisp::BoolInt, Lisp::Int, Lisp::Bool);
 
-    return primitive.makeBool(true);
+    return expeditor.makeBool(true);
   });
 
   unLisp::getInstance().runCode("(user 2 3 #t)");
   auto result = unLisp::getInstance().popOutput();
 
   TEST_ASSERT_EQUAL_STRING("#t", result.c_str());
+}
+
+void test_function_lisp_user_primitive_inline(void)
+{
+  unLisp::getInstance().pushPrimitive(inlinePrimitive("inline", expeditor, {
+    expeditor.assertArgs(1, Lisp::Int);
+
+    auto x = expeditor.getArgInt(0);
+    return expeditor.makeInt(x);
+  }));
+
+  unLisp::getInstance().runCode("(inline (+ 1 1))");
+  auto result = unLisp::getInstance().popOutput();
+
+  TEST_ASSERT_EQUAL_STRING("2", result.c_str());
+}
+
+void test_function_lisp_user_primitive_without_check(void)
+{
+  unLisp::getInstance().pushPrimitive(inlinePrimitive("inline", expeditor, {
+    expeditor.assertArgsCount(3);
+
+    auto x = expeditor.getArgSymbol(0);
+    auto y = expeditor.getArgInt(1);
+    auto z = expeditor.getArgBool(2);
+    return expeditor.makeSymbol((String(x) + " = " + y + (z ? " true" : " false")).c_str()); // wrong usage of String buffer, but ok
+  }));
+
+  unLisp::getInstance().runCode("(define a 5) (inline test (+ a 1) () )");
+  unLisp::getInstance().popOutput();
+  auto result = unLisp::getInstance().popOutput();
+
+  TEST_ASSERT_EQUAL_STRING("test = 6 false", result.c_str());
 }
 
 void test_function_lisp_user_primitive_register(void)
