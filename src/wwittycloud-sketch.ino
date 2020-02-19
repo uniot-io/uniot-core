@@ -11,6 +11,7 @@
 #include <CBOR.h>
 #include <AppKit.h>
 #include <Storage.h>
+#include <LispPrimitives.h>
 
 using namespace uniot;
 
@@ -18,7 +19,7 @@ AppKit MainAppKit(MyCredentials, PIN_BUTTON, LOW, RED);
 
 String DeviceId = String(ESP.getChipId(), HEX); // TODO: CBOR: implement storage for dynamic values 
 
-MQTTDevice mqttDevice([](MQTTDevice *device, const String &topic, const Bytes &pa) {
+CallbackMQTTDevice mqttDevice([](MQTTDevice *device, const String &topic, const Bytes &pa) {
   Serial.println(topic);
   Serial.write(pa.raw(), pa.size());
   Serial.println();
@@ -47,45 +48,6 @@ auto taskPrintOwner = TaskScheduler::make([&](short t) {
   // Serial.println(WiFi.status());
   // Serial.println(analogRead(LDR));
 });
-
-struct Obj *user_prim_led(void *root, struct Obj **env, struct Obj **list)
-{
-  auto args = eval_list(root, env, list);
-  if (length(args) != 2)
-    error("Malformed task");
-
-  auto objColor = args->car;
-  auto objState = args->cdr->car;
-
-  // TODO: check types
-  // TODO: allow bool too
-
-  auto color = objColor->value;
-  auto state = objState != Nil;
-  if (objState->type == TINT)
-  {
-    state = objState->value != 0;
-  }
-
-  uint8_t pin = 0;
-  switch (color)
-  {
-  case 0:
-    pin = RED;
-    break;
-  case 1:
-    pin = GREEN;
-    break;
-  case 2:
-    pin = BLUE;
-    break;
-  default:
-    error("Out of range: color: [0, 1, 2]");
-  }
-
-  digitalWrite(pin, state);
-  return objState;
-}
 
 struct Obj *user_prim_ldr(void *root, struct Obj **env, struct Obj **list)
 {

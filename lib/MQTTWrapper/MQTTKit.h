@@ -27,6 +27,7 @@
 #include <Bytes.h>
 #include <CBOR.h>
 #include "MQTTDevice.h"
+#include "CallbackMQTTDevice.h"
 #include "MQTTPath.h"
 
 namespace uniot
@@ -47,10 +48,9 @@ public:
   {
     mPubSubClient.setCallback([this](char *topic, uint8_t *payload, unsigned int length) {
       mDevices.forEach([&](MQTTDevice *device) {
-        MQTTDevice::Handler callbackHandler = device->handler();
-        if (callbackHandler && device->isSubscribed(String(topic)))
+        if (device->isSubscribed(String(topic)))
         {
-          callbackHandler(device, topic, Bytes(payload, length));
+          device->handle(topic, Bytes(payload, length));
         }
       });
     });
