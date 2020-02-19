@@ -56,6 +56,11 @@ public:
     });
   }
 
+  ~MQTTKit()
+  {
+    // TODO: implement, remove all devices
+  }
+
   void setServer(const char *domain, uint16_t port)
   {
     mPubSubClient.setServer(domain, port);
@@ -72,6 +77,15 @@ public:
     }
   }
 
+  void addDevice(MQTTDevice *device, const String &subTopic)
+  {
+    if (!mDevices.contains(device))
+    {
+      device->subscribe(mPath.buildDevicePath(subTopic));
+      addDevice(device);
+    }
+  }
+
   void removeDevice(MQTTDevice *device)
   {
     if (mDevices.removeOne(device))
@@ -81,6 +95,11 @@ public:
         mPubSubClient.unsubscribe(topic.c_str());
       });
     }
+  }
+
+  const MQTTPath &getPath()
+  {
+    return mPath;
   }
 
   virtual uint8_t execute() override

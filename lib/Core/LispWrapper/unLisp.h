@@ -25,6 +25,7 @@
 #include <Bytes.h>
 #include <Common.h>
 #include <LispHelper.h>
+#include <PrimitiveExpeditor.h>
 
 namespace uniot
 {
@@ -33,8 +34,8 @@ using namespace lisp;
 class unLisp : public GeneralPublisher
 {
 public:
-  enum Topic { OUTPUT_BUF = FOURCC(lisp) };
-  enum Msg { ADDED, REPLACED };
+  enum Topic { LISP = FOURCC(lisp) };
+  enum Msg { MSG_ADDED, MSG_REPLACED, ERROR };
 
   unLisp(unLisp const &) = delete;
   void operator=(unLisp const &) = delete;
@@ -64,13 +65,20 @@ public:
   }
 
   void runCode(const Bytes& data) {
+    if (!data.size())
+      return;
+
     mLastCode = data;
+    mLastError = "";
 
     mTaskLispEval->detach();
     _destroyMachine();
     _createMachine();
     
-    lisp_eval(mLispRoot, mLispEnv, mLastCode.terminate().c_str());
+    auto code = mLastCode.terminate().c_str();
+    UNIOT_LOG_DEBUG("eval: %s", code);
+
+    lisp_eval(mLispRoot, mLispEnv, code);
     if (!mTaskLispEval->isAtached())
       _destroyMachine();
   }
@@ -89,15 +97,33 @@ public:
     return mOutputBuffer.size();
   }
 
+  const String &getLastError()
+  {
+    return mLastError;
+  }
+
 private:
   unLisp()
   {
-    auto fnPrint = [] (const char *msg, int size) {
-      getInstance()._printToBuf(msg, size);
+    auto fnPrintOut = [](const char *msg, int size) {
+      if (size > 0)
+      {
+        auto &instance = unLisp::getInstance();
+        auto alreadyFull = instance.mOutputBuffer.isFull();
+        instance.mOutputBuffer.pushLimited(String(msg));
+        instance.publish(Topic::LISP, alreadyFull ? Msg::MSG_REPLACED : Msg::MSG_ADDED);
+      }
+      yield();
+    };
+
+    auto fnPrintErr = [](const char *msg, int size) {
+      auto &instance = unLisp::getInstance();
+      instance.mLastError = msg;
+      instance.publish(Topic::LISP, ERROR);
     };
 
     lisp_set_cycle_yield(yield);
-    lisp_set_printers(fnPrint, fnPrint);
+    lisp_set_printers(fnPrintOut, fnPrintErr);
 
     _constructLispEnv();
 
@@ -152,34 +178,25 @@ private:
 
   inline Object _primTask(Root root, VarObject env, VarObject list)
   {
-    auto args = eval_list(root, env, list);
-    if (length(args) != 3)
-      error("Malformed task");
+    PrimitiveExpeditor expeditor("task", root, env, list);
+    expeditor.assertArgs(3, Lisp::Int, Lisp::Int, Lisp::Cell);
 
-    auto times = args->car;
-    auto ms = args->cdr->car;
-    auto obj = args->cdr->cdr->car;
+    auto times = expeditor.getArgInt(0);
+    auto ms = expeditor.getArgInt(1);
+    auto obj = expeditor.getArg(2);
 
-    // TODO: check types
+    UNIOT_LOG_DEBUG("%d", obj->type);
 
     DEFINE1(t_obj);
     *t_obj = get_variable(root, env, "#t_obj");
     (*t_obj)->cdr = obj;
 
-    mTaskLispEval->attach(ms->value, times->value);
-    return True;
-  }
-
-  inline void _printToBuf(const char *msg, int size) {
-    if(size > 0) {
-      bool alreadyFull = mOutputBuffer.isFull();
-      mOutputBuffer.pushLimited(String(msg));
-      publish(Topic::OUTPUT_BUF, alreadyFull ? Msg::REPLACED : Msg::ADDED);
-    }
-    yield();
+    mTaskLispEval->attach(ms, times);
+    return expeditor.makeBool(true);
   }
 
   Bytes mLastCode;
+  String mLastError;
   LimitedQueue<String> mOutputBuffer;
   TaskScheduler::TaskPtr mTaskLispEval;
   ClearQueue<std::pair<String, Primitive*>> mUserPrimitives;

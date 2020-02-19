@@ -23,7 +23,7 @@
 #include <Arduino.h>
 
 #ifndef UNIOT_LOG_BUF_SIZE
-#define UNIOT_LOG_BUF_SIZE 128
+#define UNIOT_LOG_BUF_SIZE 256
 #endif
 
 #ifndef UNIOT_LOG_PRINT

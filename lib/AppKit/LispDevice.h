@@ -18,31 +18,23 @@
 
 #pragma once
 
-#include <functional>
+#include <unLisp.h>
 #include <MQTTDevice.h>
-#include <Logger.h>
 
 namespace uniot
 {
 
-class CallbackMQTTDevice : public MQTTDevice
+class LispDevice : public MQTTDevice
 {
 public:
-  using Handler = std::function<void(MQTTDevice *device, const String &topic, const Bytes &payload)>;
-
-  CallbackMQTTDevice(Handler handler)
-      : MQTTDevice(),
-        mHandler(handler)
+  LispDevice() : MQTTDevice()
   {
   }
 
-protected:
   void handle(const String &topic, const Bytes &payload) override
   {
-    UNIOT_LOG_DEBUG("topic: %s", topic.c_str());
-    mHandler(this, topic, payload);
+    unLisp::getInstance().runCode(payload);
   }
-
-  Handler mHandler;
 };
+
 } // namespace uniot

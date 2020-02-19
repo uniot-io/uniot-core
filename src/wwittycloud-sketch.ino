@@ -12,6 +12,7 @@
 #include <AppKit.h>
 #include <Storage.h>
 #include <LispPrimitives.h>
+#include <Logger.h>
 
 using namespace uniot;
 
@@ -20,19 +21,11 @@ AppKit MainAppKit(MyCredentials, PIN_BUTTON, LOW, RED);
 String DeviceId = String(ESP.getChipId(), HEX); // TODO: CBOR: implement storage for dynamic values 
 
 CallbackMQTTDevice mqttDevice([](MQTTDevice *device, const String &topic, const Bytes &pa) {
-  Serial.println(topic);
-  Serial.write(pa.raw(), pa.size());
-  Serial.println();
-
   if (topic.endsWith("script")) {
     unLisp::getInstance().runCode(pa);
   }
 
   if (topic.endsWith("online/request")) {
-    // CBOR packet;
-    // packet.put("id", DeviceId.c_str()); // TODO: CBOR: implement storage for dynamic values
-    // packet.put("type", "rgb");
-
     mqttDevice.publish("bits/TEST/online/response", CBOR().put("id", DeviceId.c_str()).put("type", "relay").build());
   }
 });

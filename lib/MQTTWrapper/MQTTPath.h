@@ -29,7 +29,7 @@ public:
   {
   }
 
-  String buildDevicePath(const String &topic)
+  String buildDevicePath(const String &topic) const
   {
     return mPrefix + "/"
             + mpCredentials->getOwnerId() + "/"
@@ -37,20 +37,21 @@ public:
             + topic;
   }
 
-  String buildGroupPath(const String &topic)
+  String buildGroupPath(const String &topic) const
   {
     return mPrefix + "/"
             + mpCredentials->getOwnerId() + "/"
             + topic;
   }
 
-  String buildPublicPath(const String &topic)
+  String buildPublicPath(const String &topic) const
   {
     return mPrefix + "/"
             + topic;
   }
 
-  const Credentials *getCredentials() const {
+  const Credentials *getCredentials() const
+  {
     return mpCredentials;
   }
 

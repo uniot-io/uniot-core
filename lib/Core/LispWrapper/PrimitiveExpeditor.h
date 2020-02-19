@@ -24,6 +24,7 @@
 
 namespace uniot
 {
+using namespace lisp;
 
 class PrimitiveExpeditor
 {
@@ -192,7 +193,7 @@ public:
     return arg->value;
   }
 
-  const char* getArgSymbol(int idx)
+  const char *getArgSymbol(int idx)
   {
     auto arg = getArg(idx);
 

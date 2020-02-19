@@ -141,7 +141,7 @@ void test_function_lisp_full_cycle(void)
   });
 
   // subscribe to the topic and connect subscriber to broker
-  broker.connect(subscriber.subscribe(unLisp::OUTPUT_BUF));
+  broker.connect(subscriber.subscribe(unLisp::LISP));
 
   // connect publisher to broker
   broker.connect(&unLisp::getInstance());

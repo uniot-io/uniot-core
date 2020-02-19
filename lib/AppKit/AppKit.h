@@ -25,6 +25,8 @@
 #include <unLisp.h>
 #include <IBrokerKitConnection.h>
 #include <ISchedulerKitConnection.h>
+#include <Logger.h>
+#include <LispDevice.h>
 
 namespace uniot
 {
@@ -34,10 +36,11 @@ public:
   AppKit(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
       : mMQTT(credentials), mNetworkDevice(credentials, pinBtn, activeLevelBtn, pinLed)
   {
+    _initMqtt();
     _initSubscribers();
   }
 
-  unLisp &getInterpreter()
+  unLisp &getLisp()
   {
     return unLisp::getInstance();
   }
@@ -56,7 +59,7 @@ public:
   {
     scheduler->push(&mNetworkDevice);
     scheduler->push(mTaskMQTT = TaskScheduler::make(&mMQTT));
-    scheduler->push(unLisp::getInstance().getTask());
+    scheduler->push(getLisp().getTask());
   }
 
   void attach()
@@ -67,20 +70,26 @@ public:
   void connect(GeneralBroker *broker)
   {
     broker->connect(&mNetworkDevice);
-    broker->connect(&unLisp::getInstance());
+    broker->connect(&getLisp());
     broker->connect(mpSubscriberNetwork->subscribe(NetworkScheduler::CONNECTION));
-    broker->connect(mpSubscriberLisp->subscribe(unLisp::OUTPUT_BUF));
+    broker->connect(mpSubscriberLisp->subscribe(unLisp::LISP));
   }
 
   void disconnect(GeneralBroker *broker)
   {
     broker->disconnect(&mNetworkDevice);
-    broker->disconnect(&unLisp::getInstance());
+    broker->disconnect(&getLisp());
     broker->disconnect(mpSubscriberNetwork->unsubscribe(NetworkScheduler::CONNECTION));
-    broker->disconnect(mpSubscriberLisp->unsubscribe(unLisp::OUTPUT_BUF));
+    broker->disconnect(mpSubscriberLisp->unsubscribe(unLisp::LISP));
   }
 
 private:
+  void _initMqtt()
+  {
+    // TODO: mMQTT.setServer("broker.uniot.io", 1883);
+    mMQTT.addDevice(&mLispDevice, "script");
+  }
+
   void _initSubscribers()
   {
     mpSubscriberNetwork = std::unique_ptr<GeneralSubscriber>(new GeneralCallbackSubscriber([&](int topic, int msg) {
@@ -117,20 +126,23 @@ private:
       }
     }));
     mpSubscriberLisp = std::unique_ptr<GeneralSubscriber>(new GeneralCallbackSubscriber([&](int topic, int msg) {
-      auto size = unLisp::getInstance().sizeOutput();
-      auto result = unLisp::getInstance().popOutput();
-      if (msg == unLisp::ADDED)
+      if (msg == unLisp::ERROR)
       {
-        Serial.println(":) ADDED: " + String(size) + " : " + result);
+        auto lastError = getLisp().getLastError().c_str();
+        UNIOT_LOG_ERROR("lisp error: %s", lastError);
       }
-      else
+      else if (msg == unLisp::MSG_ADDED)
       {
-        Serial.println(":) REPLACED: " + String(size) + " : " + result);
+        auto size = getLisp().sizeOutput();
+        auto result = getLisp().popOutput();
+        UNIOT_LOG_INFO("%s, %d msgs to read; %s", msg == unLisp::MSG_ADDED ? "added" : "replaced", size, result.c_str());
       }
     }));
   }
 
   MQTTKit mMQTT;
+  LispDevice mLispDevice;
+
   NetworkDevice mNetworkDevice;
 
   TaskScheduler::TaskPtr mTaskMQTT;
