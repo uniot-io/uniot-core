@@ -47,33 +47,41 @@ public:
 
   int getArgsLength()
   {
-    return length(*mList);
+    return length(list());
   }
 
-  bool checkType(Object param, LispType type)
+  bool checkType(Object param, Lisp::Type type)
   {
-    auto paramType = param->car->type;
+    auto paramType = param->type;
     switch (type)
     {
-    case Int:
+    case Lisp::Int:
       if (paramType == TINT)
         return true;
       break;
 
-    case Bool:
+    case Lisp::Bool:
       if (paramType == TNIL || paramType == TTRUE)
         return true;
       break;
 
-    case BoolInt:
+    case Lisp::BoolInt:
       if (paramType == TINT || paramType == TNIL || paramType == TTRUE)
         return true;
       break;
 
-    case Symbol:
+    case Lisp::Symbol:
       if (paramType == TSYMBOL)
         return true;
       break;
+
+    case Lisp::Cell:
+      if (paramType == TCELL)
+        return true;
+      break;
+
+    case Lisp::Any:
+      return true;
 
     default:
       break;
@@ -88,10 +96,33 @@ public:
     return mEvalList;
   }
 
+  Object list()
+  {
+    if (!mEvalList)
+      return *mList;
+    return mEvalList;
+  }
+
+  Object evalObj(VarObject obj)
+  {
+    return eval(mRoot, mEnv, obj);
+  }
+
+  void terminate(const char *msg)
+  {
+    error("[%s] %s", mName.c_str(), msg);
+  }
+
+  void assertArgsCount(int length)
+  {
+    if (getArgsLength() != length)
+      error_wrong_params_number();
+  }
+
   void assertArgs(int length, ...)
   {
     if (getArgsLength() != length)
-      error("[%s] Wrong number of params", mName.c_str());
+      error_wrong_params_number();
 
     if (length <= 0)
       return;
@@ -104,12 +135,71 @@ public:
     {
       auto type = va_arg(args, int);
 
+      if (!Lisp::correct(static_cast<Lisp::Type>(type)))
+        error("[%s] Type for %d parameter is not set", mName.c_str(), i);
       if (param == Nil)
-        error("[%s] Unexpected end of params list at %d", mName.c_str(), i + 1);
-      if (!checkType(param, static_cast<LispType>(type)))
-        error("[%s] Invalid type of %d parameter", mName.c_str(), i + 1);
+        error("[%s] Unexpected end of params list at %d", mName.c_str(), i);
+      if (!checkType(param->car, static_cast<Lisp::Type>(type)))
+        error_invalid_type(i, static_cast<Lisp::Type>(type));
     }
     va_end(args);
+  }
+
+  Object getArg(int idx)
+  {
+    const auto length = getArgsLength();
+    if (idx >= length)
+      error("[%s] Trying to get %d arg out of %d", mName.c_str(), idx, length);
+
+    auto param = list();
+    for (auto i = 0; i < idx; i++, param = param->cdr)
+      ;
+
+    return param->car;
+  }
+
+  bool getArgBool(int idx, bool acceptsInt = true)
+  {
+    auto arg = getArg(idx);
+    if (!mEvalList)
+      arg = evalObj(&arg);
+
+    auto type = acceptsInt ? Lisp::BoolInt : Lisp::Bool;
+    if (!checkType(arg, type))
+      error_invalid_type(idx, type);
+
+    switch (arg->type)
+    {
+    case TINT:
+      return arg->value != 0;
+    case TTRUE:
+      return true;
+    case TNIL:
+    default:
+      return false;
+    }
+  }
+
+  int getArgInt(int idx)
+  {
+    auto arg = getArg(idx);
+    if (!mEvalList)
+      arg = evalObj(&arg);
+
+    if (!checkType(arg, Lisp::Int))
+      error_invalid_type(idx, Lisp::Int);
+
+    return arg->value;
+  }
+
+  const char* getArgSymbol(int idx)
+  {
+    auto arg = getArg(idx);
+
+    if (!checkType(arg, Lisp::Symbol))
+      error_invalid_type(idx, Lisp::Symbol);
+
+    return arg->name;
   }
 
   Object makeBool(bool value)
@@ -122,7 +212,22 @@ public:
     return make_int(mRoot, value);
   }
 
+  Object makeSymbol(const char *value)
+  {
+    return make_symbol(mRoot, value);
+  }
+
 private:
+  void error_invalid_type(int idx, Lisp::Type type)
+  {
+    error("[%s] Invalid type of %d parameter, expected <%s>", mName.c_str(), idx, Lisp::str(type));
+  }
+
+  void error_wrong_params_number()
+  {
+    error("[%s] Wrong number of params", mName.c_str());
+  }
+
   String mName;
   Root mRoot;
   VarObject mEnv;

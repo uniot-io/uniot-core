@@ -20,6 +20,15 @@
 
 #include <libminilisp.h>
 
+#define inlinePrimitive(name, expiditor, body)           \
+  name, [](Root root, VarObject env, VarObject list) {   \
+    PrimitiveExpeditor expiditor(name, root, env, list); \
+    {                                                    \
+      body                                               \
+    }                                                    \
+    return expiditor.makeBool(false);                    \
+  }
+
 namespace uniot
 {
 
@@ -30,12 +39,38 @@ using VarObject = struct Obj **;
 using Root = void *;
 } // namespace lisp
 
-enum LispType
+class Lisp
 {
-  Int,
-  Bool,
-  BoolInt,
-  Symbol
+public:
+  enum Type
+  {
+    Int,
+    Bool,
+    BoolInt,
+    Symbol,
+    Cell,
+
+    Any
+  };
+
+  static inline bool correct(Lisp::Type type)
+  {
+    return (type >= Type::Int && type <= Lisp::Type::Any);
+  }
+
+  static inline const char *str(Lisp::Type type)
+  {
+    static const char *unknown = "unknown";
+    static const char *map[] = {
+        "Int",
+        "Bool",
+        "Bool/Int",
+        "Symbol",
+        "Cell",
+
+        "Any"};
+    return correct(type) ? map[type] : unknown;
+  }
 };
 
-}
+} // namespace uniot
