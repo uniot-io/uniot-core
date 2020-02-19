@@ -6,7 +6,8 @@
             "-I Network",
             "-I Storage",
             "-I Utils",
-            "-I CBORWrapper"
+            "-I CBORWrapper",
+            "-I LispWrapper"
         ],
         "srcDir": ".",
         "srcFilter": [
@@ -15,7 +16,8 @@
             "+<Network/*>",
             "+<Storage/*>",
             "+<Utils/*>",
-            "+<CBORWrapper/*>"
+            "+<CBORWrapper/*>",
+            "+<LispWrapper/*>"
         ]
     }
 }
