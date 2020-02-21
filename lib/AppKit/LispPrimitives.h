@@ -22,35 +22,93 @@
 #include <PrimitiveExpeditor.h>
 #include <LispHelper.h>
 
+#if not defined(UNIOT_DIGITAL_PIN_MAP)
+#error "You must define UNIOT_DIGITAL_PIN_MAP and UNIOT_DIGITAL_PIN_LENGTH to be able to use primitives such as 'dwrite' and 'dread'"
+#elif not defined (UNIOT_DIGITAL_PIN_LENGTH)
+#error "You must define UNIOT_DIGITAL_PIN_MAP and UNIOT_DIGITAL_PIN_LENGTH to be able to use primitives such as 'dwrite' and 'dread'"
+#endif
+
+#if not defined(UNIOT_ANALOG_W_PIN_MAP)
+#error "You must define UNIOT_ANALOG_W_PIN_MAP and UNIOT_ANALOG_W_PIN_LENGTH to be able to use primitives such as 'awrite'"
+#elif not defined(UNIOT_ANALOG_W_PIN_LENGTH)
+#error "You must define UNIOT_ANALOG_W_PIN_MAP and UNIOT_ANALOG_W_PIN_LENGTH to be able to use primitives such as 'awrite'"
+#endif
+
+#if not defined(UNIOT_ANALOG_R_PIN_MAP)
+#error "You must define UNIOT_ANALOG_R_PIN_MAP and UNIOT_ANALOG_R_PIN_LENGTH to be able to use primitives such as 'aread'"
+#elif not defined(UNIOT_ANALOG_R_PIN_LENGTH)
+#error "You must define UNIOT_ANALOG_R_PIN_MAP and UNIOT_ANALOG_R_PIN_LENGTH to be able to use primitives such as 'aread'"
+#endif
+
 namespace uniot
+{
+namespace primitive
 {
 using namespace lisp;
 
-Object user_prim_led(Root root, VarObject env, VarObject list)
+Object dwrite(Root root, VarObject env, VarObject list)
 {
-  PrimitiveExpeditor expiditor("led", root, env, list);
+  exportPrimitiveNameTo(name);
+  PrimitiveExpeditor expiditor(name, root, env, list);
   expiditor.assertArgs(2, Lisp::Int, Lisp::BoolInt);
-  auto color = expiditor.getArgInt(0);
+  auto pin = expiditor.getArgInt(0);
   auto state = expiditor.getArgBool(1);
 
-  uint8_t pin = 0;
-  switch (color)
-  {
-  case 0:
-    pin = RED;
-    break;
-  case 1:
-    pin = GREEN;
-    break;
-  case 2:
-    pin = BLUE;
-    break;
-  default:
-    expiditor.terminate("Out of range: color: [0, 1, 2]");
-  }
+  if (pin >= 0 && pin < UNIOT_DIGITAL_PIN_LENGTH)
+    digitalWrite(UNIOT_DIGITAL_PIN_MAP[pin], state);
+  else
+    expiditor.terminate("pin is out of range");
 
-  digitalWrite(pin, state);
   return expiditor.makeBool(state);
 }
 
+Object dread(Root root, VarObject env, VarObject list)
+{
+  exportPrimitiveNameTo(name);
+  PrimitiveExpeditor expiditor(name, root, env, list);
+  expiditor.assertArgs(1, Lisp::Int);
+  auto pin = expiditor.getArgInt(0);
+  int state = 0;
+
+  if (pin >= 0 && pin < UNIOT_DIGITAL_PIN_LENGTH)
+    state = digitalRead(UNIOT_DIGITAL_PIN_MAP[pin]);
+  else
+    expiditor.terminate("pin is out of range");
+
+  return expiditor.makeBool(state);
+}
+
+Object awrite(Root root, VarObject env, VarObject list)
+{
+  exportPrimitiveNameTo(name);
+  PrimitiveExpeditor expiditor(name, root, env, list);
+  expiditor.assertArgs(2, Lisp::Int, Lisp::Int);
+  auto pin = expiditor.getArgInt(0);
+  auto value = expiditor.getArgInt(1);
+
+  if (pin >= 0 && pin < UNIOT_ANALOG_W_PIN_LENGTH)
+    analogWrite(UNIOT_ANALOG_W_PIN_MAP[pin], value);
+  else
+    expiditor.terminate("pin is out of range");
+
+  return expiditor.makeInt(value);
+}
+
+Object aread(Root root, VarObject env, VarObject list)
+{
+  exportPrimitiveNameTo(name);
+  PrimitiveExpeditor expiditor(name, root, env, list);
+  expiditor.assertArgs(1, Lisp::Int);
+  auto pin = expiditor.getArgInt(0);
+  int value = 0;
+
+  if (pin >= 0 && pin < UNIOT_ANALOG_R_PIN_LENGTH)
+    value = analogRead(UNIOT_ANALOG_R_PIN_MAP[pin]);
+  else
+    expiditor.terminate("pin is out of range");
+
+  return expiditor.makeInt(value);
+}
+
+} // namespace primitive
 } // namespace uniot

@@ -58,7 +58,10 @@ void process()
   // test_data_links_register.h
   RUN_TEST(test_function_links_register);
   // test_data_lisp_primitives.h
-  RUN_TEST(test_function_lisp_primitive_led);
+  RUN_TEST(test_function_lisp_primitive_dwrite);
+  RUN_TEST(test_function_lisp_primitive_dread);
+  RUN_TEST(test_function_lisp_primitive_awrite);
+  RUN_TEST(test_function_lisp_primitive_aread);
 
   UNITY_END();
 }
@@ -72,6 +75,7 @@ void setup()
   pinMode(RED, OUTPUT);
   pinMode(BLUE, OUTPUT);
   pinMode(GREEN, OUTPUT);
+  pinMode(LDR, INPUT);
 
   process();
 }

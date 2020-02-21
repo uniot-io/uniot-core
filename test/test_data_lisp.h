@@ -75,14 +75,14 @@ void test_function_lisp_user_primitive(void)
 
 void test_function_lisp_user_primitive_inline(void)
 {
-  unLisp::getInstance().pushPrimitive(inlinePrimitive("inline", expeditor, {
+  unLisp::getInstance().pushPrimitive(inlinePrimitive(test_inline, expeditor, {
     expeditor.assertArgs(1, Lisp::Int);
 
     auto x = expeditor.getArgInt(0);
     return expeditor.makeInt(x);
   }));
 
-  unLisp::getInstance().runCode("(inline (+ 1 1))");
+  unLisp::getInstance().runCode("(test_inline (+ 1 1))");
   auto result = unLisp::getInstance().popOutput();
 
   TEST_ASSERT_EQUAL_STRING("2", result.c_str());
@@ -90,7 +90,7 @@ void test_function_lisp_user_primitive_inline(void)
 
 void test_function_lisp_user_primitive_without_check(void)
 {
-  unLisp::getInstance().pushPrimitive(inlinePrimitive("inline", expeditor, {
+  unLisp::getInstance().pushPrimitive(inlinePrimitive(test_inline, expeditor, {
     expeditor.assertArgsCount(3);
 
     auto x = expeditor.getArgSymbol(0);
@@ -99,7 +99,7 @@ void test_function_lisp_user_primitive_without_check(void)
     return expeditor.makeSymbol((String(x) + " = " + y + (z ? " true" : " false")).c_str()); // wrong usage of String buffer, but ok
   }));
 
-  unLisp::getInstance().runCode("(define a 5) (inline test (+ a 1) () )");
+  unLisp::getInstance().runCode("(define a 5) (test_inline test (+ a 1) () )");
   unLisp::getInstance().popOutput();
   auto result = unLisp::getInstance().popOutput();
 

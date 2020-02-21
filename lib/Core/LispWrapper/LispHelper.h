@@ -20,14 +20,21 @@
 
 #include <libminilisp.h>
 
-#define inlinePrimitive(name, expiditor, body)           \
-  name, [](Root root, VarObject env, VarObject list) {   \
-    PrimitiveExpeditor expiditor(name, root, env, list); \
-    {                                                    \
-      body                                               \
-    }                                                    \
-    return expiditor.makeBool(false);                    \
+#define inlinePrimitive(name, expiditor, body)            \
+  #name, [](Root root, VarObject env, VarObject list) {   \
+    PrimitiveExpeditor expiditor(#name, root, env, list); \
+    {                                                     \
+      body                                                \
+    }                                                     \
+    return expiditor.makeBool(false);                     \
   }
+
+#define exportPrimitiveNameTo(name) \
+  char name[sizeof(__func__)];      \
+  snprintf(name, sizeof(name), __func__)
+
+#define globalPrimitive(name) \
+  #name, uniot::primitive::name
 
 namespace uniot
 {

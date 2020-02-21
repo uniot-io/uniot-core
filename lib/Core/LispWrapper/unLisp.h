@@ -26,6 +26,7 @@
 #include <Common.h>
 #include <LispHelper.h>
 #include <PrimitiveExpeditor.h>
+#include <Logger.h>
 
 namespace uniot
 {
