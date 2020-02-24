@@ -18,39 +18,35 @@
 
 #pragma once
 
-#include <LinksRegister.h>
+#include <ClearQueue.h>
+#include <Logger.h>
 
 namespace uniot
 {
 
-class LinksRegisterProxy
+class LinkRegisterRecord
 {
 public:
-  LinksRegisterProxy(const String &name, LinksRegister *reg)
-      : mName(name), mpRegister(reg)
+  LinkRegisterRecord()
   {
+    auto success = sRegisteredLinks.pushUnique(this);
+    UNIOT_LOG_DEBUG("record.push [%lu][%d]", this, success);
   }
 
-  bool link(LinksRegister::RecordPtr link)
+  virtual ~LinkRegisterRecord()
   {
-    return mpRegister->link(mName, link);
+    auto success = sRegisteredLinks.removeOne(this);
+    UNIOT_LOG_DEBUG("record.remove [%lu][%d]", this, success);
   }
 
-  template <typename T>
-  T *first()
+  static bool exists(LinkRegisterRecord * record)
   {
-    return mpRegister->first<T>(mName);
-  }
-
-  template <typename T>
-  T *next()
-  {
-    return mpRegister->next<T>(mName);
+    return sRegisteredLinks.contains(record);
   }
 
 private:
-  String mName;
-  LinksRegister *mpRegister;
+  static ClearQueue<LinkRegisterRecord *> sRegisteredLinks;
 };
 
+ClearQueue<LinkRegisterRecord *> LinkRegisterRecord::sRegisteredLinks;
 } // namespace uniot

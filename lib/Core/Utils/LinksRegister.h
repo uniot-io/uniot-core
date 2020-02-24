@@ -21,6 +21,7 @@
 #include <Arduino.h>
 #include <Common.h>
 #include <Map.h>
+#include <LinkRegisterRecord.h>
 
 namespace uniot
 {
@@ -28,7 +29,7 @@ namespace uniot
 class LinksRegister
 {
 public:
-  using VoidPtr = void *;
+  using RecordPtr = LinkRegisterRecord *;
 
   LinksRegister() {}
   virtual ~LinksRegister() {}
@@ -36,10 +37,10 @@ public:
   LinksRegister(LinksRegister const &) = delete;
   void operator=(LinksRegister const &) = delete;
 
-  bool link(const String &name, VoidPtr link)
+  bool link(const String &name, RecordPtr link)
   {
     if (!mMapLinks.exist(name))
-      mMapLinks.put(name, SharedPointer<IterableQueue<VoidPtr>>(new IterableQueue<VoidPtr>()));
+      mMapLinks.put(name, SharedPointer<IterableQueue<RecordPtr>>(new IterableQueue<RecordPtr>()));
 
     return mMapLinks.get(name)->pushUnique(link);
   }
@@ -52,9 +53,7 @@ public:
     auto links = mMapLinks.get(name);
 
     links->begin();
-    if (!links->isEnd())
-      return static_cast<T *>(links->current());
-    return nullptr;
+    return _get<T>(links);
   }
 
   template <typename T>
@@ -64,14 +63,35 @@ public:
       return nullptr;
     auto links = mMapLinks.get(name);
 
+    if (links->isEnd())
+      return nullptr;
+
     links->next();
-    if (!links->isEnd())
-      return static_cast<T *>(links->current());
-    return nullptr;
+    return _get<T>(links);
   }
 
 private:
-  Map<String, SharedPointer<IterableQueue<VoidPtr>>> mMapLinks;
+  template <typename T>
+  T *_get(SharedPointer<IterableQueue<RecordPtr>> links)
+  {
+    if (!links->isEnd())
+    {
+      auto link = links->current();
+      UNIOT_LOG_DEBUG("record.access [%lu]", link);
+      if (LinkRegisterRecord::exists(link))
+      {
+        return static_cast<T *>(link);
+      }
+      else
+      {
+        UNIOT_LOG_DEBUG("record not exists [%lu]", link);
+        links->removeOne(link);
+      }
+    }
+    return nullptr;
+  }
+
+  Map<String, SharedPointer<IterableQueue<RecordPtr>>> mMapLinks;
 };
 
 } // namespace uniot

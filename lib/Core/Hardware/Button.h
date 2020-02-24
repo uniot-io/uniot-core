@@ -19,10 +19,11 @@
 #pragma once
 
 #include <TaskScheduler.h>
+#include <LinkRegisterRecord.h>
 
 namespace uniot
 {
-class Button
+class Button : public LinkRegisterRecord
 {
 public:
   enum Event
@@ -32,7 +33,8 @@ public:
   };
   using ButtonCallback = std::function<void(Button *, Event)>;
   Button(uint8_t pin, uint8_t activeLevel, uint8_t longPressTicks, ButtonCallback commonCallback = nullptr, uint8_t autoResetTicks = 100)
-      : mPin(pin),
+      : LinkRegisterRecord(),
+        mPin(pin),
         mActiveLevel(activeLevel),
         mLongPressTicks(longPressTicks),
         mAutoResetTicks(autoResetTicks),

@@ -25,7 +25,7 @@
 
 #if not defined(UNIOT_DIGITAL_PIN_MAP)
 #error "You must define UNIOT_DIGITAL_PIN_MAP and UNIOT_DIGITAL_PIN_LENGTH to be able to use primitives such as 'dwrite' and 'dread'"
-#elif not defined (UNIOT_DIGITAL_PIN_LENGTH)
+#elif not defined(UNIOT_DIGITAL_PIN_LENGTH)
 #error "You must define UNIOT_DIGITAL_PIN_MAP and UNIOT_DIGITAL_PIN_LENGTH to be able to use primitives such as 'dwrite' and 'dread'"
 #endif
 
@@ -117,12 +117,23 @@ Object bclicked(Root root, VarObject env, VarObject list)
   PrimitiveExpeditor expiditor(name, root, env, list);
   expiditor.assertArgs(1, Lisp::Int);
   auto btnId = expiditor.getArgInt(0);
+  bool value = false;
 
   auto btn = expiditor.getCurrentRegister().first<Button>();
+  if (btnId > 0)
+  {
+    for (int i = 1; i <= btnId; i++)
+    {
+      btn = expiditor.getCurrentRegister().next<Button>();
+      if (!btn)
+        break;
+    }
+  }
 
-  bool value = false;
   if (btn)
     value = btn->resetClick();
+  else
+    expiditor.terminate("wrong button id");
 
   return expiditor.makeBool(value);
 }
