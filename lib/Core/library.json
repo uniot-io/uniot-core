@@ -7,7 +7,8 @@
             "-I Storage",
             "-I Utils",
             "-I CBORWrapper",
-            "-I LispWrapper"
+            "-I LispWrapper",
+            "-I Hardware"
         ],
         "srcDir": ".",
         "srcFilter": [
@@ -17,7 +18,8 @@
             "+<Storage/*>",
             "+<Utils/*>",
             "+<CBORWrapper/*>",
-            "+<LispWrapper/*>"
+            "+<LispWrapper/*>",
+            "+<Hardware/*>"
         ]
     }
 }
