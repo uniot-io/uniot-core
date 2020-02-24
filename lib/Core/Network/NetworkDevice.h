@@ -32,6 +32,7 @@ class NetworkDevice : public IGeneralBrokerKitConnection, public ISchedulerKitCo
 public:
   NetworkDevice(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
       : mNetwork(credentials),
+        mNetworkLastState(NetworkScheduler::SUCCESS),
         mClickCounter(0),
         mPinLed(pinLed),
         mConfigBtn(pinBtn, activeLevelBtn, 30, [&](Button *btn, Button::Event event) {
@@ -118,17 +119,27 @@ public:
     mpTaskSignalLed->attach(200, 1);
   }
 
+
 private:
+  int _resetNetworkLastState(int newState)
+  {
+    auto oldState = mNetworkLastState;
+    mNetworkLastState = newState;
+    return oldState;
+  }
+
   void _initSubscribers()
   {
     mpSubscriberNetwork = std::unique_ptr<GeneralSubscriber>(new GeneralCallbackSubscriber([&](int topic, int msg) {
       if (NetworkScheduler::CONNECTION == topic)
       {
+        int lastState = _resetNetworkLastState(msg);
         switch (msg)
         {
         case NetworkScheduler::ACCESS_POINT:
           Serial.println("NetworkDevice Subscriber, ACCESS_POINT ");
-          statusWaiting();
+          if (lastState != NetworkScheduler::FAILED)
+            statusWaiting();
           break;
 
         case NetworkScheduler::SUCCESS:
@@ -158,6 +169,7 @@ private:
   }
 
   NetworkScheduler mNetwork;
+  int mNetworkLastState;
 
   uint8_t mClickCounter;
   uint8_t mPinLed;

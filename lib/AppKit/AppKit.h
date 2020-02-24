@@ -27,6 +27,7 @@
 #include <ISchedulerKitConnection.h>
 #include <Logger.h>
 #include <LispDevice.h>
+#include <LispPrimitives.h>
 
 namespace uniot
 {
@@ -34,10 +35,12 @@ class AppKit : public IGeneralBrokerKitConnection, public ISchedulerKitConnectio
 {
 public:
   AppKit(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
-      : mMQTT(credentials), mNetworkDevice(credentials, pinBtn, activeLevelBtn, pinLed)
+      : mMQTT(credentials), mLispButton(pinBtn, activeLevelBtn, 30), mNetworkDevice(credentials, pinBtn, activeLevelBtn, pinLed)
   {
     _initMqtt();
+    _initTasks();
     _initSubscribers();
+    _initPrimitives();
   }
 
   unLisp &getLisp()
@@ -58,13 +61,15 @@ public:
   void pushTo(TaskScheduler *scheduler)
   {
     scheduler->push(&mNetworkDevice);
-    scheduler->push(mTaskMQTT = TaskScheduler::make(&mMQTT));
+    scheduler->push(mTaskMQTT);
+    scheduler->push(mTaskLispButton);
     scheduler->push(getLisp().getTask());
   }
 
   void attach()
   {
     mNetworkDevice.attach();
+    mTaskLispButton->attach(100);
   }
 
   void connect(GeneralBroker *broker)
@@ -86,8 +91,25 @@ public:
 private:
   void _initMqtt()
   {
-    // TODO: mMQTT.setServer("broker.uniot.io", 1883);
+    mMQTT.setServer("mqtt.uniot.io", 1883);
     mMQTT.addDevice(&mLispDevice, "script");
+  }
+
+  void _initTasks()
+  {
+    mTaskMQTT = TaskScheduler::make(&mMQTT);
+    mTaskLispButton = TaskScheduler::make(mLispButton.getTaskCallback());
+  }
+
+  void _initPrimitives()
+  {
+    getLisp().pushPrimitive(globalPrimitive(dwrite));
+    getLisp().pushPrimitive(globalPrimitive(dread));
+    getLisp().pushPrimitive(globalPrimitive(awrite));
+    getLisp().pushPrimitive(globalPrimitive(aread));
+    getLisp().pushPrimitive(globalPrimitive(bclicked));
+
+    PrimitiveExpeditor::getGlobalRegister().link("bclicked", &mLispButton);
   }
 
   void _initSubscribers()
@@ -142,10 +164,12 @@ private:
 
   MQTTKit mMQTT;
   LispDevice mLispDevice;
+  Button mLispButton;
 
   NetworkDevice mNetworkDevice;
 
   TaskScheduler::TaskPtr mTaskMQTT;
+  TaskScheduler::TaskPtr mTaskLispButton;
 
   UniquePointer<GeneralSubscriber> mpSubscriberNetwork;
   UniquePointer<GeneralSubscriber> mpSubscriberLisp;

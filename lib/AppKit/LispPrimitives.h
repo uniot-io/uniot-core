@@ -21,6 +21,7 @@
 #include <Board-WittyCloud.h>
 #include <PrimitiveExpeditor.h>
 #include <LispHelper.h>
+#include <Button.h>
 
 #if not defined(UNIOT_DIGITAL_PIN_MAP)
 #error "You must define UNIOT_DIGITAL_PIN_MAP and UNIOT_DIGITAL_PIN_LENGTH to be able to use primitives such as 'dwrite' and 'dread'"
@@ -108,6 +109,22 @@ Object aread(Root root, VarObject env, VarObject list)
     expiditor.terminate("pin is out of range");
 
   return expiditor.makeInt(value);
+}
+
+Object bclicked(Root root, VarObject env, VarObject list)
+{
+  exportPrimitiveNameTo(name);
+  PrimitiveExpeditor expiditor(name, root, env, list);
+  expiditor.assertArgs(1, Lisp::Int);
+  auto btnId = expiditor.getArgInt(0);
+
+  auto btn = expiditor.getCurrentRegister().first<Button>();
+
+  bool value = false;
+  if (btn)
+    value = btn->resetClick();
+
+  return expiditor.makeBool(value);
 }
 
 } // namespace primitive

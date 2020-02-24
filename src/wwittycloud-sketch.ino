@@ -18,36 +18,9 @@ using namespace uniot;
 
 AppKit MainAppKit(MyCredentials, PIN_BUTTON, LOW, RED);
 
-String DeviceId = String(ESP.getChipId(), HEX); // TODO: CBOR: implement storage for dynamic values 
-
-CallbackMQTTDevice mqttDevice([](MQTTDevice *device, const String &topic, const Bytes &pa) {
-  if (topic.endsWith("script")) {
-    unLisp::getInstance().runCode(pa);
-  }
-
-  if (topic.endsWith("online/request")) {
-    mqttDevice.publish("bits/TEST/online/response", CBOR().put("id", DeviceId.c_str()).put("type", "relay").build());
-  }
-});
-
 auto taskPrintHeap = TaskScheduler::make([&](short t) {
   Serial.println(ESP.getFreeHeap());
-  // Serial.println(WiFi.status());
-  // Serial.println(analogRead(LDR));
 });
-
-auto taskPrintOwner = TaskScheduler::make([&](short t) {
-  Serial.println("Owner: " + MyCredentials.getOwnerId());
-  // Serial.println(WiFi.status());
-  // Serial.println(analogRead(LDR));
-});
-
-struct Obj *user_prim_ldr(void *root, struct Obj **env, struct Obj **list)
-{
-  DEFINE1(objLdr);
-  *objLdr = make_int(root, analogRead(LDR));
-  return *objLdr;
-}
 
 void inject()
 {
@@ -56,25 +29,16 @@ void inject()
   pinMode(BLUE, OUTPUT);
   pinMode(LDR, INPUT);
 
-  MainAppKit.getMQTT().setServer("broker.hivemq.com", 1883);
-  MainAppKit.getMQTT().addDevice(&mqttDevice);
-  mqttDevice.subscribe("bits/TEST/online/request");
-  mqttDevice.subscribe("bits/TEST/script");
-
   MainBroker.connect(&MainAppKit);
   MainScheduler.push(&MainAppKit)
-      ->push(taskPrintHeap)
-      ->push(taskPrintOwner);
+      ->push(taskPrintHeap);
 
   taskPrintHeap->attach(500);
-  taskPrintOwner->attach(500);
 
   MainAppKit.attach();
   MainAppKit.begin();
 
-  unLisp::getInstance().pushPrimitive("led", user_prim_led);
-  unLisp::getInstance().pushPrimitive("ldr", user_prim_ldr);
-
   UNIOT_LOG_INFO("%s: %s", "CHIP_ID", String(ESP.getChipId(), HEX).c_str());
   UNIOT_LOG_INFO("%s: %s", "DEVICE_ID", MyCredentials.getDeviceId().c_str());
+  UNIOT_LOG_INFO("%s: %s", "OWNER_ID", MyCredentials.getOwnerId().c_str());
 }
