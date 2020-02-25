@@ -35,7 +35,12 @@ class AppKit : public IGeneralBrokerKitConnection, public ISchedulerKitConnectio
 {
 public:
   AppKit(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
-      : mMQTT(credentials), mLispButton(pinBtn, activeLevelBtn, 30), mNetworkDevice(credentials, pinBtn, activeLevelBtn, pinLed)
+      : mMQTT(credentials, [this](CBOR &info) {
+          auto arr = info.putArray("primitives");
+          getLisp().serializeNamesOfPrimitives(arr.get());
+          arr->closeArray();
+        }),
+        mLispButton(pinBtn, activeLevelBtn, 30), mNetworkDevice(credentials, pinBtn, activeLevelBtn, pinLed)
   {
     _initMqtt();
     _initTasks();

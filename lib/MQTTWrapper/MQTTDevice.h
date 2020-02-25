@@ -49,7 +49,11 @@ public:
   MQTTDevice() : mpKit(nullptr) {}
   virtual ~MQTTDevice();
   void subscribe(const String &topic);
-  void publish(const String &topic, const Bytes &payload);
+  void subscribeDevice(const String &subTopic);
+  void subscribeGroup(const String &subTopic);
+  void publish(const String &topic, const Bytes &payload, bool retained = false);
+  void publishDevice(const String &subTopic, const Bytes &payload, bool retained = false);
+  void publishGroup(const String &subTopic, const Bytes &payload, bool retained = false);
   bool isSubscribed(const String &topic);
 };
 } // namespace uniot

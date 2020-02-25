@@ -17,6 +17,7 @@
  */
 
 #include <Arduino.h>
+#include <Logger.h>
 #include "MQTTKit.h"
 #include "MQTTDevice.h"
 
@@ -40,12 +41,40 @@ void MQTTDevice::subscribe(const String &topic)
   }
 }
 
-void MQTTDevice::publish(const String &topic, const Bytes &payload)
+void MQTTDevice::subscribeDevice(const String &subTopic)
+{
+  if (mpKit)
+    subscribe(mpKit->getPath().buildDevicePath(subTopic));
+  else
+    UNIOT_LOG_WARN("use detailed subscription after adding device to kit");
+}
+
+void MQTTDevice::subscribeGroup(const String &subTopic)
+{
+  if (mpKit)
+    subscribe(mpKit->getPath().buildGroupPath(subTopic));
+  else
+    UNIOT_LOG_WARN("use detailed subscription after adding device to kit");
+}
+
+void MQTTDevice::publish(const String &topic, const Bytes &payload, bool retained)
 {
   if (mpKit)
   {
-    mpKit->client()->publish(topic.c_str(), payload.raw(), payload.size());
+    mpKit->client()->publish(topic.c_str(), payload.raw(), payload.size(), retained);
   }
+}
+
+void MQTTDevice::publishDevice(const String &subTopic, const Bytes &payload, bool retained)
+{
+  if (mpKit)
+    publish(mpKit->getPath().buildDevicePath(subTopic), payload, retained);
+}
+
+void MQTTDevice::publishGroup(const String &subTopic, const Bytes &payload, bool retained)
+{
+  if (mpKit)
+    publish(mpKit->getPath().buildGroupPath(subTopic), payload, retained);
 }
 
 bool MQTTDevice::isSubscribed(const String &topic)

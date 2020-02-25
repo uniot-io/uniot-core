@@ -32,7 +32,7 @@ template<typename T>
  public:
 
 #ifdef __cplusplus
-  typedef std::function<void(T)> VoidCallback;
+  typedef std::function<void(const T&)> VoidCallback;
 #else
   typedef void (*VoidCallback)(T);
 #endif

@@ -22,6 +22,7 @@
 #include <TaskScheduler.h>
 #include <LimitedQueue.h>
 #include <Publisher.h>
+#include <CBORArray.h>
 #include <Bytes.h>
 #include <Common.h>
 #include <LispHelper.h>
@@ -86,8 +87,16 @@ public:
 
   unLisp *pushPrimitive(const String &name, Primitive *primitive)
   {
-    mUserPrimitives.push(std::make_pair(name, primitive));
+    mUserPrimitives.push(MakePair(name, primitive));
     return this;
+  }
+
+  void serializeNamesOfPrimitives(CBORArray *arr)
+  {
+    if (arr)
+      mUserPrimitives.forEach([&](Pair<const String&, Primitive *> holder) {
+        arr->put(holder.first.c_str());
+      });
   }
 
   String popOutput() {
@@ -157,7 +166,7 @@ private:
 
   void _createMachine()
   {
-    lisp_create(4000);
+    lisp_create(8000);
 
     *mLispEnv = make_env(mLispRoot, &Nil, &Nil);
     define_constants(mLispRoot, mLispEnv);
@@ -167,7 +176,7 @@ private:
     add_constant_int(mLispRoot, mLispEnv, "#t_pass", 0);
     add_primitive(mLispRoot, mLispEnv, "task", mPrimitiveTask);
 
-    mUserPrimitives.forEach([this](std::pair<String, Primitive *> holder) {
+    mUserPrimitives.forEach([this](Pair<const String&, Primitive *> holder) {
       add_primitive(mLispRoot, mLispEnv, holder.first.c_str(), holder.second);
     });
   }
@@ -200,7 +209,7 @@ private:
   String mLastError;
   LimitedQueue<String> mOutputBuffer;
   TaskScheduler::TaskPtr mTaskLispEval;
-  ClearQueue<std::pair<String, Primitive*>> mUserPrimitives;
+  ClearQueue<Pair<String, Primitive*>> mUserPrimitives;
 
   const Primitive *mPrimitiveTask = [](Root root, VarObject env, VarObject list) { return getInstance()._primTask(root, env, list); };
 

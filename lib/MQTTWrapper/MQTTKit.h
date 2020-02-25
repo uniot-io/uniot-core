@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <functional>
 #include <Common.h>
 #include <IExecutor.h>
 #include <Publisher.h>
@@ -34,14 +35,16 @@ namespace uniot
 {
 class MQTTKit : public IExecutor, public GeneralPublisher
 {
+  typedef std::function<void(CBOR &)> CBORExtender;
   friend class MQTTDevice;
 
 public:
   enum Topic { CONNECTION = FOURCC(mqtt) };
   enum Msg { FAILED = 0, SUCCESS };
 
-  MQTTKit(const Credentials &credentials)
+  MQTTKit(const Credentials &credentials, CBORExtender infoExtender = nullptr)
       : mPath(credentials),
+        mInfoExtender(infoExtender),
         mPubSubClient(mWiFiClient),
         mConnectionId(0),
         mClientId(credentials.getShortDeviceId())
@@ -81,8 +84,8 @@ public:
   {
     if (!mDevices.contains(device))
     {
-      device->subscribe(mPath.buildDevicePath(subTopic));
       addDevice(device);
+      device->subscribeDevice(subTopic);
     }
   }
 
@@ -108,10 +111,9 @@ public:
     {
       Serial.print("Attempting MQTT connection...    ");
       Serial.println(mConnectionId);
-      auto offlinePacket = CBOR()
-                  .put("state", 0)
-                  .put("id", mConnectionId)
-                  .build();
+      CBOR offlineCBOR;
+      _prepareOfflinePacket(offlineCBOR);
+      auto offlinePacket = offlineCBOR.build();
       if (mPubSubClient.connect(
               mPath.getCredentials()->getDeviceId().c_str(),
               mPath.buildDevicePath("online").c_str(),
@@ -120,10 +122,9 @@ public:
               offlinePacket.raw(),
               offlinePacket.size()))
       {
-        auto onlinePacket = CBOR()
-                .put("state", 1)
-                .put("id", mConnectionId++)
-                .build();
+        CBOR onlineCBOR;
+        _prepareOnlinePacket(onlineCBOR);
+        auto onlinePacket = onlineCBOR.build();
         mPubSubClient.publish(
             mPath.buildDevicePath("online").c_str(),
             onlinePacket.raw(),
@@ -152,7 +153,28 @@ protected:
   }
 
 private:
+  void _prepareOnlinePacket(CBOR &packet)
+  {
+    packet
+        .put("state", 1)
+        .put("id", mConnectionId++);
+
+    if (mInfoExtender)
+      mInfoExtender(packet);
+  }
+
+  void _prepareOfflinePacket(CBOR &packet)
+  {
+    packet
+        .put("state", 0)
+        .put("id", mConnectionId);
+
+    if (mInfoExtender)
+      mInfoExtender(packet);
+  }
+
   MQTTPath mPath;
+  CBORExtender mInfoExtender;
   PubSubClient mPubSubClient;
 
   long mConnectionId;
