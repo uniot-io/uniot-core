@@ -1,0 +1,21 @@
+{
+  "name": "Uniot",
+  "description": "Uniot is an IoT platform with its own task scheduler and lisp interpreter",
+  "keywords": "iot,m2m,automation,async,wifi,app,cloud,web,control",
+  "authors": {
+    "name": "Uniot Team",
+    "url": "https://github.com/uniot-io",
+    "maintainer": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uniot-io/uniot-core.git"
+  },
+  "homepage": "https://uniot.io",
+  "version": "0.1.0",
+  "license": "GPL-3.0",
+  "frameworks": "arduino",
+  "platforms": ["espressif8266"],
+  "dependencies": [
+  ]
+}
