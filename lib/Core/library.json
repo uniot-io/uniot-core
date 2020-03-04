@@ -8,6 +8,7 @@
             "-I Utils",
             "-I CBORWrapper",
             "-I LispWrapper",
+            "-I MQTTWrapper",
             "-I Hardware"
         ],
         "srcDir": ".",
@@ -19,6 +20,7 @@
             "+<Utils/*>",
             "+<CBORWrapper/*>",
             "+<LispWrapper/*>",
+            "+<MQTTWrapper/*>",
             "+<Hardware/*>"
         ]
     }
