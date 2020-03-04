@@ -20,6 +20,7 @@
 
 #include <Arduino.h>
 #include <unity.h>
+#include "mocks.h"
 
 #include <unLisp.h>
 #include <PrimitiveExpeditor.h>
@@ -108,16 +109,16 @@ void test_function_lisp_user_primitive_without_check(void)
 
 void test_function_lisp_user_primitive_register(void)
 {
-  int number = 100500;
+  IntRecord number(100500);
   PrimitiveExpeditor::getGlobalRegister().link("external", &number);
 
   unLisp::getInstance().pushPrimitive("external", [](Root root, VarObject env, VarObject list) {
     PrimitiveExpeditor primitive("external", root, env, list);
     primitive.assertArgs(0);
 
-    auto value = primitive.getCurrentRegister().first<int>();
+    auto record = primitive.getCurrentRegister().first<IntRecord>();
 
-    return primitive.makeInt(*value);
+    return primitive.makeInt(record ? record->value : 0);
   });
 
   unLisp::getInstance().runCode("(external)");

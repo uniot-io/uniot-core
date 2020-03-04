@@ -19,21 +19,21 @@
 #pragma once
 
 #include <unity.h>
-#include "mocks.h"
 
 #include <LinksRegister.h>
 
 using namespace uniot;
 
-void test_function_links_register(void)
+class IntRecord : public LinkRegisterRecord
 {
-  LinksRegister reg;
-  StringRecord aaa("aaa");
-  StringRecord bbb("bbb");
-  reg.link("global", &aaa);
-  reg.link("global", &bbb);
+public:
+  IntRecord(int v) : value(v) {}
+  int value;
+};
 
-  reg.first<StringRecord>("global");
-
-  TEST_ASSERT_EQUAL_STRING("bbb", reg.next<StringRecord>("global")->value.c_str());
-}
+class StringRecord : public LinkRegisterRecord
+{
+public:
+  StringRecord(const String &v) : value(v) {}
+  String value;
+};
