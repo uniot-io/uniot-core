@@ -68,9 +68,11 @@ uniot_log_printf(const char *format, ...)
 }
 
 #else
-#define UNIOT_LOG_PRINT(...) ((void)0)
-#define UNIOT_LOG(...) ((void)0)
-#define UNIOT_LOG_IF(...) ((void)0)
+#include <Common.h>
+
+#define UNIOT_LOG_PRINT(...) (UNUSED(__VA_ARGS__))
+#define UNIOT_LOG(log_type, ...) (UNUSED(__VA_ARGS__))
+#define UNIOT_LOG_IF(log_type, ...) (UNUSED(__VA_ARGS__))
 #endif
 
 #define UNIOT_LOG_ERROR(...) UNIOT_LOG(ERROR, __VA_ARGS__)

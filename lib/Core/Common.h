@@ -27,6 +27,12 @@ struct FourCC
   static const unsigned int Value = (((((d << 8) | c) << 8) | b) << 8) | a;
 };
 
+template <typename... Args>
+inline void UNUSED(Args &&... args)
+{
+  (void)(sizeof...(args));
+}
+
 #define COUNT_OF(arr) (sizeof(arr) / sizeof(arr[0]))
 #define ARRAY_ELEMENT_SAFE(arr, index) ((arr)[(((index) < COUNT_OF(arr)) ? (index) : (COUNT_OF(arr) - 1))])
 #define FOURCC(name) FourCC<ARRAY_ELEMENT_SAFE(#name, 0), ARRAY_ELEMENT_SAFE(#name, 1), ARRAY_ELEMENT_SAFE(#name, 2), ARRAY_ELEMENT_SAFE(#name, 3)>::Value
