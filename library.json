@@ -11,11 +11,61 @@
     "type": "git",
     "url": "https://github.com/uniot-io/uniot-core.git"
   },
+  "export": {
+    "exclude": [
+      "src",
+      "test"
+    ]
+  },
+  "build": {
+    "flags": [
+      "-I lib/Uniot",
+      "-I lib/Core",
+      "-I lib/AppKit",
+      "-I lib/WebPages",
+      "-I lib/Platforms",
+
+      "-I lib/Core/Broker",
+      "-I lib/Core/Scheduler",
+      "-I lib/Core/Network",
+      "-I lib/Core/Storage",
+      "-I lib/Core/Utils",
+      "-I lib/Core/CBORWrapper",
+      "-I lib/Core/LispWrapper",
+      "-I lib/Core/MQTTWrapper",
+      "-I lib/Core/Hardware",
+
+      "-I lib/_module_cbor",
+      "-I lib/_module_cbor/include",
+      "-I lib/_module_lisp/src",
+      "-I lib/_module_pubsubclient/src"
+    ],
+    "srcDir": ".",
+    "srcFilter": [
+      "+<lib/Uniot/*>",
+      "+<lib/Core/*>",
+      "+<lib/AppKit/*>",
+      "+<lib/WebPages/*>",
+      "+<lib/Platforms/*>",
+
+      "+<lib/Core/Broker/*>",
+      "+<lib/Core/Scheduler/*>",
+      "+<lib/Core/Network/*>",
+      "+<lib/Core/Storage/*>",
+      "+<lib/Core/Utils/*>",
+      "+<lib/Core/CBORWrapper/*>",
+      "+<lib/Core/LispWrapper/*>",
+      "+<lib/Core/MQTTWrapper/*>",
+      "+<lib/Core/Hardware/*>",
+
+      "+<lib/_module_cbor/src/*>",
+      "+<lib/_module_lisp/src/*>",
+      "+<lib/_module_pubsubclient/src/*>"
+    ]
+  },
   "homepage": "https://uniot.io",
   "version": "0.1.0",
   "license": "GPL-3.0",
   "frameworks": "arduino",
-  "platforms": ["espressif8266"],
-  "dependencies": [
-  ]
+  "platforms": ["espressif8266"]
 }
