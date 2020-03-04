@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <Board-WittyCloud.h>
 #include <PrimitiveExpeditor.h>
 #include <LispHelper.h>
 #include <Button.h>

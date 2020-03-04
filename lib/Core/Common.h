@@ -52,6 +52,4 @@ using Pair = std::pair<T_First, T_Second>;
 
 ALIAS_FUNCTION(MakePair, std::make_pair)
 
-ALIAS_FUNCTION(MakeShared, std::make_shared)
-
 } // namespace uniot

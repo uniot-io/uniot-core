@@ -19,6 +19,7 @@
 #pragma once
 
 #include <functional>
+#include <Common.h>
 #include <IExecutor.h>
 #include <ISchedulerKitConnection.h>
 #include <ClearQueue.h>
@@ -32,7 +33,7 @@ class SchedulerTask : public Task, public IExecutor
 public:
   // TODO: add ms to callback
   using SchedulerTaskCallback = std::function<void(short)>;
-  using spSchedulerTaskCallback = std::shared_ptr<SchedulerTaskCallback>;
+  using spSchedulerTaskCallback = SharedPointer<SchedulerTaskCallback>;
 
   SchedulerTask(IExecutor *executor)
       : SchedulerTask([=](short) { executor->execute(); }) {}
@@ -74,7 +75,7 @@ private:
 class TaskScheduler : public IExecutor
 {
 public:
-  using TaskPtr = std::shared_ptr<SchedulerTask>;
+  using TaskPtr = SharedPointer<SchedulerTask>;
 
   static TaskPtr make(SchedulerTask::SchedulerTaskCallback callback)
   {
