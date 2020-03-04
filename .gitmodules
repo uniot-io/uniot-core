@@ -1,9 +1,6 @@
 [submodule "lib/WebPages/web-pages"]
 	path = lib/WebPages/web-pages
 	url = https://github.com/uniot-io/web-pages.git
-[submodule "lib/_module_microcoap"]
-	path = lib/_module_microcoap
-	url = https://github.com/uniot-io/uniot-coap.git
 [submodule "lib/_module_cbor"]
 	path = lib/_module_cbor
 	url = https://github.com/uniot-io/uniot-cbor.git
