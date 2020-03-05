@@ -33,12 +33,7 @@
       "-I lib/Core/CBORWrapper",
       "-I lib/Core/LispWrapper",
       "-I lib/Core/MQTTWrapper",
-      "-I lib/Core/Hardware",
-
-      "-I lib/_module_cbor",
-      "-I lib/_module_cbor/include",
-      "-I lib/_module_lisp/src",
-      "-I lib/_module_pubsubclient/src"
+      "-I lib/Core/Hardware"
     ],
     "srcDir": ".",
     "srcFilter": [
@@ -56,15 +51,24 @@
       "+<lib/Core/CBORWrapper/*>",
       "+<lib/Core/LispWrapper/*>",
       "+<lib/Core/MQTTWrapper/*>",
-      "+<lib/Core/Hardware/*>",
-
-      "+<lib/_module_cbor/src/*>",
-      "+<lib/_module_lisp/src/*>",
-      "+<lib/_module_pubsubclient/src/*>"
+      "+<lib/Core/Hardware/*>"
     ]
   },
+  "dependencies": [{
+      "name": "uniot-cbor",
+      "version": "https://github.com/uniot-io/uniot-cbor.git"
+    },
+    {
+      "name": "uniot-lisp",
+      "version": "https://github.com/uniot-io/uniot-lisp.git"
+    },
+    {
+      "name": "uniot-pubsubclient",
+      "version": "https://github.com/uniot-io/uniot-pubsubclient.git"
+    }
+  ],
   "homepage": "https://uniot.io",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "GPL-3.0",
   "frameworks": "arduino",
   "platforms": ["espressif8266"]

@@ -1,12 +1,3 @@
 [submodule "lib/WebPages/web-pages"]
 	path = lib/WebPages/web-pages
 	url = https://github.com/uniot-io/web-pages.git
-[submodule "lib/_module_cbor"]
-	path = lib/_module_cbor
-	url = https://github.com/uniot-io/uniot-cbor.git
-[submodule "lib/_module_pubsubclient"]
-	path = lib/_module_pubsubclient
-	url = https://github.com/uniot-io/pubsubclient.git
-[submodule "lib/_module_lisp"]
-	path = lib/_module_lisp
-	url = https://github.com/uniot-io/uniot-lisp.git
