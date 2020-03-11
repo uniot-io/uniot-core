@@ -28,17 +28,13 @@ namespace uniot
 class CrashStorage : public Storage
   {
   public:
-    CrashStorage(const String &path) : Storage(path)
+    CrashStorage(const String &path)
+      : Storage(path)
     {
     }
 
-    virtual ~CrashStorage() {}
-
-    void setCrashInfo(struct rst_info* resetInfo, uint32_t stackStart, uint32_t stackEnd)
+    virtual ~CrashStorage()
     {
-      mResetInfo = resetInfo;
-      mStackStart = stackStart;
-      mStackEnd = stackEnd;
     }
 
     bool store()
@@ -47,7 +43,16 @@ class CrashStorage : public Storage
       return Storage::store();
     }
 
-    bool printCrashDataIfExists()
+    bool clean()
+    {
+      mResetInfo = nullptr;
+      mStackStart = 0;
+      mStackEnd = 0;
+
+      return Storage::clean();
+    }
+
+    bool printCrashDataIfExists() const
     {
       if (mData.size())
       {
@@ -58,16 +63,15 @@ class CrashStorage : public Storage
       return false;
     }
 
-    bool clean() {
-      mResetInfo = nullptr;
-      mStackStart = 0;
-      mStackEnd = 0;
-
-      return Storage::clean();
+  protected:
+    void setCrashInfo(struct rst_info* resetInfo, uint32_t stackStart, uint32_t stackEnd)
+    {
+      mResetInfo = resetInfo;
+      mStackStart = stackStart;
+      mStackEnd = stackEnd;
     }
 
-  protected:
-    Bytes buildDumpData()
+    Bytes buildDumpData() const
     {
       const uint32_t crashTime = millis();
 
@@ -111,6 +115,8 @@ class CrashStorage : public Storage
       return dumpData;
     }
 
+    friend void uniotCrashCallback(struct rst_info *resetInfo, uint32_t stackStart, uint32_t stackEnd);
+
     struct rst_info *mResetInfo;
     uint32_t mStackStart;
     uint32_t mStackEnd;
@@ -118,9 +124,3 @@ class CrashStorage : public Storage
 } // namespace uniot
 
 
-extern "C" void custom_crash_callback(struct rst_info * resetInfo, uint32_t stackStart, uint32_t stackEnd)
-{
-  uniot::CrashStorage crashStorage("crash_dump.txt");
-  crashStorage.setCrashInfo(resetInfo, stackStart, stackEnd);
-  crashStorage.store();
-}

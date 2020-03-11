@@ -17,10 +17,12 @@
  */
 
 #include <Uniot.h>
+#include <CrashStorage.h>
 
 uniot::TaskScheduler MainScheduler;
 uniot::GeneralBroker MainBroker;
 uniot::Credentials MyCredentials;
+
 
 void setup()
 {
@@ -34,4 +36,19 @@ void setup()
 void loop()
 {
   MainScheduler.execute();
+}
+
+namespace uniot
+{
+void uniotCrashCallback(struct rst_info *resetInfo, uint32_t stackStart, uint32_t stackEnd)
+{
+  CrashStorage crashStorage("crash_dump.txt");
+  crashStorage.setCrashInfo(resetInfo, stackStart, stackEnd);
+  crashStorage.store();
+}
+}
+
+extern "C" void custom_crash_callback(struct rst_info *resetInfo, uint32_t stackStart, uint32_t stackEnd)
+{
+  uniot::uniotCrashCallback(resetInfo, stackStart, stackEnd);
 }
