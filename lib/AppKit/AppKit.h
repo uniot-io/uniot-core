@@ -28,6 +28,7 @@
 #include <Logger.h>
 #include <LispDevice.h>
 #include <LispPrimitives.h>
+#include <CrashStorage.h>
 
 namespace uniot
 {
@@ -39,13 +40,15 @@ public:
           auto arr = info.putArray("primitives");
           getLisp().serializeNamesOfPrimitives(arr.get());
           arr->closeArray();
-        }),
-        mLispButton(pinBtn, activeLevelBtn, 30), mNetworkDevice(credentials, pinBtn, activeLevelBtn, pinLed)
+        })
+      , mLispButton(pinBtn, activeLevelBtn, 30), mNetworkDevice(credentials, pinBtn, activeLevelBtn, pinLed)
+      , mCrashStorage("crash_dump.txt")
   {
     _initMqtt();
     _initTasks();
     _initSubscribers();
     _initPrimitives();
+    mCrashStorage.restore();
   }
 
   unLisp &getLisp()
@@ -60,6 +63,7 @@ public:
 
   void begin()
   {
+    mCrashStorage.printCrashDataIfExists();
     mNetworkDevice.begin();
   }
 
@@ -172,6 +176,8 @@ private:
   Button mLispButton;
 
   NetworkDevice mNetworkDevice;
+
+  CrashStorage mCrashStorage;
 
   TaskScheduler::TaskPtr mTaskMQTT;
   TaskScheduler::TaskPtr mTaskLispButton;
