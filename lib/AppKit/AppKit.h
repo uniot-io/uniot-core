@@ -40,15 +40,13 @@ public:
           auto arr = info.putArray("primitives");
           getLisp().serializeNamesOfPrimitives(arr.get());
           arr->closeArray();
-        })
-      , mLispButton(pinBtn, activeLevelBtn, 30), mNetworkDevice(credentials, pinBtn, activeLevelBtn, pinLed)
-      , mCrashStorage("crash_dump.txt")
+        }),
+        mLispButton(pinBtn, activeLevelBtn, 30), mNetworkDevice(credentials, pinBtn, activeLevelBtn, pinLed)
   {
     _initMqtt();
     _initTasks();
     _initSubscribers();
     _initPrimitives();
-    mCrashStorage.restore();
   }
 
   unLisp &getLisp()
@@ -63,7 +61,6 @@ public:
 
   void begin()
   {
-    mCrashStorage.printCrashDataIfExists();
     mNetworkDevice.begin();
   }
 
@@ -176,8 +173,6 @@ private:
   Button mLispButton;
 
   NetworkDevice mNetworkDevice;
-
-  CrashStorage mCrashStorage;
 
   TaskScheduler::TaskPtr mTaskMQTT;
   TaskScheduler::TaskPtr mTaskLispButton;
