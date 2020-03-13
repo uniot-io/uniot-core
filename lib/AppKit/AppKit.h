@@ -28,6 +28,7 @@
 #include <Logger.h>
 #include <LispDevice.h>
 #include <LispPrimitives.h>
+#include <CrashStorage.h>
 
 namespace uniot
 {

@@ -74,7 +74,7 @@ public:
     file.close();
     // using SPIFFS.gc() can avoid or reduce issues where SPIFFS reports
     // free space but is unable to write additional data to a file
-    UNIOT_LOG_WARN_IF(!SPIFFS.gc(), "SPIFFS gc failed. Caller: %s", mPath.c_str());
+    UNIOT_LOG_DEBUG_IF(!SPIFFS.gc(), "SPIFFS gc failed. Caller: %s", mPath.c_str());
     return true;
   }
 
