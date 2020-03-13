@@ -25,8 +25,11 @@
 
 namespace uniot
 {
+void uniotCrashCallback(struct rst_info *resetInfo, uint32_t stackStart, uint32_t stackEnd);
+
 class CrashStorage : public Storage
   {
+  friend void uniotCrashCallback(struct rst_info *resetInfo, uint32_t stackStart, uint32_t stackEnd);
   public:
     CrashStorage(const String &path)
       : Storage(path)
@@ -56,7 +59,7 @@ class CrashStorage : public Storage
     {
       if (mData.size())
       {
-        UNIOT_LOG_WARN("Crash file dump:");
+        UNIOT_LOG_WARN("Crash file dump");
         Serial.print(mData.c_str());
         return true;
       }
@@ -75,14 +78,14 @@ class CrashStorage : public Storage
     {
       const uint32_t crashTime = millis();
 
-      // // one complete log has 170 chars + 45 * n
+      // // one complete log has 170 chars + (45 + 1) * n
       // // n >= 2 e [2, 4, 6, ...]
       // // 4220 + safety will last for 90 stack traces including header (170)
       // // uint16_t maximumFileContent = 4250;
 
       // maximum tmpBuffer size needed is 83, so 100 should be enough
       const int16_t stackLength = mStackEnd - mStackStart;
-      char *tmpBuffer = (char*)calloc(170 + 45 * stackLength, sizeof(char));
+      char *tmpBuffer = (char*)calloc(170 + (45 + 1) * stackLength, sizeof(char));
 
       // max. 65 chars of Crash time, reason, exception
       int numBytesWritten = sprintf(tmpBuffer, "Crashed at %d ms\nRestart reason: %d\nException (%d):\n", crashTime, mResetInfo->reason, mResetInfo->exccause);
@@ -93,7 +96,7 @@ class CrashStorage : public Storage
       uint32_t stackTrace = 0;
 
       // collect stack trace
-      // one loop contains 45 chars of stack address and its content
+      // one loop contains 45 chars of stack address, its content and '\n'
       // e.g. "3fffffb0: feefeffe feefeffe 3ffe8508 40100459"
       for (uint16_t i = 0; i < stackLength; i += 0x10)
       {
@@ -106,6 +109,7 @@ class CrashStorage : public Storage
 
           numBytesWritten += sprintf(tmpBuffer + numBytesWritten, "%08x ", stackTrace);
         }
+        numBytesWritten += sprintf(tmpBuffer + numBytesWritten, "\n");
       }
       // as we checked +15 char, this will always fit
       numBytesWritten += sprintf(tmpBuffer + numBytesWritten, "%s", "<<<stack<<<\n\n");
@@ -114,8 +118,6 @@ class CrashStorage : public Storage
       free(tmpBuffer);
       return dumpData;
     }
-
-    friend void uniotCrashCallback(struct rst_info *resetInfo, uint32_t stackStart, uint32_t stackEnd);
 
     struct rst_info *mResetInfo;
     uint32_t mStackStart;

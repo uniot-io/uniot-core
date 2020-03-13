@@ -16,29 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Uniot.h>
-#include <CrashStorage.h>
+#include <user_interface.h>
+#include "CrashStorage.h"
 
-uniot::TaskScheduler MainScheduler;
-uniot::GeneralBroker MainBroker;
-uniot::Credentials MyCredentials;
-
-
-void setup()
+namespace uniot
 {
-  auto taskHandleBroker = uniot::TaskScheduler::make(&MainBroker);
-  MainScheduler.push(taskHandleBroker);
-  taskHandleBroker->attach(100);
-
-  inject();
-}
-
-void loop()
+void uniotCrashCallback(struct rst_info *resetInfo, uint32_t stackStart, uint32_t stackEnd)
 {
-  MainScheduler.execute();
+  CrashStorage crashStorage("crash_dump.txt");
+  crashStorage.setCrashInfo(resetInfo, stackStart, stackEnd);
+  crashStorage.store();
 }
-
-extern "C" void custom_crash_callback(struct rst_info *resetInfo, uint32_t stackStart, uint32_t stackEnd)
-{
-  uniot::uniotCrashCallback(resetInfo, stackStart, stackEnd);
-}
+} // namespace uniot
