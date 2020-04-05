@@ -29,6 +29,7 @@
 #include <LispDevice.h>
 #include <LispPrimitives.h>
 #include <CrashStorage.h>
+#include <PinMap.h>
 
 namespace uniot
 {
@@ -40,6 +41,11 @@ public:
           auto arr = info.putArray("primitives");
           getLisp().serializeNamesOfPrimitives(arr.get());
           arr->closeArray();
+
+          info.put("d_in", UniotPinMap.getDigitalInputLength());
+          info.put("d_out", UniotPinMap.getDigitalOutputLength());
+          info.put("a_in", UniotPinMap.getAnalogInputLength());
+          info.put("a_out", UniotPinMap.getAnalogOutputLength());
         }),
         mLispButton(pinBtn, activeLevelBtn, 30), mNetworkDevice(credentials, pinBtn, activeLevelBtn, pinLed)
   {

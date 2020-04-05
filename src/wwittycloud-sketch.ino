@@ -8,7 +8,7 @@
 
 using namespace uniot;
 
-AppKit MainAppKit(MyCredentials, PIN_BUTTON, LOW, RED);
+AppKit MainAppKit(MyCredentials, PIN_BUTTON, BTN_PIN_LEVEL, RED);
 
 auto taskPrintHeap = TaskScheduler::make([&](short t) {
   Serial.println(ESP.getFreeHeap());
@@ -16,9 +16,11 @@ auto taskPrintHeap = TaskScheduler::make([&](short t) {
 
 void inject()
 {
-  pinMode(RED, OUTPUT);
-  pinMode(GREEN, OUTPUT);
-  pinMode(BLUE, OUTPUT);
+  UniotPinMap.setDigitalOutput(3, RED, GREEN, BLUE);
+  UniotPinMap.setDigitalInput(3, RED, GREEN, BLUE);
+  UniotPinMap.setAnalogOutput(3, RED, GREEN, BLUE);
+  UniotPinMap.setAnalogInput(1, LDR);
+
   pinMode(LDR, INPUT);
 
   MainBroker.connect(&MainAppKit);

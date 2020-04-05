@@ -22,6 +22,7 @@
 #include <TaskScheduler.h>
 #include <Broker.h>
 #include <Credentials.h>
+#include <PinMap.h>
 #include <Logger.h>
 
 void inject();

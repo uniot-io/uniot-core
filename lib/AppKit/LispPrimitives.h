@@ -21,24 +21,7 @@
 #include <PrimitiveExpeditor.h>
 #include <LispHelper.h>
 #include <Button.h>
-
-#if not defined(UNIOT_DIGITAL_PIN_MAP)
-#error "You must define UNIOT_DIGITAL_PIN_MAP and UNIOT_DIGITAL_PIN_LENGTH to be able to use primitives such as 'dwrite' and 'dread'"
-#elif not defined(UNIOT_DIGITAL_PIN_LENGTH)
-#error "You must define UNIOT_DIGITAL_PIN_MAP and UNIOT_DIGITAL_PIN_LENGTH to be able to use primitives such as 'dwrite' and 'dread'"
-#endif
-
-#if not defined(UNIOT_ANALOG_W_PIN_MAP)
-#error "You must define UNIOT_ANALOG_W_PIN_MAP and UNIOT_ANALOG_W_PIN_LENGTH to be able to use primitives such as 'awrite'"
-#elif not defined(UNIOT_ANALOG_W_PIN_LENGTH)
-#error "You must define UNIOT_ANALOG_W_PIN_MAP and UNIOT_ANALOG_W_PIN_LENGTH to be able to use primitives such as 'awrite'"
-#endif
-
-#if not defined(UNIOT_ANALOG_R_PIN_MAP)
-#error "You must define UNIOT_ANALOG_R_PIN_MAP and UNIOT_ANALOG_R_PIN_LENGTH to be able to use primitives such as 'aread'"
-#elif not defined(UNIOT_ANALOG_R_PIN_LENGTH)
-#error "You must define UNIOT_ANALOG_R_PIN_MAP and UNIOT_ANALOG_R_PIN_LENGTH to be able to use primitives such as 'aread'"
-#endif
+#include <PinMap.h>
 
 namespace uniot
 {
@@ -54,8 +37,8 @@ Object dwrite(Root root, VarObject env, VarObject list)
   auto pin = expiditor.getArgInt(0);
   auto state = expiditor.getArgBool(1);
 
-  if (pin >= 0 && pin < UNIOT_DIGITAL_PIN_LENGTH)
-    digitalWrite(UNIOT_DIGITAL_PIN_MAP[pin], state);
+  if (pin >= 0 && pin < UniotPinMap.getDigitalOutputLength())
+    digitalWrite(UniotPinMap.getDigitalOutput(pin), state);
   else
     expiditor.terminate("pin is out of range");
 
@@ -70,8 +53,8 @@ Object dread(Root root, VarObject env, VarObject list)
   auto pin = expiditor.getArgInt(0);
   int state = 0;
 
-  if (pin >= 0 && pin < UNIOT_DIGITAL_PIN_LENGTH)
-    state = digitalRead(UNIOT_DIGITAL_PIN_MAP[pin]);
+  if (pin >= 0 && pin < UniotPinMap.getDigitalInputLength())
+    state = digitalRead(UniotPinMap.getDigitalInput(pin));
   else
     expiditor.terminate("pin is out of range");
 
@@ -86,8 +69,8 @@ Object awrite(Root root, VarObject env, VarObject list)
   auto pin = expiditor.getArgInt(0);
   auto value = expiditor.getArgInt(1);
 
-  if (pin >= 0 && pin < UNIOT_ANALOG_W_PIN_LENGTH)
-    analogWrite(UNIOT_ANALOG_W_PIN_MAP[pin], value);
+  if (pin >= 0 && pin < UniotPinMap.getAnalogOutputLength())
+    analogWrite(UniotPinMap.getAnalogOutput(pin), value);
   else
     expiditor.terminate("pin is out of range");
 
@@ -102,8 +85,8 @@ Object aread(Root root, VarObject env, VarObject list)
   auto pin = expiditor.getArgInt(0);
   int value = 0;
 
-  if (pin >= 0 && pin < UNIOT_ANALOG_R_PIN_LENGTH)
-    value = analogRead(UNIOT_ANALOG_R_PIN_MAP[pin]);
+  if (pin >= 0 && pin < UniotPinMap.getAnalogInputLength())
+    value = analogRead(UniotPinMap.getAnalogInput(pin));
   else
     expiditor.terminate("pin is out of range");
 
