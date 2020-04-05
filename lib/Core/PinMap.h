@@ -34,7 +34,8 @@ public:
   PinMap() : mpMap(nullptr)
   {
     mpMap = new unsigned char *[MAP_COUNT];
-    for (int i = 0; i < MAP_COUNT; i++) {
+    for (int i = 0; i < MAP_COUNT; i++)
+    {
       mpMap[i] = nullptr;
       mMapLength[i] = 0;
     }
@@ -43,9 +44,8 @@ public:
   ~PinMap()
   {
     for (int i = 0; i < MAP_COUNT; ++i)
-    {
       _invalidateMap(i);
-    }
+
     delete[] mpMap;
     mpMap = nullptr;
   }
@@ -142,9 +142,7 @@ private:
   void _setPinMode(unsigned char idx, int count, unsigned char mode)
   {
     for (int i = 0; i < count; i++)
-    {
       pinMode(mpMap[idx][i], mode);
-    }
   }
 
   void _invalidateMap(unsigned char idx, int count = 0)
@@ -161,9 +159,7 @@ private:
     }
 
     if (count > 0)
-    {
       mpMap[idx] = new unsigned char[count];
-    }
   }
 
   static const int MAP_COUNT = 4;

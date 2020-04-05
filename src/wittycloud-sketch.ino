@@ -21,8 +21,6 @@ void inject()
   UniotPinMap.setAnalogOutput(3, RED, GREEN, BLUE);
   UniotPinMap.setAnalogInput(1, LDR);
 
-  pinMode(LDR, INPUT);
-
   MainBroker.connect(&MainAppKit);
   MainScheduler.push(&MainAppKit)
       ->push(taskPrintHeap);
