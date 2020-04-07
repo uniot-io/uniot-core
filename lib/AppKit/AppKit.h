@@ -107,6 +107,12 @@ private:
     mMQTT.addDevice(&mLispDevice, "script");
   }
 
+  void _refreshMqttDevices()
+  {
+    mLispDevice.unsubscribeFromAll();
+    mLispDevice.subscribeDevice("script");
+  }
+
   void _initTasks()
   {
     mTaskMQTT = TaskScheduler::make(&mMQTT);
@@ -135,6 +141,7 @@ private:
           Serial.print("AppKit Subscriber, ip: ");
           Serial.println(WiFi.localIP());
           mTaskMQTT->attach(10);
+          _refreshMqttDevices();
           break;
         case NetworkScheduler::ACCESS_POINT:
           Serial.println("AppKit Subscriber, ACCESS_POINT ");

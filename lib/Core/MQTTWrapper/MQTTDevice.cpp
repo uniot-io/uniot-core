@@ -32,6 +32,16 @@ MQTTDevice::~MQTTDevice()
   }
 }
 
+void MQTTDevice::unsubscribeFromAll()
+{
+  while (!mTopics.isEmpty())
+  {
+    auto topic = mTopics.hardPop();
+    if (mpKit)
+      mpKit->client()->unsubscribe(topic.c_str());
+  }
+}
+
 void MQTTDevice::subscribe(const String &topic)
 {
   mTopics.push(topic);

@@ -48,6 +48,7 @@ protected:
 public:
   MQTTDevice() : mpKit(nullptr) {}
   virtual ~MQTTDevice();
+  void unsubscribeFromAll();
   void subscribe(const String &topic);
   void subscribeDevice(const String &subTopic);
   void subscribeGroup(const String &subTopic);
