@@ -65,6 +65,10 @@
     {
       "name": "uniot-pubsubclient",
       "version": "https://github.com/uniot-io/uniot-pubsubclient.git"
+    },
+    {
+      "name": "uniot-crypto",
+      "version": "https://github.com/uniot-io/uniot-crypto.git"
     }
   ],
   "homepage": "https://uniot.io",
