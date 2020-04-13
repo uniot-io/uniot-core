@@ -72,7 +72,7 @@
     }
   ],
   "homepage": "https://uniot.io",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "license": "GPL-3.0",
   "frameworks": "arduino",
   "platforms": ["espressif8266"]
