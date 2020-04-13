@@ -25,8 +25,8 @@
 
 #include "CBORArray.h"
 
-#ifndef MAX_CBOR_BUF_SIZE
-#define MAX_CBOR_BUF_SIZE 256
+#ifndef UNIOT_DANGEROUS_CBOR_DATA_SIZE
+#define UNIOT_DANGEROUS_CBOR_DATA_SIZE 256
 #endif
 
 namespace uniot
@@ -57,12 +57,12 @@ public:
 
   std::unique_ptr<CBORArray> putArray(int key) {
     mDirty = true;
-    return std::unique_ptr<CBORArray>(new CBORArray(this, mpMapNode, cn_cbor_int_create(key, &mErr)));
+    return std::unique_ptr<CBORArray>(new CBORArray(this, mpMapNode, cn_cbor_int_create(key, _errback())));
   }
 
   std::unique_ptr<CBORArray> putArray(const char* key) {
     mDirty = true;
-    return std::unique_ptr<CBORArray>(new CBORArray(this, mpMapNode, cn_cbor_string_create(key, &mErr)));
+    return std::unique_ptr<CBORArray>(new CBORArray(this, mpMapNode, cn_cbor_string_create(key, _errback())));
   }
 
   CBOR &put(int key, int value) {
@@ -70,7 +70,7 @@ public:
     if (existing) {
       mDirty = cn_cbor_int_update(existing, value);
     } else {
-      mDirty = cn_cbor_mapput_int(mpMapNode, key, cn_cbor_int_create(value, &mErr), &mErr);
+      mDirty = cn_cbor_mapput_int(mpMapNode, key, cn_cbor_int_create(value, _errback()), _errback());
     }
     return *this;
   }
@@ -79,8 +79,10 @@ public:
     auto existing = cn_cbor_mapget_int(mpMapNode, key);
     if (existing) {
       mDirty = cn_cbor_string_update(existing, value);
+      if (!mDirty)
+        UNIOT_LOG_WARN_IF(_isPtrEqual(existing, value), "pointer to the same value is specified for '%s'", key);
     } else {
-      mDirty = cn_cbor_mapput_int(mpMapNode, key, cn_cbor_string_create(value, &mErr), &mErr);
+      mDirty = cn_cbor_mapput_int(mpMapNode, key, cn_cbor_string_create(value, _errback()), _errback());
     }
     return *this;
   }
@@ -90,7 +92,7 @@ public:
     if (existing) {
       mDirty = cn_cbor_int_update(existing, value);
     } else {
-      mDirty = cn_cbor_mapput_string(mpMapNode, key, cn_cbor_int_create(value, &mErr), &mErr);
+      mDirty = cn_cbor_mapput_string(mpMapNode, key, cn_cbor_int_create(value, _errback()), _errback());
     }
     return *this;
   }
@@ -99,8 +101,10 @@ public:
     auto existing = cn_cbor_mapget_string(mpMapNode, key);
     if (existing) {
       mDirty = cn_cbor_string_update(existing, value);
+      if (!mDirty)
+        UNIOT_LOG_WARN_IF(_isPtrEqual(existing, value), "pointer to the same value is specified for '%s'", key);
     } else {
-      mDirty = cn_cbor_mapput_string(mpMapNode, key, cn_cbor_string_create(value, &mErr), &mErr);
+      mDirty = cn_cbor_mapput_string(mpMapNode, key, cn_cbor_string_create(value, _errback()), _errback());
     }
 
     return *this;
@@ -144,20 +148,39 @@ public:
 
   void read(const Bytes &buf) {
     _clean();
-    mpMapNode = cn_cbor_decode(buf.raw(), buf.size(), &mErr);
+    mpMapNode = cn_cbor_decode(buf.raw(), buf.size(), _errback());
     if (!mpMapNode) {
       _create();
     }
   }
 
-  Bytes build() {
-    uint8_t buf[MAX_CBOR_BUF_SIZE];
-    size_t size = cn_cbor_encoder_write(buf, 0, MAX_CBOR_BUF_SIZE, mpMapNode);
-    return Bytes(buf, size);
+  Bytes build()
+  {
+    // NOTE: for the future, cn_cbor_encoder_calc was not tested with floats
+    auto calculated = cn_cbor_encoder_calc(mpMapNode);
+    UNIOT_LOG_WARN_IF(calculated > UNIOT_DANGEROUS_CBOR_DATA_SIZE, "dangerous data size: %d", calculated);
+
+    Bytes bytes(nullptr, calculated);
+    auto written = bytes.fill([&](uint8_t *buf, size_t size) {
+      auto actual = cn_cbor_encoder_write(buf, 0, size, mpMapNode);
+      if (actual < 0)
+      {
+        UNIOT_LOG_ERROR("%s", "CBOR build failed, buffer size too small");
+        return 0;
+      }
+      return actual;
+    });
+
+    return bytes.prune(written);
   }
 
   bool dirty() {
     return mDirty;
+  }
+
+  void forceDirty() {
+    UNIOT_LOG_WARN("%s", "the data forced marked as dirty");
+    mDirty = true;
   }
 
   void clean() {
@@ -168,7 +191,7 @@ public:
 private:
   void _create() {
     mDirty = false;
-    mpMapNode = cn_cbor_map_create(&mErr);
+    mpMapNode = cn_cbor_map_create(_errback());
   }
 
   void _clean() {
@@ -196,6 +219,18 @@ private:
       return String(bytes.c_str());
     }
     return "";
+  }
+
+  bool _isPtrEqual(cn_cbor* cb, const void *ptr) const {
+    return ptr == (const void *) cb->v.bytes;
+  }
+
+  cn_cbor_errback *_errback() {
+    UNIOT_LOG_ERROR_IF(mErr.err, "last unhandled error code: %lu", mErr.err);
+
+    mErr.err = CN_CBOR_NO_ERROR;
+    mErr.pos = 0;
+    return &mErr;
   }
 
   cn_cbor* mpMapNode;
