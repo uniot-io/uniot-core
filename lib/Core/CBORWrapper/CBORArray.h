@@ -22,10 +22,10 @@
 
 namespace uniot
 {
-class CBOR;
+class CBORObject;
 class CBORArray
 {
-  friend class CBOR;
+  friend class CBORObject;
 public:
   ~CBORArray() {
     mpContext = nullptr;
@@ -46,17 +46,17 @@ public:
     return this;
   } 
 
-  CBOR &closeArray() {
+  CBORObject &closeArray() {
     cn_cbor_map_put(mpMapNode, mpKey, mpArrayNode, &mErr);
     return *mpContext;
   }
 private:
-  CBORArray(CBOR* context, cn_cbor* mapNode, cn_cbor* key)
+  CBORArray(CBORObject* context, cn_cbor* mapNode, cn_cbor* key)
   : mpContext(context), mpMapNode(mapNode), mpKey(key) {
     mpArrayNode = cn_cbor_array_create(&mErr);
   }
   
-  CBOR* mpContext;
+  CBORObject* mpContext;
   cn_cbor* mpMapNode;
   cn_cbor* mpKey;
   cn_cbor* mpArrayNode;

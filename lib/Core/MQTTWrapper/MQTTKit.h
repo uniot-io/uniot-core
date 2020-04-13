@@ -26,7 +26,7 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Bytes.h>
-#include <CBOR.h>
+#include <CBORObject.h>
 #include "MQTTDevice.h"
 #include "CallbackMQTTDevice.h"
 #include "MQTTPath.h"
@@ -35,7 +35,7 @@ namespace uniot
 {
 class MQTTKit : public IExecutor, public GeneralPublisher
 {
-  typedef std::function<void(CBOR &)> CBORExtender;
+  typedef std::function<void(CBORObject &)> CBORExtender;
   friend class MQTTDevice;
 
 public:
@@ -111,7 +111,7 @@ public:
     {
       Serial.print("Attempting MQTT connection...    ");
       Serial.println(mConnectionId);
-      CBOR offlineCBOR;
+      CBORObject offlineCBOR;
       _prepareOfflinePacket(offlineCBOR);
       auto offlinePacket = offlineCBOR.build();
       if (mPubSubClient.connect(
@@ -122,7 +122,7 @@ public:
               offlinePacket.raw(),
               offlinePacket.size()))
       {
-        CBOR onlineCBOR;
+        CBORObject onlineCBOR;
         _prepareOnlinePacket(onlineCBOR);
         auto onlinePacket = onlineCBOR.build();
         mPubSubClient.publish(
@@ -153,7 +153,7 @@ protected:
   }
 
 private:
-  void _prepareOnlinePacket(CBOR &packet)
+  void _prepareOnlinePacket(CBORObject &packet)
   {
     packet
         .put("state", 1)
@@ -163,7 +163,7 @@ private:
       mInfoExtender(packet);
   }
 
-  void _prepareOfflinePacket(CBOR &packet)
+  void _prepareOfflinePacket(CBORObject &packet)
   {
     packet
         .put("state", 0)

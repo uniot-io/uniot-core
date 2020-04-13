@@ -20,7 +20,7 @@
 
 // doc: https://arduino-esp8266.readthedocs.io/en/latest/filesystem.html
 #include <Storage.h>
-#include <CBOR.h>
+#include <CBORObject.h>
 
 namespace uniot
 {
@@ -33,7 +33,7 @@ public:
 
   virtual ~CBORStorage() {}
 
-  CBOR &object()
+  CBORObject &object()
   {
     return mCbor;
   }
@@ -65,6 +65,6 @@ public:
   }
 
 protected:
-  CBOR mCbor;
+  CBORObject mCbor;
 };
 } // namespace uniot

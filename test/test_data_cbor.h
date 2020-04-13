@@ -20,7 +20,7 @@
 
 #include <unity.h>
 
-#include <CBOR.h>
+#include <CBORObject.h>
 
 using namespace uniot;
 
@@ -38,20 +38,20 @@ const unsigned char cbor_object_1[] = {
 void test_function_cbor_read_string(void)
 {
   auto bytes = Bytes(cbor_object_1, sizeof(cbor_object_1));
-  CBOR cbor(bytes);
+  CBORObject cbor(bytes);
   TEST_ASSERT_EQUAL_STRING("simple", cbor.getString("object").c_str());
 }
 
 void test_function_cbor_read_int(void)
 {
   auto bytes = Bytes(cbor_object_1, sizeof(cbor_object_1));
-  CBOR cbor(bytes);
+  CBORObject cbor(bytes);
   TEST_ASSERT_EQUAL(42, cbor.getInt("number"));
 }
 
 void test_function_cbor_put(void)
 {
-  CBOR cbor;
+  CBORObject cbor;
   cbor.put("object", "simple");
   cbor.put("number", 42);
   TEST_ASSERT_EQUAL_MEMORY(cbor_object_1, cbor.build().raw(), sizeof(cbor_object_1));

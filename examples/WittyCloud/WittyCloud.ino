@@ -18,7 +18,7 @@
 
 #include <Uniot.h>
 #include <Board-WittyCloud.h>
-#include <CBOR.h>
+#include <CBORObject.h>
 #include <AppKit.h>
 #include <Storage.h>
 #include <LispPrimitives.h>

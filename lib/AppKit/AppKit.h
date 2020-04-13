@@ -37,7 +37,7 @@ class AppKit : public IGeneralBrokerKitConnection, public ISchedulerKitConnectio
 {
 public:
   AppKit(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
-      : mMQTT(credentials, [this, &credentials](CBOR &info) {
+      : mMQTT(credentials, [this, &credentials](CBORObject &info) {
           auto arr = info.putArray("primitives");
           getLisp().serializeNamesOfPrimitives(arr.get());
           arr->closeArray();

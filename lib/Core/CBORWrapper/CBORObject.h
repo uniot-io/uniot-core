@@ -18,10 +18,11 @@
 
 #pragma once
 
-#include <Arduino.h>
-#include <Bytes.h>
 #include <memory>
 #include <cn-cbor.h>
+#include <Arduino.h>
+#include <Bytes.h>
+#include <Logger.h>
 
 #include "CBORArray.h"
 
@@ -31,23 +32,23 @@
 
 namespace uniot
 {
-class CBOR
+class CBORObject
 {
   friend class CBORArray;
 public:
-  CBOR(const Bytes &buf)
+  CBORObject(const Bytes &buf)
       : mpMapNode(nullptr),
         mDirty(false)
   {
     read(buf);
   }
 
-  CBOR() : mDirty(false)
+  CBORObject() : mDirty(false)
   {
     _create();
   }
 
-  ~CBOR() {
+  ~CBORObject() {
     _clean();
   }
 
@@ -65,7 +66,7 @@ public:
     return std::unique_ptr<CBORArray>(new CBORArray(this, mpMapNode, cn_cbor_string_create(key, _errback())));
   }
 
-  CBOR &put(int key, int value) {
+  CBORObject &put(int key, int value) {
     auto existing = cn_cbor_mapget_int(mpMapNode, key);
     if (existing) {
       mDirty = cn_cbor_int_update(existing, value);
@@ -75,7 +76,7 @@ public:
     return *this;
   }
 
-  CBOR &put(int key, const char* value) {
+  CBORObject &put(int key, const char* value) {
     auto existing = cn_cbor_mapget_int(mpMapNode, key);
     if (existing) {
       mDirty = cn_cbor_string_update(existing, value);
@@ -87,7 +88,7 @@ public:
     return *this;
   }
 
-  CBOR &put(const char* key, int value) {
+  CBORObject &put(const char* key, int value) {
     auto existing = cn_cbor_mapget_string(mpMapNode, key);
     if (existing) {
       mDirty = cn_cbor_int_update(existing, value);
@@ -97,7 +98,7 @@ public:
     return *this;
   }
 
-  CBOR &put(const char* key, const char* value) {
+  CBORObject &put(const char* key, const char* value) {
     auto existing = cn_cbor_mapget_string(mpMapNode, key);
     if (existing) {
       mDirty = cn_cbor_string_update(existing, value);
@@ -126,21 +127,21 @@ public:
     return _getString(cn_cbor_mapget_string(mpMapNode, key));
   }
 
-  CBOR &copyInt(const CBOR &from, int key) {
+  CBORObject &copyInt(const CBORObject &from, int key) {
     return put(key, from.getInt(key));
   }
 
-  CBOR &copyInt(const CBOR &from, const char* key) {
+  CBORObject &copyInt(const CBORObject &from, const char* key) {
     return put(key, from.getInt(key));
   }
 
-  CBOR &copyStrPtr(const CBOR &from, int key) {
+  CBORObject &copyStrPtr(const CBORObject &from, int key) {
     auto cb = cn_cbor_mapget_int(from.mpMapNode, key);
     // TODO: check types, set Err
     return put(key, cb->v.str);
   }
 
-  CBOR &copyStrPtr(const CBOR &from, const char* key) {
+  CBORObject &copyStrPtr(const CBORObject &from, const char* key) {
     auto cb = cn_cbor_mapget_string(from.mpMapNode, key);
     // TODO: check types, set Err
     return put(key, cb->v.str);
@@ -165,7 +166,7 @@ public:
       auto actual = cn_cbor_encoder_write(buf, 0, size, mpMapNode);
       if (actual < 0)
       {
-        UNIOT_LOG_ERROR("%s", "CBOR build failed, buffer size too small");
+        UNIOT_LOG_ERROR("%s", "CBORObject build failed, buffer size too small");
         return 0;
       }
       return actual;
@@ -190,6 +191,8 @@ public:
 
 private:
   void _create() {
+    mErr.err = CN_CBOR_NO_ERROR;
+    mErr.pos = 0;
     mDirty = false;
     mpMapNode = cn_cbor_map_create(_errback());
   }
@@ -199,6 +202,8 @@ private:
       cn_cbor_free(mpMapNode);
       mpMapNode = nullptr;
     }
+    mErr.err = CN_CBOR_NO_ERROR;
+    mErr.pos = 0;
   }
 
   long _getInt(cn_cbor* cb) const {
