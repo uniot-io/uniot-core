@@ -20,21 +20,102 @@
 
 #include <unLisp.h>
 #include <MQTTDevice.h>
+#include <CBORStorage.h>
+#include <Subscriber.h>
 
 namespace uniot
 {
 
-class LispDevice : public MQTTDevice
+class LispDevice : public MQTTDevice, public CBORStorage, public GeneralSubscriber
 {
 public:
-  LispDevice() : MQTTDevice()
+  LispDevice() : MQTTDevice(), CBORStorage("lisp.cbor"), GeneralSubscriber(),
+                 mFirstPacketReceived(false)
   {
+    GeneralSubscriber::subscribe(unLisp::LISP);
+  }
+
+  void runStoredCode()
+  {
+    if (CBORStorage::restore())
+    {
+      auto code = object().getString("code");
+      auto persist = object().getInt("persist");
+      mChecksum = object().getInt("checksum");
+
+      if (persist && code.length() > 0)
+        getLisp().runCode(code);
+    }
+  }
+
+  unLisp &getLisp()
+  {
+    return unLisp::getInstance();
+  }
+
+  bool store()
+  {
+    mChecksum = getLisp().getLastCode().checksum();
+    object()
+        .put("persist", getLisp().isLastCodePersist())
+        .put("checksum", mChecksum);
+
+    if (getLisp().isLastCodePersist())
+      object()
+          .put("code", getLisp().getLastCode().c_str())
+          .forceDirty(); // Avoid optimization. The pointer to the data may be the same. Read the warnings.
+    return CBORStorage::store();
+  }
+
+  void onPublish(unsigned int topic, int msg) override
+  {
+    if (msg == unLisp::ERROR)
+    {
+      auto lastError = getLisp().getLastError();
+      publishDevice("script_error", lastError);
+      UNIOT_LOG_ERROR("lisp error: %s", lastError.c_str());
+    }
+    else if (msg == unLisp::MSG_ADDED)
+    {
+      auto size = getLisp().sizeOutput();
+      auto result = getLisp().popOutput();
+      UNIOT_LOG_INFO("%s, %d msgs to read; %s", msg == unLisp::MSG_ADDED ? "added" : "replaced", size, result.c_str());
+    }
   }
 
   void handle(const String &topic, const Bytes &payload) override
   {
-    unLisp::getInstance().runCode(payload);
+    auto script = payload;
+
+    auto newChecksum = script.terminate().checksum();
+    auto isEqual = mChecksum == newChecksum;
+    auto ignoreScript = isEqual;
+
+    if (mFirstPacketReceived)
+      ignoreScript = isEqual && getLisp().isLastCodePersist();
+    else
+      mFirstPacketReceived = true;
+
+    if (!ignoreScript)
+    {
+      // TODO: check signature here later
+      getLisp().runCode(script);
+
+      if (!isEqual)
+        LispDevice::store();
+    }
+    else
+      UNIOT_LOG_INFO("script ignored: %s", script.c_str());
+
+    // let's free some memory
+    object().clean();
+    // NOTE: you may need getLasCode() somewhere else, but it has already cleaned here
+    getLisp().cleanLastCode();
   }
+
+private:
+  bool mFirstPacketReceived;
+  uint32_t mChecksum;
 };
 
 } // namespace uniot

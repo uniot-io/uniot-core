@@ -37,11 +37,13 @@ class AppKit : public IGeneralBrokerKitConnection, public ISchedulerKitConnectio
 {
 public:
   AppKit(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
-      : mMQTT(credentials, [this](CBOR &info) {
+      : mMQTT(credentials, [this, &credentials](CBOR &info) {
           auto arr = info.putArray("primitives");
           getLisp().serializeNamesOfPrimitives(arr.get());
           arr->closeArray();
 
+          info.put("creator", credentials.getCreatorId().c_str());
+          info.put("mqtt_size", MQTT_MAX_PACKET_SIZE);
           info.put("d_in", UniotPinMap.getDigitalInputLength());
           info.put("d_out", UniotPinMap.getDigitalOutputLength());
           info.put("a_in", UniotPinMap.getAnalogInputLength());
@@ -68,9 +70,10 @@ public:
   void begin()
   {
     mNetworkDevice.begin();
+    mLispDevice.runStoredCode();
   }
 
-  void pushTo(TaskScheduler *scheduler)
+  void pushTo(TaskScheduler *scheduler) override
   {
     scheduler->push(&mNetworkDevice);
     scheduler->push(mTaskMQTT);
@@ -78,31 +81,32 @@ public:
     scheduler->push(getLisp().getTask());
   }
 
-  void attach()
+  void attach() override
   {
     mNetworkDevice.attach();
     mTaskLispButton->attach(100);
   }
 
-  void connect(GeneralBroker *broker)
+  void connect(GeneralBroker *broker) override
   {
     broker->connect(&mNetworkDevice);
     broker->connect(&getLisp());
+    broker->connect(&mLispDevice);
     broker->connect(mpSubscriberNetwork->subscribe(NetworkScheduler::CONNECTION));
-    broker->connect(mpSubscriberLisp->subscribe(unLisp::LISP));
   }
 
-  void disconnect(GeneralBroker *broker)
+  void disconnect(GeneralBroker *broker) override
   {
     broker->disconnect(&mNetworkDevice);
     broker->disconnect(&getLisp());
+    broker->disconnect(&mLispDevice);
     broker->disconnect(mpSubscriberNetwork->unsubscribe(NetworkScheduler::CONNECTION));
-    broker->disconnect(mpSubscriberLisp->unsubscribe(unLisp::LISP));
   }
 
 private:
   void _initMqtt()
   {
+    // TODO: should I move configs to the Credentials class?
     mMQTT.setServer("mqtt.uniot.io", 1883);
     mMQTT.addDevice(&mLispDevice, "script");
   }
@@ -166,19 +170,6 @@ private:
         }
       }
     }));
-    mpSubscriberLisp = std::unique_ptr<GeneralSubscriber>(new GeneralCallbackSubscriber([&](int topic, int msg) {
-      if (msg == unLisp::ERROR)
-      {
-        auto lastError = getLisp().getLastError().c_str();
-        UNIOT_LOG_ERROR("lisp error: %s", lastError);
-      }
-      else if (msg == unLisp::MSG_ADDED)
-      {
-        auto size = getLisp().sizeOutput();
-        auto result = getLisp().popOutput();
-        UNIOT_LOG_INFO("%s, %d msgs to read; %s", msg == unLisp::MSG_ADDED ? "added" : "replaced", size, result.c_str());
-      }
-    }));
   }
 
   MQTTKit mMQTT;
@@ -191,6 +182,5 @@ private:
   TaskScheduler::TaskPtr mTaskLispButton;
 
   UniquePointer<GeneralSubscriber> mpSubscriberNetwork;
-  UniquePointer<GeneralSubscriber> mpSubscriberLisp;
 };
 } // namespace uniot
