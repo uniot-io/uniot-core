@@ -29,6 +29,10 @@
 #include <PrimitiveExpeditor.h>
 #include <Logger.h>
 
+#ifndef UNIOT_LISP_HEAP
+#define UNIOT_LISP_HEAP 8000
+#endif
+
 namespace uniot
 {
 using namespace lisp;
@@ -70,6 +74,7 @@ public:
     if (!data.size())
       return;
 
+    mIsLastCodePersist = false;
     mLastCode = data;
     mLastError = "";
 
@@ -112,8 +117,23 @@ public:
     return mLastError;
   }
 
+  const Bytes &getLastCode()
+  {
+    UNIOT_LOG_WARN_IF(!mLastCode.size(), "there is no last saved code");
+    return mLastCode;
+  }
+
+  bool isLastCodePersist()
+  {
+    return mIsLastCodePersist;
+  }
+
+  void cleanLastCode() {
+    mLastCode.clean();
+  }
+
 private:
-  unLisp()
+  unLisp() : mIsLastCodePersist(false)
   {
     auto fnPrintOut = [](const char *msg, int size) {
       if (size > 0)
@@ -130,6 +150,10 @@ private:
       auto &instance = unLisp::getInstance();
       instance.mLastError = msg;
       instance.publish(Topic::LISP, ERROR);
+
+      // TODO: do we need a special error callback?
+      instance.mTaskLispEval->detach();
+      instance._destroyMachine();
     };
 
     lisp_set_cycle_yield(yield);
@@ -166,7 +190,7 @@ private:
 
   void _createMachine()
   {
-    lisp_create(8000);
+    lisp_create(UNIOT_LISP_HEAP);
 
     *mLispEnv = make_env(mLispRoot, &Nil, &Nil);
     define_constants(mLispRoot, mLispEnv);
@@ -195,16 +219,17 @@ private:
     auto ms = expeditor.getArgInt(1);
     auto obj = expeditor.getArg(2);
 
-    UNIOT_LOG_DEBUG("%d", obj->type);
-
     DEFINE1(t_obj);
     *t_obj = get_variable(root, env, "#t_obj");
     (*t_obj)->cdr = obj;
 
     mTaskLispEval->attach(ms, times);
+    mIsLastCodePersist = times <= 0;
+
     return expeditor.makeBool(true);
   }
 
+  bool mIsLastCodePersist;
   Bytes mLastCode;
   String mLastError;
   LimitedQueue<String> mOutputBuffer;
