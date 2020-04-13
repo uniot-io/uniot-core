@@ -30,17 +30,25 @@ class Credentials : public CBORStorage
 public:
   Credentials() : CBORStorage("credentials.cbor")
   {
-    CBORStorage::restore();
-
     mCreatorId = UNIOT_CREATOR_ID;
-    mOwnerId = object().getString("account");
     mDeviceId = _calcDeviceId();
   }
 
-  bool store()
+  bool store() override
   {
     object().put("account", mOwnerId.c_str());
     return CBORStorage::store();
+  }
+
+  bool restore() override
+  {
+    if (CBORStorage::restore())
+    {
+      mOwnerId = object().getString("account");
+      return true;
+    }
+    UNIOT_LOG_ERROR("%s", "credentials not restored");
+    return false;
   }
 
   void setOwnerId(const String &id)
@@ -48,17 +56,17 @@ public:
     mOwnerId = id;
   }
 
-  String getOwnerId() const
+  const String &getOwnerId() const
   {
     return mOwnerId;
   }
 
-  String getCreatorId() const
+  const String &getCreatorId() const
   {
     return mCreatorId;
   }
 
-  String getDeviceId() const
+  const String &getDeviceId() const
   {
     return mDeviceId;
   }

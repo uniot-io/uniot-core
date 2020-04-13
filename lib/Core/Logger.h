@@ -26,16 +26,24 @@
 #define UNIOT_LOG_BUF_SIZE 256
 #endif
 
+#ifndef UNIOT_LOG_SET_READY
+#define UNIOT_LOG_SET_READY() \
+  do                          \
+  {                           \
+    if (!Serial)              \
+    {                         \
+      Serial.begin(9600);     \
+      Serial.print("\n\n");   \
+    }                         \
+  } while (0)
+#endif
+
 #ifndef UNIOT_LOG_PRINT
-#define UNIOT_LOG_PRINT(...)   \
-  do                           \
-  {                            \
-    if (!Serial)               \
-    {                          \
-      Serial.begin(9600);      \
-      Serial.print("\n\n");    \
-    }                          \
-    Serial.print(__VA_ARGS__); \
+#define UNIOT_LOG_PRINT(...)     \
+  do                             \
+  {                              \
+    if (Serial)                  \
+      Serial.print(__VA_ARGS__); \
   } while (0)
 #endif
 
@@ -70,6 +78,7 @@ uniot_log_printf(const char *format, ...)
 #else
 #include <Common.h>
 
+#define UNIOT_LOG_SET_READY() do {} while(0)
 #define UNIOT_LOG_PRINT(...) (UNUSED(__VA_ARGS__))
 #define UNIOT_LOG(log_type, ...) (UNUSED(__VA_ARGS__))
 #define UNIOT_LOG_IF(log_type, ...) (UNUSED(__VA_ARGS__))

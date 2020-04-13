@@ -25,7 +25,9 @@
 #include <PinMap.h>
 #include <Logger.h>
 
-void inject();
+extern "C" {
+  void inject(void);
+}
 
 extern uniot::TaskScheduler MainScheduler;
 extern uniot::GeneralBroker MainBroker;
