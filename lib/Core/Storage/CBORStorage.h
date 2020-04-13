@@ -38,7 +38,7 @@ public:
     return mCbor;
   }
 
-  bool store()
+  bool store() override
   {
     if (mCbor.dirty())
     {
@@ -48,7 +48,7 @@ public:
     return true;
   }
 
-  bool restore()
+  bool restore() override
   {
     auto success = Storage::restore();
     if (success)
@@ -58,7 +58,8 @@ public:
     return success;
   }
 
-  bool clean() {
+  bool clean() override
+  {
     mCbor.clean();
     return Storage::clean();
   }

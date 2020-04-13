@@ -38,8 +38,8 @@ public:
   {
   }
 
-  bool store();
-  bool clean();
+  bool store() override;
+  bool clean() override;
   bool printCrashDataIfExists() const;
 
 protected:

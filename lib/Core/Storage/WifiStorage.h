@@ -46,25 +46,29 @@ public:
     return &mWifiArgs;
   }
 
-  void store()
+  bool store() override
   {
     object().put("ssid", mWifiArgs.ssid.c_str());
     object().put("pass", mWifiArgs.pass.c_str());
-    CBORStorage::store();
+    return CBORStorage::store();
   }
 
-  void restore()
+  bool restore() override
   {
-    CBORStorage::restore();
-    mWifiArgs.ssid = object().getString("ssid");
-    mWifiArgs.pass = object().getString("pass");
+    if (CBORStorage::restore())
+    {
+      mWifiArgs.ssid = object().getString("ssid");
+      mWifiArgs.pass = object().getString("pass");
+      return true;
+    }
+    return false;
   }
 
-  void clean()
+  bool clean() override
   {
-    CBORStorage::clean();
     mWifiArgs.ssid = "";
     mWifiArgs.pass = "";
+    return CBORStorage::clean();
   }
 
 private:

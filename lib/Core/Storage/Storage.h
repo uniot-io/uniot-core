@@ -62,7 +62,7 @@ public:
     }
   }
 
-  bool store()
+  virtual bool store()
   {
     auto file = SPIFFS.open(mPath, "w");
     if (!file)
@@ -74,16 +74,16 @@ public:
     file.close();
     // using SPIFFS.gc() can avoid or reduce issues where SPIFFS reports
     // free space but is unable to write additional data to a file
-    UNIOT_LOG_DEBUG_IF(!SPIFFS.gc(), "SPIFFS gc failed. Caller: %s", mPath.c_str());
+    UNIOT_LOG_DEBUG_IF(!SPIFFS.gc(), "SPIFFS gc failed. That's all right. Caller: %s", mPath.c_str());
     return true;
   }
 
-  bool restore()
+  virtual bool restore()
   {
     auto file = SPIFFS.open(mPath, "r");
     if (!file)
     {
-      UNIOT_LOG_WARN("Failed to open %s", mPath.c_str());
+      UNIOT_LOG_WARN("Failed to open %s. It is ok on first start", mPath.c_str());
       return false;
     }
     mData = _readSmallFile(file);
@@ -91,7 +91,7 @@ public:
     return true;
   }
 
-  bool clean()
+  virtual bool clean()
   {
     mData.clean();
     if (!SPIFFS.remove(mPath))
