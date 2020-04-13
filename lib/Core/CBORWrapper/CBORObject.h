@@ -157,8 +157,7 @@ public:
 
   Bytes build()
   {
-    // NOTE: for the future, cn_cbor_encoder_calc was not tested with floats
-    auto calculated = cn_cbor_encoder_calc(mpMapNode);
+    auto calculated = cn_cbor_encoder_write(NULL, 0, 0, mpMapNode);
     UNIOT_LOG_WARN_IF(calculated > UNIOT_DANGEROUS_CBOR_DATA_SIZE, "dangerous data size: %d", calculated);
 
     Bytes bytes(nullptr, calculated);
