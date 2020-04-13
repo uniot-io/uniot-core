@@ -17,15 +17,18 @@
  */
 
 #pragma once
+
+#include <functional>
 #include <type_traits>
+#include <Common.h>
+
 class Bytes
 {
 public:
+  using Filler = std::function<size_t(uint8_t *buf, size_t size)>;
 
   Bytes() : Bytes(nullptr, 0)
-  {
-    
-  }
+  {}
 
   Bytes(const uint8_t* data, size_t size) {
     _init();
@@ -46,6 +49,11 @@ public:
   }
 
   Bytes(const Bytes &value) {
+    _init();
+    *this = value;
+  }
+
+  Bytes(const String &value) {
     _init();
     *this = value;
   }
@@ -79,6 +87,21 @@ public:
     return *((T *)mBuffer);
   }
 
+  size_t fill(Filler filler)
+  {
+    if (filler) {
+      return filler(mBuffer, mSize);
+    }
+    return 0;
+  }
+
+  Bytes &prune(size_t newSize) {
+    if (newSize < mSize) {
+      _reserve(newSize);
+    }
+    return *this;
+  }
+
   uint8_t* raw() const {
     return mBuffer;
   }
@@ -102,6 +125,10 @@ public:
 
   void clean() {
     _invalidate();
+  }
+
+  uint32_t checksum() const {
+    return CRC32(mBuffer, mSize);
   }
 
 private:

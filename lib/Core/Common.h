@@ -33,6 +33,20 @@ inline void UNUSED(Args &&... args)
   (void)(sizeof...(args));
 }
 
+inline uint32_t CRC32(const void *data, size_t length, uint32_t crc = 0)
+{
+  const uint8_t *ldata = (const uint8_t *)data;
+
+  crc = ~crc;
+  while (length--)
+  {
+    crc ^= *ldata++;
+    for (uint8_t k = 0; k < 8; k++)
+      crc = crc & 1 ? (crc >> 1) ^ 0x82f63b78 : crc >> 1; // CRC-32C (iSCSI) polynomial in reversed bit order.
+  }
+  return ~crc;
+}
+
 #define COUNT_OF(arr) (sizeof(arr) / sizeof(arr[0]))
 #define ARRAY_ELEMENT_SAFE(arr, index) ((arr)[(((index) < COUNT_OF(arr)) ? (index) : (COUNT_OF(arr) - 1))])
 #define FOURCC(name) FourCC<ARRAY_ELEMENT_SAFE(#name, 0), ARRAY_ELEMENT_SAFE(#name, 1), ARRAY_ELEMENT_SAFE(#name, 2), ARRAY_ELEMENT_SAFE(#name, 3)>::Value
