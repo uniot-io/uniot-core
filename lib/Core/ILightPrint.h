@@ -20,11 +20,21 @@
 
 namespace uniot {
 
-  class ILightPrint {
-  public:
-    virtual ~ILightPrint() {}
-    virtual void println(const char* str) = 0;
-    virtual void printlnPGM(const char* PSTR_str) = 0;
-  };
+class ILightPrint {
+ public:
+  virtual ~ILightPrint() {}
+  virtual void println(const char* str) = 0;
+  virtual void printlnPGM(const char* PSTR_str) = 0;
+};
 
-}
+class SerialLightPrinter : public ILightPrint {
+ public:
+  virtual void println(const char* str) override {
+    Serial.println(str);
+  }
+  virtual void printlnPGM(const char* PSTR_str) override {
+    Serial.println(PSTR_str);
+  }
+};
+
+}  // namespace uniot

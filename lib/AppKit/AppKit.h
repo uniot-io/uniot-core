@@ -18,12 +18,12 @@
 
 #pragma once
 
-#include <Broker.h>
+#include <EventBus.h>
 #include <NetworkDevice.h>
-#include <CallbackSubscriber.h>
+#include <CallbackEventListener.h>
 #include <MQTTKit.h>
 #include <unLisp.h>
-#include <IBrokerKitConnection.h>
+#include <IEventBusKitConnection.h>
 #include <ISchedulerKitConnection.h>
 #include <Logger.h>
 #include <LispDevice.h>
@@ -33,7 +33,7 @@
 
 namespace uniot
 {
-class AppKit : public IGeneralBrokerKitConnection, public ISchedulerKitConnection
+class AppKit : public ICoreEventBusKitConnection, public ISchedulerKitConnection
 {
 public:
   AppKit(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
@@ -69,6 +69,7 @@ public:
 
   void begin()
   {
+    attach();
     mNetworkDevice.begin();
     mLispDevice.runStoredCode();
   }
@@ -87,20 +88,20 @@ public:
     mTaskLispButton->attach(100);
   }
 
-  void connect(GeneralBroker *broker) override
+  void connect(CoreEventBus *eventBus) override
   {
-    broker->connect(&mNetworkDevice);
-    broker->connect(&getLisp());
-    broker->connect(&mLispDevice);
-    broker->connect(mpSubscriberNetwork->subscribe(NetworkScheduler::CONNECTION));
+    eventBus->connect(&mNetworkDevice);
+    eventBus->connect(&getLisp());
+    eventBus->connect(&mLispDevice);
+    eventBus->connect(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
   }
 
-  void disconnect(GeneralBroker *broker) override
+  void disconnect(CoreEventBus *eventBus) override
   {
-    broker->disconnect(&mNetworkDevice);
-    broker->disconnect(&getLisp());
-    broker->disconnect(&mLispDevice);
-    broker->disconnect(mpSubscriberNetwork->unsubscribe(NetworkScheduler::CONNECTION));
+    eventBus->disconnect(&mNetworkDevice);
+    eventBus->disconnect(&getLisp());
+    eventBus->disconnect(&mLispDevice);
+    eventBus->disconnect(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
   }
 
 private:
@@ -136,7 +137,7 @@ private:
 
   void _initSubscribers()
   {
-    mpSubscriberNetwork = std::unique_ptr<GeneralSubscriber>(new GeneralCallbackSubscriber([&](int topic, int msg) {
+    mpNetworkEventListener = std::unique_ptr<CoreEventListener>(new CoreCallbackEventListener([&](int topic, int msg) {
       if (NetworkScheduler::CONNECTION == topic)
       {
         switch (msg)
@@ -181,6 +182,6 @@ private:
   TaskScheduler::TaskPtr mTaskMQTT;
   TaskScheduler::TaskPtr mTaskLispButton;
 
-  UniquePointer<GeneralSubscriber> mpSubscriberNetwork;
+  UniquePointer<CoreEventListener> mpNetworkEventListener;
 };
 } // namespace uniot

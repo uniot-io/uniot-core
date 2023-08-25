@@ -18,23 +18,32 @@
 
 #pragma once
 
-#include <functional>
-#include "Subscriber.h"
+#include <ClearQueue.h>
 
 namespace uniot
 {
 template <class T_topic, class T_msg>
-class CallbackSubscriber : public Subscriber<T_topic, T_msg>
-{
-public:
-  using SubscriberCallback = std::function<void(T_topic, T_msg)>;
+class EventBus;
 
-  CallbackSubscriber(SubscriberCallback callback);
-  virtual void onPublish(T_topic topic, T_msg msg);
+template <class T_topic, class T_msg>
+class EventListener
+{
+  friend class EventBus<T_topic, T_msg>;
+
+public:
+  virtual ~EventListener();
+
+  EventListener *listenToEvent(T_topic topic);
+  EventListener *stopListeningToEvent(T_topic topic);
+  bool isListeningToEvent(T_topic topic);
+  void connect(EventBus<T_topic, T_msg> *eventBus);
+  void disconnect(EventBus<T_topic, T_msg> *eventBus);
+  virtual void onEventReceived(T_topic topic, T_msg msg) = 0;
 
 private:
-  SubscriberCallback mCallback;
+  ClearQueue<EventBus<T_topic, T_msg> *> mEventBusQueue;
+  ClearQueue<T_topic> mTopics;
 };
 
-using GeneralCallbackSubscriber = CallbackSubscriber<unsigned int, int>;
+using CoreEventListener = EventListener<unsigned int, int>;
 } // namespace uniot

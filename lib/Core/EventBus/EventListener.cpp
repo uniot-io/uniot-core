@@ -17,40 +17,54 @@
  */
 
 #include <Arduino.h>
-#include "Publisher.h"
-#include "Broker.h"
+#include "EventListener.h"
+#include "EventBus.h"
 
 namespace uniot
 {
 template <class T_topic, class T_msg>
-Publisher<T_topic, T_msg>::~Publisher()
+EventListener<T_topic, T_msg>::~EventListener()
 {
-  mBrokerQueue.forEach([this](Broker<T_topic, T_msg> *broker) { broker->mPublishers.removeOne(this); });
+  mEventBusQueue.forEach([this](EventBus<T_topic, T_msg> *eventBus) { eventBus->mListeners.removeOne(this); });
 }
 
 template <class T_topic, class T_msg>
-void Publisher<T_topic, T_msg>::publish(T_topic topic, T_msg msg)
+EventListener<T_topic, T_msg> *EventListener<T_topic, T_msg>::listenToEvent(T_topic topic)
 {
-  mBrokerQueue.forEach([&](Broker<T_topic, T_msg> *broker) { broker->publish(topic, msg); yield(); });
+  mTopics.pushUnique(topic);
+  return this;
 }
 
 template <class T_topic, class T_msg>
-void Publisher<T_topic, T_msg>::connect(Broker<T_topic, T_msg> *broker)
+EventListener<T_topic, T_msg> *EventListener<T_topic, T_msg>::stopListeningToEvent(T_topic topic)
 {
-  if (broker)
+  mTopics.removeOne(topic);
+  return this;
+}
+
+template <class T_topic, class T_msg>
+bool EventListener<T_topic, T_msg>::isListeningToEvent(T_topic topic)
+{
+  return mTopics.contains(topic);
+}
+
+template <class T_topic, class T_msg>
+void EventListener<T_topic, T_msg>::connect(EventBus<T_topic, T_msg> *eventBus)
+{
+  if (eventBus)
   {
-    broker->connect(this);
+    eventBus->connect(this);
   }
 }
 
 template <class T_topic, class T_msg>
-void Publisher<T_topic, T_msg>::disconnect(Broker<T_topic, T_msg> *broker)
+void EventListener<T_topic, T_msg>::disconnect(EventBus<T_topic, T_msg> *eventBus)
 {
-  if (broker)
+  if (eventBus)
   {
-    broker->disconnect(this);
+    eventBus->disconnect(this);
   }
 }
 } // namespace uniot
 
-template class uniot::Publisher<unsigned int, int>;
+template class uniot::EventListener<unsigned int, int>;

@@ -21,7 +21,7 @@
 #include <libminilisp.h>
 #include <TaskScheduler.h>
 #include <LimitedQueue.h>
-#include <Publisher.h>
+#include <EventEmitter.h>
 #include <CBORArray.h>
 #include <Bytes.h>
 #include <Common.h>
@@ -37,7 +37,7 @@ namespace uniot
 {
 using namespace lisp;
 
-class unLisp : public GeneralPublisher
+class unLisp : public CoreEventEmitter
 {
 public:
   enum Topic { LISP = FOURCC(lisp) };
@@ -81,7 +81,7 @@ public:
     mTaskLispEval->detach();
     _destroyMachine();
     _createMachine();
-    
+
     auto code = mLastCode.terminate().c_str();
     UNIOT_LOG_DEBUG("eval: %s", code);
 
@@ -141,7 +141,7 @@ private:
         auto &instance = unLisp::getInstance();
         auto alreadyFull = instance.mOutputBuffer.isFull();
         instance.mOutputBuffer.pushLimited(String(msg));
-        instance.publish(Topic::LISP, alreadyFull ? Msg::MSG_REPLACED : Msg::MSG_ADDED);
+        instance.emitEvent(Topic::LISP, alreadyFull ? Msg::MSG_REPLACED : Msg::MSG_ADDED);
       }
       yield();
     };
@@ -149,7 +149,7 @@ private:
     auto fnPrintErr = [](const char *msg, int size) {
       auto &instance = unLisp::getInstance();
       instance.mLastError = msg;
-      instance.publish(Topic::LISP, ERROR);
+      instance.emitEvent(Topic::LISP, ERROR);
 
       // TODO: do we need a special error callback?
       instance.mTaskLispEval->detach();

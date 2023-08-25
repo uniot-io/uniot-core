@@ -1,7 +1,7 @@
 {
     "build": {
         "flags": [
-            "-I Broker",
+            "-I EventBus",
             "-I Scheduler",
             "-I Network",
             "-I Storage",
@@ -13,7 +13,7 @@
         ],
         "srcDir": ".",
         "srcFilter": [
-            "+<Broker/*>",
+            "+<EventBus/*>",
             "+<Scheduler/*>",
             "+<Network/*>",
             "+<Storage/*>",

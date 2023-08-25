@@ -24,8 +24,8 @@
 
 #include <unLisp.h>
 #include <PrimitiveExpeditor.h>
-#include <Broker.h>
-#include <CallbackSubscriber.h>
+#include <EventBus.h>
+#include <CallbackEventListener.h>
 
 using namespace uniot;
 
@@ -134,26 +134,26 @@ void test_function_lisp_full_cycle(void)
 
   // env global variables
   TaskScheduler scheduler;
-  GeneralBroker broker;
+  CoreEventBus eventBus;
 
   // simple lisp output subscriber
-  GeneralCallbackSubscriber subscriber([&](int topic, int msg) {
+  CoreCallbackEventListener subscriber([&](int topic, int msg) {
     lastLispResult = unLisp::getInstance().popOutput();
   });
 
-  // subscribe to the topic and connect subscriber to broker
-  broker.connect(subscriber.subscribe(unLisp::LISP));
+  // subscribe to the topic and connect subscriber to eventBus
+  eventBus.connect(subscriber.listenToEvent(unLisp::LISP));
 
-  // connect publisher to broker
-  broker.connect(&unLisp::getInstance());
+  // connect publisher to eventBus
+  eventBus.connect(&unLisp::getInstance());
 
   // push unLisp task to scheduler, attachment is regulated by the internal logic of the class
   scheduler.push(unLisp::getInstance().getTask());
 
-  // create a broker task, push it to the scheduler and attach it manually
-  auto brokerTask = TaskScheduler::make(&broker);
-  scheduler.push(brokerTask);
-  brokerTask->attach(1);
+  // create a eventBus task, push it to the scheduler and attach it manually
+  auto eventBusTask = TaskScheduler::make(&eventBus);
+  scheduler.push(eventBusTask);
+  eventBusTask->attach(1);
 
   // push user primitive to unLisp
   unLisp::getInstance().pushPrimitive("simple_plus", user_prim_simple_plus);

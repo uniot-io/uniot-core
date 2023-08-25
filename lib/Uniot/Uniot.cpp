@@ -20,7 +20,7 @@
 #include <CrashStorage.h>
 
 uniot::TaskScheduler MainScheduler;
-uniot::GeneralBroker MainBroker;
+uniot::CoreEventBus MainEventBus;
 uniot::Credentials MyCredentials;
 
 
@@ -28,9 +28,9 @@ void setup()
 {
   UNIOT_LOG_SET_READY();
 
-  auto taskHandleBroker = uniot::TaskScheduler::make(&MainBroker);
-  MainScheduler.push(taskHandleBroker);
-  taskHandleBroker->attach(100);
+  auto taskHandleEventBus = uniot::TaskScheduler::make(&MainEventBus);
+  MainScheduler.push(taskHandleEventBus);
+  taskHandleEventBus->attach(100);
   MyCredentials.restore();
 
   inject();

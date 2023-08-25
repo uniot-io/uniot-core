@@ -18,20 +18,20 @@
 
 #pragma once
 
-#include <Broker.h>
+#include <EventBus.h>
 #include <NetworkScheduler.h>
-#include <CallbackSubscriber.h>
-#include <IBrokerKitConnection.h>
+#include <CallbackEventListener.h>
+#include <IEventBusKitConnection.h>
 #include <ISchedulerKitConnection.h>
 #include <Button.h>
 
 namespace uniot
 {
-class NetworkDevice : public IGeneralBrokerKitConnection, public ISchedulerKitConnection
+class NetworkDevice : public ICoreEventBusKitConnection, public ISchedulerKitConnection
 {
 public:
   NetworkDevice(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
-      : mNetwork(credentials),
+      : mNetwork(credentials, new SerialLightPrinter()),
         mNetworkLastState(NetworkScheduler::SUCCESS),
         mClickCounter(0),
         mPinLed(pinLed),
@@ -61,16 +61,16 @@ public:
     return mNetwork;
   }
 
-  void connect(GeneralBroker *broker)
+  void connect(CoreEventBus *eventBus)
   {
-    broker->connect(&mNetwork);
-    broker->connect(mpSubscriberNetwork->subscribe(NetworkScheduler::CONNECTION));
+    eventBus->connect(&mNetwork);
+    eventBus->connect(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
   }
 
-  void disconnect(GeneralBroker *broker)
+  void disconnect(CoreEventBus *eventBus)
   {
-    broker->disconnect(&mNetwork);
-    broker->disconnect(mpSubscriberNetwork->unsubscribe(NetworkScheduler::CONNECTION));
+    eventBus->disconnect(&mNetwork);
+    eventBus->disconnect(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
   }
 
   void pushTo(TaskScheduler *scheduler) {
@@ -130,7 +130,7 @@ private:
 
   void _initSubscribers()
   {
-    mpSubscriberNetwork = std::unique_ptr<GeneralSubscriber>(new GeneralCallbackSubscriber([&](int topic, int msg) {
+    mpNetworkEventListener = std::unique_ptr<CoreEventListener>(new CoreCallbackEventListener([&](int topic, int msg) {
       if (NetworkScheduler::CONNECTION == topic)
       {
         int lastState = _resetNetworkLastState(msg);
@@ -180,6 +180,6 @@ private:
   TaskScheduler::TaskPtr mpTaskConfigBtn;
   TaskScheduler::TaskPtr mpTaskResetClickCounter;
 
-  UniquePointer<GeneralSubscriber> mpSubscriberNetwork;
+  UniquePointer<CoreEventListener> mpNetworkEventListener;
 };
 } // namespace uniot

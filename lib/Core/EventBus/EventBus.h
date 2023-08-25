@@ -20,42 +20,42 @@
 
 #include <IExecutor.h>
 #include <ClearQueue.h>
-#include "IBrokerKitConnection.h"
+#include "IEventBusKitConnection.h"
 
 namespace uniot
 {
 template <class T_topic, class T_msg>
-class Subscriber;
+class EventListener;
 
 template <class T_topic, class T_msg>
-class Publisher;
+class EventEmitter;
 
 template <class T_topic, class T_msg>
-class Broker : public uniot::IExecutor
+class EventBus : public uniot::IExecutor
 {
-  friend class Subscriber<T_topic, T_msg>;
-  friend class Publisher<T_topic, T_msg>;
+  friend class EventListener<T_topic, T_msg>;
+  friend class EventEmitter<T_topic, T_msg>;
 
 public:
-  virtual ~Broker();
+  virtual ~EventBus();
 
-  void connect(IBrokerKitConnection<T_topic, T_msg> *connection);
-  void disconnect(IBrokerKitConnection<T_topic, T_msg> *connection);
+  void connect(IEventBusKitConnection<T_topic, T_msg> *connection);
+  void disconnect(IEventBusKitConnection<T_topic, T_msg> *connection);
 
-  void connect(Publisher<T_topic, T_msg> *publisher);
-  void disconnect(Publisher<T_topic, T_msg> *publisher);
+  void connect(EventEmitter<T_topic, T_msg> *emitter);
+  void disconnect(EventEmitter<T_topic, T_msg> *emitter);
 
-  void connect(Subscriber<T_topic, T_msg> *subscriber);
-  void disconnect(Subscriber<T_topic, T_msg> *subscriber);
+  void connect(EventListener<T_topic, T_msg> *listener);
+  void disconnect(EventListener<T_topic, T_msg> *listener);
 
-  void publish(T_topic topic, T_msg msg);
+  void emitEvent(T_topic topic, T_msg msg);
   virtual uint8_t execute() override;
 
 private:
-  ClearQueue<Subscriber<T_topic, T_msg> *> mSubscribers; // TODO: need real set; std::set is broken into esp xtensa sdk
-  ClearQueue<Publisher<T_topic, T_msg> *> mPublishers;
+  ClearQueue<EventListener<T_topic, T_msg> *> mListeners; // TODO: need real set; std::set is broken into esp xtensa sdk
+  ClearQueue<EventEmitter<T_topic, T_msg> *> mEmitters;
   ClearQueue<std::pair<T_topic, T_msg>> mEvents;
 };
 
-using GeneralBroker = Broker<unsigned int, int>;
+using CoreEventBus = EventBus<unsigned int, int>;
 } // namespace uniot

@@ -18,21 +18,21 @@
 
 #pragma once
 
-#include "Broker.h"
+#include "EventBus.h"
 
 namespace uniot
 {
 template <class T_topic, class T_msg>
-class Broker;
+class EventBus;
 
 template <class T_topic, class T_msg>
-class IBrokerKitConnection
+class IEventBusKitConnection
 {
 public:
-  virtual ~IBrokerKitConnection() {}
-  virtual void connect(Broker<T_topic, T_msg> *broker) = 0;
-  virtual void disconnect(Broker<T_topic, T_msg> *broker) = 0;
+  virtual ~IEventBusKitConnection() {}
+  virtual void connect(EventBus<T_topic, T_msg> *eventBus) = 0;
+  virtual void disconnect(EventBus<T_topic, T_msg> *eventBus) = 0;
 };
 
-using IGeneralBrokerKitConnection = IBrokerKitConnection<unsigned int, int>;
+using ICoreEventBusKitConnection = IEventBusKitConnection<unsigned int, int>;
 } // namespace uniot

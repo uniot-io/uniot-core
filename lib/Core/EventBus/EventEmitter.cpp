@@ -17,54 +17,40 @@
  */
 
 #include <Arduino.h>
-#include "Subscriber.h"
-#include "Broker.h"
+#include "EventEmitter.h"
+#include "EventBus.h"
 
 namespace uniot
 {
 template <class T_topic, class T_msg>
-Subscriber<T_topic, T_msg>::~Subscriber()
+EventEmitter<T_topic, T_msg>::~EventEmitter()
 {
-  mBrokerQueue.forEach([this](Broker<T_topic, T_msg> *broker) { broker->mSubscribers.removeOne(this); });
+  mEventBusQueue.forEach([this](EventBus<T_topic, T_msg> *eventBus) { eventBus->mEmitters.removeOne(this); });
 }
 
 template <class T_topic, class T_msg>
-Subscriber<T_topic, T_msg> *Subscriber<T_topic, T_msg>::subscribe(T_topic topic)
+void EventEmitter<T_topic, T_msg>::emitEvent(T_topic topic, T_msg msg)
 {
-  mTopics.pushUnique(topic);
-  return this;
+  mEventBusQueue.forEach([&](EventBus<T_topic, T_msg> *eventBus) { eventBus->emitEvent(topic, msg); yield(); });
 }
 
 template <class T_topic, class T_msg>
-Subscriber<T_topic, T_msg> *Subscriber<T_topic, T_msg>::unsubscribe(T_topic topic)
+void EventEmitter<T_topic, T_msg>::connect(EventBus<T_topic, T_msg> *eventBus)
 {
-  mTopics.removeOne(topic);
-  return this;
-}
-
-template <class T_topic, class T_msg>
-bool Subscriber<T_topic, T_msg>::isSubscribed(T_topic topic)
-{
-  return mTopics.contains(topic);
-}
-
-template <class T_topic, class T_msg>
-void Subscriber<T_topic, T_msg>::connect(Broker<T_topic, T_msg> *broker)
-{
-  if (broker)
+  if (eventBus)
   {
-    broker->connect(this);
+    eventBus->connect(this);
   }
 }
 
 template <class T_topic, class T_msg>
-void Subscriber<T_topic, T_msg>::disconnect(Broker<T_topic, T_msg> *broker)
+void EventEmitter<T_topic, T_msg>::disconnect(EventBus<T_topic, T_msg> *eventBus)
 {
-  if (broker)
+  if (eventBus)
   {
-    broker->disconnect(this);
+    eventBus->disconnect(this);
   }
 }
 } // namespace uniot
 
-template class uniot::Subscriber<unsigned int, int>;
+template class uniot::EventEmitter<unsigned int, int>;

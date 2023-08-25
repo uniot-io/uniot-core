@@ -23,27 +23,23 @@
 namespace uniot
 {
 template <class T_topic, class T_msg>
-class Broker;
+class EventBus;
 
 template <class T_topic, class T_msg>
-class Subscriber
+class EventEmitter
 {
-  friend class Broker<T_topic, T_msg>;
+  friend class EventBus<T_topic, T_msg>;
 
 public:
-  virtual ~Subscriber();
+  virtual ~EventEmitter();
 
-  Subscriber *subscribe(T_topic topic);
-  Subscriber *unsubscribe(T_topic topic);
-  bool isSubscribed(T_topic topic);
-  void connect(Broker<T_topic, T_msg> *broker);
-  void disconnect(Broker<T_topic, T_msg> *broker);
-  virtual void onPublish(T_topic topic, T_msg msg) = 0;
+  void emitEvent(T_topic topic, T_msg msg);
+  void connect(EventBus<T_topic, T_msg> *eventBus);
+  void disconnect(EventBus<T_topic, T_msg> *eventBus);
 
 private:
-  ClearQueue<Broker<T_topic, T_msg> *> mBrokerQueue;
-  ClearQueue<T_topic> mTopics;
+  ClearQueue<EventBus<T_topic, T_msg> *> mEventBusQueue;
 };
 
-using GeneralSubscriber = Subscriber<unsigned int, int>;
+using CoreEventEmitter = EventEmitter<unsigned int, int>;
 } // namespace uniot

@@ -23,7 +23,7 @@
 #include <Common.h>
 #include <Credentials.h>
 #include <TaskScheduler.h>
-#include <Publisher.h>
+#include <EventEmitter.h>
 #include <ConfigCaptivePortal.h>
 #include <WifiStorage.h>
 #include <ILightPrint.h>
@@ -40,7 +40,7 @@ namespace uniot {
   const char text[]                PROGMEM = "text";
 
 //TODO: improve by public methods as needed
-  class NetworkScheduler : public TaskScheduler, public GeneralPublisher
+  class NetworkScheduler : public TaskScheduler, public CoreEventEmitter
   {
   public:
     enum Topic { CONNECTION = FOURCC(netw) };
@@ -58,7 +58,7 @@ namespace uniot {
     {
       mApName = "UNIOT-" + String(mpCredentials->getShortDeviceId(), HEX);
       mApName.toUpperCase();
-      
+
       // default wifi persistent storage brings unexpected behavior, I turn it off
       WiFi.persistent(false);
       WiFi.setAutoConnect(false);
@@ -76,7 +76,7 @@ namespace uniot {
         _print(mWifiStorage.getWifiArgs()->ssid.c_str());
         mTaskConnectSta->attach(500, 1);
       } else {
-        mTaskConfigAp->attach(500, 1);  
+        mTaskConfigAp->attach(500, 1);
       }
     }
 
@@ -109,13 +109,13 @@ namespace uniot {
     }
 
     void _initTasks() {
-      push(mTaskStart = make([this](short t) { 
-        if(mpConfigServer->start()) { 
+      push(mTaskStart = make([this](short t) {
+        if(mpConfigServer->start()) {
           mTaskServe->attach(10);
         }
       }));
       push(mTaskServe = make(mpConfigServer.get()));
-      push(mTaskStop = make([this](short t) { 
+      push(mTaskStop = make([this](short t) {
         mTaskServe->detach();
         mpConfigServer->stop();
       }));
@@ -123,18 +123,18 @@ namespace uniot {
       push(mTaskConfigAp = make([this](short t) {
         WiFi.disconnect(true);
         if( WiFi.softAPConfig((*mpApIp), (*mpApIp),  (*mpApSubnet))
-          && WiFi.softAP(mApName.c_str())) 
+          && WiFi.softAP(mApName.c_str()))
         {
           _printp(strApCreated);
           _print(mApName.c_str());
           mTaskStart->attach(500, 1);
-          publish(Topic::CONNECTION, Msg::ACCESS_POINT);
+          emitEvent(Topic::CONNECTION, Msg::ACCESS_POINT);
         } else {
           Serial.println("DEBUG: NetworkScheduler, mTaskConfigAp failed");
           mTaskConfigAp->attach(500, 1);
         }
       }));
-      push(mTaskConnectSta = make([this](short t) { 
+      push(mTaskConnectSta = make([this](short t) {
         WiFi.disconnect(true);
         bool disconect = true; WiFi.softAPdisconnect(true); // !!!!!!!!!!!!
         bool connect = WiFi.begin(mWifiStorage.getWifiArgs()->ssid.c_str(), mWifiStorage.getWifiArgs()->pass.c_str()) != WL_CONNECT_FAILED;
@@ -142,7 +142,7 @@ namespace uniot {
         {
           mTaskServe->detach();
           mTaskConnecting->attach(500, 20);
-          publish(Topic::CONNECTION, Msg::CONNECTING);
+          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::CONNECTING);
         }
       }));
       push(mTaskConnecting = make([this](short times) {
@@ -154,7 +154,7 @@ namespace uniot {
           mWifiStorage.store();
           mpCredentials->store();
           _printp(strSuccess);
-          publish(Topic::CONNECTION, Msg::SUCCESS);
+          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::SUCCESS);
           break;
 
           case WL_NO_SSID_AVAIL:
@@ -162,14 +162,14 @@ namespace uniot {
           mTaskConnecting->detach();
           mTaskConfigAp->attach(500, 1);
           _printp(strFailed);
-          publish(Topic::CONNECTION, Msg::FAILED);
+          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
           break;
 
           case WL_DISCONNECTED:
           if(!times) {
             mTaskConfigAp->attach(500, 1);
             _printp(strFailed);
-            publish(Topic::CONNECTION, Msg::FAILED);
+            CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
           }
           break;
 
@@ -181,7 +181,7 @@ namespace uniot {
       push(mTaskMonitoring = make([this](short times) {
         if(WiFi.status() != WL_CONNECTED) {
           mTaskMonitoring->detach();
-          publish(Topic::CONNECTION, Msg::DISCONNECTED);
+          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::DISCONNECTED);
         }
       }));
     }

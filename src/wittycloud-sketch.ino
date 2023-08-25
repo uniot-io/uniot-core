@@ -1,8 +1,8 @@
-#include <Uniot.h>
-#include <Board-WittyCloud.h>
 #include <AppKit.h>
+#include <Board-WittyCloud.h>
 #include <LispPrimitives.h>
 #include <Logger.h>
+#include <Uniot.h>
 
 using namespace uniot;
 
@@ -12,20 +12,18 @@ auto taskPrintHeap = TaskScheduler::make([&](short t) {
   Serial.println(ESP.getFreeHeap());
 });
 
-void inject()
-{
+void inject() {
   UniotPinMap.setDigitalOutput(3, RED, GREEN, BLUE);
   UniotPinMap.setDigitalInput(3, RED, GREEN, BLUE);
   UniotPinMap.setAnalogOutput(3, RED, GREEN, BLUE);
   UniotPinMap.setAnalogInput(1, LDR);
 
-  MainBroker.connect(&MainAppKit);
+  MainEventBus.connect(&MainAppKit);
   MainScheduler.push(&MainAppKit)
       ->push(taskPrintHeap);
 
   taskPrintHeap->attach(500);
 
-  MainAppKit.attach();
   MainAppKit.begin();
 
   UNIOT_LOG_INFO("%s: %s", "CHIP_ID", String(ESP.getChipId(), HEX).c_str());

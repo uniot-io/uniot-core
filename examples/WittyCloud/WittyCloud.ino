@@ -39,13 +39,12 @@ void inject()
   UniotPinMap.setAnalogOutput(3, RED, GREEN, BLUE);
   UniotPinMap.setAnalogInput(1, LDR);
 
-  MainBroker.connect(&MainAppKit);
+  MainEventBus.connect(&MainAppKit);
   MainScheduler.push(&MainAppKit)
       ->push(taskPrintHeap);
 
   taskPrintHeap->attach(500);
 
-  MainAppKit.attach();
   MainAppKit.begin();
 
   UNIOT_LOG_INFO("%s: %s", "CHIP_ID", String(ESP.getChipId(), HEX).c_str());

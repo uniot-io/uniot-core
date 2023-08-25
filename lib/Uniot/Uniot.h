@@ -20,7 +20,7 @@
 
 #include <Arduino.h>
 #include <TaskScheduler.h>
-#include <Broker.h>
+#include <EventBus.h>
 #include <Credentials.h>
 #include <PinMap.h>
 #include <Logger.h>
@@ -30,5 +30,5 @@ extern "C" {
 }
 
 extern uniot::TaskScheduler MainScheduler;
-extern uniot::GeneralBroker MainBroker;
+extern uniot::CoreEventBus MainEventBus;
 extern uniot::Credentials MyCredentials;

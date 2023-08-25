@@ -21,18 +21,18 @@
 #include <unLisp.h>
 #include <MQTTDevice.h>
 #include <CBORStorage.h>
-#include <Subscriber.h>
+#include <EventListener.h>
 
 namespace uniot
 {
 
-class LispDevice : public MQTTDevice, public CBORStorage, public GeneralSubscriber
+class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListener
 {
 public:
-  LispDevice() : MQTTDevice(), CBORStorage("lisp.cbor"), GeneralSubscriber(),
+  LispDevice() : MQTTDevice(), CBORStorage("lisp.cbor"), CoreEventListener(),
                  mFirstPacketReceived(false)
   {
-    GeneralSubscriber::subscribe(unLisp::LISP);
+    CoreEventListener::listenToEvent(unLisp::LISP);
   }
 
   void runStoredCode()
@@ -67,7 +67,7 @@ public:
     return CBORStorage::store();
   }
 
-  void onPublish(unsigned int topic, int msg) override
+  void onEventReceived(unsigned int topic, int msg) override
   {
     if (msg == unLisp::ERROR)
     {

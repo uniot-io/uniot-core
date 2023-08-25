@@ -21,7 +21,7 @@
 #include <functional>
 #include <Common.h>
 #include <IExecutor.h>
-#include <Publisher.h>
+#include <EventEmitter.h>
 #include <ClearQueue.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
@@ -33,7 +33,7 @@
 
 namespace uniot
 {
-class MQTTKit : public IExecutor, public GeneralPublisher
+class MQTTKit : public IExecutor, public CoreEventEmitter
 {
   typedef std::function<void(CBORObject &)> CBORExtender;
   friend class MQTTDevice;
@@ -135,11 +135,11 @@ public:
             mPubSubClient.subscribe(topic.c_str());
           });
         });
-        publish(Topic::CONNECTION, Msg::SUCCESS);
+        CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::SUCCESS);
       }
       else
       {
-        publish(Topic::CONNECTION, Msg::FAILED);
+        CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
       }
     }
     mPubSubClient.loop();

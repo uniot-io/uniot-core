@@ -16,30 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <ClearQueue.h>
+#include "CallbackEventListener.h"
 
 namespace uniot
 {
 template <class T_topic, class T_msg>
-class Broker;
+CallbackEventListener<T_topic, T_msg>::CallbackEventListener(EventListenerCallback callback)
+    : mCallback(callback) {}
 
 template <class T_topic, class T_msg>
-class Publisher
+void CallbackEventListener<T_topic, T_msg>::onEventReceived(T_topic topic, T_msg msg)
 {
-  friend class Broker<T_topic, T_msg>;
-
-public:
-  virtual ~Publisher();
-
-  void publish(T_topic topic, T_msg msg);
-  void connect(Broker<T_topic, T_msg> *broker);
-  void disconnect(Broker<T_topic, T_msg> *broker);
-
-private:
-  ClearQueue<Broker<T_topic, T_msg> *> mBrokerQueue;
-};
-
-using GeneralPublisher = Publisher<unsigned int, int>;
+  mCallback(topic, msg);
+}
 } // namespace uniot
+
+template class uniot::CallbackEventListener<unsigned int, int>;

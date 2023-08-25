@@ -16,19 +16,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "CallbackSubscriber.h"
+#pragma once
+
+#include <functional>
+#include "EventListener.h"
 
 namespace uniot
 {
 template <class T_topic, class T_msg>
-CallbackSubscriber<T_topic, T_msg>::CallbackSubscriber(SubscriberCallback callback)
-    : mCallback(callback) {}
-
-template <class T_topic, class T_msg>
-void CallbackSubscriber<T_topic, T_msg>::onPublish(T_topic topic, T_msg msg)
+class CallbackEventListener : public EventListener<T_topic, T_msg>
 {
-  mCallback(topic, msg);
-}
-} // namespace uniot
+public:
+  using EventListenerCallback = std::function<void(T_topic, T_msg)>;
 
-template class uniot::CallbackSubscriber<unsigned int, int>;
+  CallbackEventListener(EventListenerCallback callback);
+  virtual void onEventReceived(T_topic topic, T_msg msg);
+
+private:
+  EventListenerCallback mCallback;
+};
+
+using CoreCallbackEventListener = CallbackEventListener<unsigned int, int>;
+} // namespace uniot

@@ -25,7 +25,7 @@
       "-I lib/WebPages",
       "-I lib/Platforms",
 
-      "-I lib/Core/Broker",
+      "-I lib/Core/EventBus",
       "-I lib/Core/Scheduler",
       "-I lib/Core/Network",
       "-I lib/Core/Storage",
@@ -43,7 +43,7 @@
       "+<lib/WebPages/*>",
       "+<lib/Platforms/*>",
 
-      "+<lib/Core/Broker/*>",
+      "+<lib/Core/EventBus/*>",
       "+<lib/Core/Scheduler/*>",
       "+<lib/Core/Network/*>",
       "+<lib/Core/Storage/*>",
