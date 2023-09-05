@@ -9,7 +9,8 @@
             "-I CBORWrapper",
             "-I LispWrapper",
             "-I MQTTWrapper",
-            "-I Hardware"
+            "-I Hardware",
+            "-I Date"
         ],
         "srcDir": ".",
         "srcFilter": [
@@ -21,7 +22,8 @@
             "+<CBORWrapper/*>",
             "+<LispWrapper/*>",
             "+<MQTTWrapper/*>",
-            "+<Hardware/*>"
+            "+<Hardware/*>",
+            "+<Date/*>"
         ]
     }
 }

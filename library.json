@@ -33,7 +33,8 @@
       "-I lib/Core/CBORWrapper",
       "-I lib/Core/LispWrapper",
       "-I lib/Core/MQTTWrapper",
-      "-I lib/Core/Hardware"
+      "-I lib/Core/Hardware",
+      "-I lib/Core/Date"
     ],
     "srcDir": ".",
     "srcFilter": [
@@ -51,7 +52,8 @@
       "+<lib/Core/CBORWrapper/*>",
       "+<lib/Core/LispWrapper/*>",
       "+<lib/Core/MQTTWrapper/*>",
-      "+<lib/Core/Hardware/*>"
+      "+<lib/Core/Hardware/*>",
+      "+<lib/Core/Date/*>"
     ]
   },
   "dependencies": [{
