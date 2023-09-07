@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 #pragma once
 
 // doc: https://arduino-esp8266.readthedocs.io/en/latest/filesystem.html
-#include <FS.h>
+#include <LittleFS.h>
 #include <Bytes.h>
 #include <Logger.h>
 
@@ -36,9 +36,9 @@ public:
 
     if (!sMounted)
     {
-      sMounted = SPIFFS.begin();
-      // By default, SPIFFS will autoformat the filesystem if SPIFFS cannot mount it.
-      // Use SPIFFSConfig to prevent this behavior.
+      sMounted = LittleFS.begin();
+      // By default, LittleFS will automatically format the filesystem if one is not detected.
+      // This means that you will lose all filesystem data even if other filesystem exists.
       UNIOT_LOG_WARN_IF(!sMounted, "Failed to mount the file system");
     }
   }
@@ -57,14 +57,14 @@ public:
   {
     if (sMounted)
     {
-      SPIFFS.end();
+      LittleFS.end();
       sMounted = false;
     }
   }
 
   virtual bool store()
   {
-    auto file = SPIFFS.open(mPath, "w");
+    auto file = LittleFS.open(mPath, "w");
     if (!file)
     {
       UNIOT_LOG_WARN("Failed to open %s", mPath.c_str());
@@ -72,15 +72,12 @@ public:
     }
     file.write(mData.raw(), mData.size());
     file.close();
-    // using SPIFFS.gc() can avoid or reduce issues where SPIFFS reports
-    // free space but is unable to write additional data to a file
-    UNIOT_LOG_DEBUG_IF(!SPIFFS.gc(), "SPIFFS gc failed. That's all right. Caller: %s", mPath.c_str());
     return true;
   }
 
   virtual bool restore()
   {
-    auto file = SPIFFS.open(mPath, "r");
+    auto file = LittleFS.open(mPath, "r");
     if (!file)
     {
       UNIOT_LOG_WARN("Failed to open %s. It is ok on first start", mPath.c_str());
@@ -94,7 +91,7 @@ public:
   virtual bool clean()
   {
     mData.clean();
-    if (!SPIFFS.remove(mPath))
+    if (!LittleFS.remove(mPath))
     {
       UNIOT_LOG_WARN("Failed to remove %s", mPath.c_str());
       return false;
