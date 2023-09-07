@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <WiFiUDP.h>
+#include <WiFiUdp.h>
 #include <EventBus.h>
 #include <NetworkDevice.h>
 #include <CallbackEventListener.h>

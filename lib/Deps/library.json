@@ -1,0 +1,11 @@
+{
+    "build": {
+        "flags": [
+            "-I NTPClient"
+        ],
+        "srcDir": ".",
+        "srcFilter": [
+            "+<NTPClient/*>"
+        ]
+    }
+}
