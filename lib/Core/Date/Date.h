@@ -44,18 +44,11 @@ class Date : public ICoreEventBusKitConnection, public ISchedulerKitConnection, 
     return mNTPClient.getFormattedTime();
   }
 
-  void begin() {
-    attach();
-  }
-
   void pushTo(TaskScheduler *scheduler) override {
-    scheduler->push(mTaskPrintTime);
     scheduler->push(mTaskNTPUpdate);
   }
 
-  void attach() override {
-    mTaskPrintTime->attach(500);
-  }
+  void attach() override {}
 
   bool store() override {
     object().put("epoch", mNTPClient.getEpochTime());
@@ -86,9 +79,6 @@ class Date : public ICoreEventBusKitConnection, public ISchedulerKitConnection, 
   }
 
   void _initTasks() {
-    mTaskPrintTime = TaskScheduler::make([&](short t) {
-      Serial.println(now());
-    });
     mTaskNTPUpdate = TaskScheduler::make([&](short t) {
       if (!mNTPClient.update()) {
         UNIOT_LOG_ERROR("failed to update current epoch from NTP server");
@@ -144,7 +134,6 @@ class Date : public ICoreEventBusKitConnection, public ISchedulerKitConnection, 
   NTPClient mNTPClient;
 
   TaskScheduler::TaskPtr mTaskNTPUpdate;
-  TaskScheduler::TaskPtr mTaskPrintTime;
 
   UniquePointer<CoreEventListener> mpNetworkEventListener;
 };
