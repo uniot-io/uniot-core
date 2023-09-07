@@ -19,6 +19,7 @@
 #pragma once
 
 #include <EventBus.h>
+#include <Date.h>
 #include <NetworkDevice.h>
 #include <CallbackEventListener.h>
 #include <MQTTKit.h>
@@ -57,6 +58,12 @@ public:
     _initPrimitives();
   }
 
+  static Date &getDate()
+  {
+    static Date date;
+    return date;
+  }
+
   unLisp &getLisp()
   {
     return unLisp::getInstance();
@@ -80,10 +87,12 @@ public:
     scheduler->push(mTaskMQTT);
     scheduler->push(mTaskLispButton);
     scheduler->push(getLisp().getTask());
+    scheduler->push(&getDate());
   }
 
   void attach() override
   {
+    getDate().attach();
     mNetworkDevice.attach();
     mTaskLispButton->attach(100);
   }
@@ -92,6 +101,7 @@ public:
   {
     eventBus->connect(&mNetworkDevice);
     eventBus->connect(&getLisp());
+    eventBus->connect(&getDate());
     eventBus->connect(&mLispDevice);
     eventBus->connect(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
   }
@@ -100,6 +110,7 @@ public:
   {
     eventBus->disconnect(&mNetworkDevice);
     eventBus->disconnect(&getLisp());
+    eventBus->disconnect(&getDate());
     eventBus->disconnect(&mLispDevice);
     eventBus->disconnect(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
   }
