@@ -8,7 +8,7 @@
 
 using namespace uniot;
 
-AppKit MainAppKit(MyCredentials, PIN_BUTTON, BTN_PIN_LEVEL, RED);
+auto &MainAppKit = AppKit::getInstance(MyCredentials, PIN_BUTTON, BTN_PIN_LEVEL, RED);
 
 auto taskPrintHeap = TaskScheduler::make([](short t) {
   Serial.println(ESP.getFreeHeap());

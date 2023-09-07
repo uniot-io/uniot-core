@@ -37,25 +37,13 @@ namespace uniot
 class AppKit : public ICoreEventBusKitConnection, public ISchedulerKitConnection
 {
 public:
-  AppKit(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
-      : mMQTT(credentials, [this, &credentials](CBORObject &info) {
-          auto arr = info.putArray("primitives");
-          getLisp().serializeNamesOfPrimitives(arr.get());
-          arr->closeArray();
+  AppKit(AppKit const &) = delete;
+  void operator=(AppKit const &) = delete;
 
-          info.put("creator", credentials.getCreatorId().c_str());
-          info.put("mqtt_size", MQTT_MAX_PACKET_SIZE);
-          info.put("d_in", UniotPinMap.getDigitalInputLength());
-          info.put("d_out", UniotPinMap.getDigitalOutputLength());
-          info.put("a_in", UniotPinMap.getAnalogInputLength());
-          info.put("a_out", UniotPinMap.getAnalogOutputLength());
-        }),
-        mLispButton(pinBtn, activeLevelBtn, 30), mNetworkDevice(credentials, pinBtn, activeLevelBtn, pinLed)
+  static AppKit &getInstance(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
   {
-    _initMqtt();
-    _initTasks();
-    _initSubscribers();
-    _initPrimitives();
+    static AppKit instance(credentials, pinBtn, activeLevelBtn, pinLed);
+    return instance;
   }
 
   static Date &getDate()
@@ -116,6 +104,27 @@ public:
   }
 
 private:
+  AppKit(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
+      : mMQTT(credentials, [this, &credentials](CBORObject &info) {
+          auto arr = info.putArray("primitives");
+          getLisp().serializeNamesOfPrimitives(arr.get());
+          arr->closeArray();
+
+          info.put("creator", credentials.getCreatorId().c_str());
+          info.put("mqtt_size", MQTT_MAX_PACKET_SIZE);
+          info.put("d_in", UniotPinMap.getDigitalInputLength());
+          info.put("d_out", UniotPinMap.getDigitalOutputLength());
+          info.put("a_in", UniotPinMap.getAnalogInputLength());
+          info.put("a_out", UniotPinMap.getAnalogOutputLength());
+        }),
+        mLispButton(pinBtn, activeLevelBtn, 30), mNetworkDevice(credentials, pinBtn, activeLevelBtn, pinLed)
+  {
+    _initMqtt();
+    _initTasks();
+    _initSubscribers();
+    _initPrimitives();
+  }
+
   void _initMqtt()
   {
     // TODO: should I move configs to the Credentials class?
