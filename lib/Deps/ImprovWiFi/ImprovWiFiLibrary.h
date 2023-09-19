@@ -101,7 +101,8 @@ public:
   /**
    * Callback function to customize the wifi connection if you needed. Optional.
    */
-  typedef bool(CustomConnectWiFi)(const char *ssid, const char *password);
+  using CustomConnectWiFi = std::function<bool(const char *ssid, const char *password)>;
+  // typedef bool(CustomConnectWiFi)(const char *ssid, const char *password);
 
   /**
    * ## Methods
@@ -142,7 +143,7 @@ public:
   /**
    * Method to set the typedef CustomConnectWiFi callback.
    */
-  void setCustomConnectWiFi(CustomConnectWiFi *connectWiFiCallBack);
+  void setCustomConnectWiFi(CustomConnectWiFi connectWiFiCallBack);
 
   /**
    * Default method to connect in a WiFi network.
@@ -160,5 +161,5 @@ public:
 private:
   OnImprovError *onImproErrorCallback;
   OnImprovConnected *onImprovConnectedCallback;
-  CustomConnectWiFi *customConnectWiFiCallback;
+  CustomConnectWiFi customConnectWiFiCallback;
 };

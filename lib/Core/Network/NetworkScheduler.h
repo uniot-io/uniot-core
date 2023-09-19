@@ -81,6 +81,7 @@ namespace uniot {
       } else {
         mTaskConfigAp->attach(500, 1);
       }
+      mImprovWiFiHandle->attach(10);
     }
 
     void forget() {
@@ -127,10 +128,6 @@ namespace uniot {
         }
         return true;
       });
-
-      push(mImprovWiFiHandle = make([this](short times) {
-          mpImprovWiFi->handleSerial();
-      }));
     }
 
     void _initTasks() {
@@ -208,6 +205,9 @@ namespace uniot {
           mTaskMonitoring->detach();
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::DISCONNECTED);
         }
+      }));
+      push(mImprovWiFiHandle = make([this](short times) {
+          mpImprovWiFi->handleSerial();
       }));
     }
 

@@ -170,7 +170,7 @@ void ImprovWiFi::onImprovConnected(OnImprovConnected *connectedCallback)
   onImprovConnectedCallback = connectedCallback;
 }
 
-void ImprovWiFi::setCustomConnectWiFi(CustomConnectWiFi *connectWiFiCallBack)
+void ImprovWiFi::setCustomConnectWiFi(CustomConnectWiFi connectWiFiCallBack)
 {
   customConnectWiFiCallback = connectWiFiCallBack;
 }
