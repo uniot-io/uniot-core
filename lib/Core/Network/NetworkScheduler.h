@@ -25,6 +25,7 @@
 #include <TaskScheduler.h>
 #include <EventEmitter.h>
 #include <ConfigCaptivePortal.h>
+#include <ImprovWiFiLibrary.h>
 #include <WifiStorage.h>
 #include <ILightPrint.h>
 #include <config.min.html.gz.h>
@@ -54,7 +55,8 @@ namespace uniot {
           mpPrinter(printer),
           mpApIp(std::make_shared<IPAddress>(1, 1, 1, 1)),
           mpApSubnet(new IPAddress(255, 255, 255, 0)),
-          mpConfigServer(new ConfigCaptivePortal(mpApIp))
+          mpConfigServer(new ConfigCaptivePortal(mpApIp)),
+          mpImprovWiFi(new ImprovWiFi(&Serial))
     {
       mApName = "UNIOT-" + String(mpCredentials->getShortDeviceId(), HEX);
       mApName.toUpperCase();
@@ -65,6 +67,7 @@ namespace uniot {
       WiFi.setAutoReconnect(false);
 
       WiFi.mode(WIFI_STA);
+      _initImprovWiFi();
       _initTasks();
       _initServerCallbacks();
     }
@@ -106,6 +109,28 @@ namespace uniot {
       if(mpPrinter) {
         mpPrinter->println(str);
       }
+    }
+
+    void _initImprovWiFi() {
+      mpImprovWiFi->setDeviceInfo(ImprovTypes::CF_ESP8266, "", "", mApName.c_str());
+      mpImprovWiFi->onImprovError([](ImprovTypes::Error error){
+        UNIOT_LOG_ERROR("ImprovWiFi error: %d", error);
+      });
+
+      mpImprovWiFi->setCustomConnectWiFi([this](const char* ssid, const char* pass) {
+        mWifiStorage.getWifiArgs()->ssid = ssid;
+        mWifiStorage.getWifiArgs()->pass = pass;
+        if(mWifiStorage.getWifiArgs()->isValid()) {
+            _printp(strStaConnecting);
+            _print(mWifiStorage.getWifiArgs()->ssid.c_str());
+            mTaskConnectSta->attach(500, 1);
+        }
+        return true;
+      });
+
+      push(mImprovWiFiHandle = make([this](short times) {
+          mpImprovWiFi->handleSerial();
+      }));
     }
 
     void _initTasks() {
@@ -234,6 +259,7 @@ namespace uniot {
     SharedPointer<IPAddress> mpApIp;
     UniquePointer<IPAddress> mpApSubnet;
     UniquePointer<ConfigCaptivePortal> mpConfigServer;
+    UniquePointer<ImprovWiFi> mpImprovWiFi;
 
     TaskPtr mTaskStart;
     TaskPtr mTaskServe;
@@ -242,5 +268,6 @@ namespace uniot {
     TaskPtr mTaskConnectSta;
     TaskPtr mTaskConnecting;
     TaskPtr mTaskMonitoring;
+    TaskPtr mImprovWiFiHandle;
   };
 }

@@ -32,7 +32,7 @@
   {                           \
     if (!Serial)              \
     {                         \
-      Serial.begin(9600);     \
+      Serial.begin(115200);     \
       Serial.print("\n\n");   \
     }                         \
   } while (0)

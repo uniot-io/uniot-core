@@ -1,11 +1,13 @@
 {
     "build": {
         "flags": [
-            "-I NTPClient"
+            "-I NTPClient",
+            "-I ImprovWiFi"
         ],
         "srcDir": ".",
         "srcFilter": [
-            "+<NTPClient/*>"
+            "+<NTPClient/*>",
+            "+<ImprovWiFi/*>"
         ]
     }
 }
