@@ -116,7 +116,7 @@ public:
       auto offlinePacket = offlineCBOR.build();
       if (mPubSubClient.connect(
               mPath.getCredentials()->getDeviceId().c_str(),
-              mPath.buildDevicePath("online").c_str(),
+              mPath.buildDevicePath("status").c_str(),
               0,
               true,
               offlinePacket.raw(),
@@ -126,7 +126,7 @@ public:
         _prepareOnlinePacket(onlineCBOR);
         auto onlinePacket = onlineCBOR.build();
         mPubSubClient.publish(
-            mPath.buildDevicePath("online").c_str(),
+            mPath.buildDevicePath("status").c_str(),
             onlinePacket.raw(),
             onlinePacket.size(),
             true); // publish an announcement
@@ -156,7 +156,7 @@ private:
   void _prepareOnlinePacket(CBORObject &packet)
   {
     packet
-        .put("state", 1)
+        .put("online", 1)
         .put("id", mConnectionId++);
 
     if (mInfoExtender)
@@ -166,7 +166,7 @@ private:
   void _prepareOfflinePacket(CBORObject &packet)
   {
     packet
-        .put("state", 0)
+        .put("online", 0)
         .put("id", mConnectionId);
 
     if (mInfoExtender)

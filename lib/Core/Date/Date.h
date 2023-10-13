@@ -51,7 +51,7 @@ class Date : public ICoreEventBusKitConnection, public ISchedulerKitConnection, 
   void attach() override {}
 
   bool store() override {
-    object().put("epoch", mNTPClient.getEpochTime());
+    object().put("epoch", (long) mNTPClient.getEpochTime());
     return CBORStorage::store();
   }
 

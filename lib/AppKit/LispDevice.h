@@ -58,7 +58,7 @@ public:
     mChecksum = getLisp().getLastCode().checksum();
     object()
         .put("persist", getLisp().isLastCodePersist())
-        .put("checksum", mChecksum);
+        .put("checksum", (int) mChecksum);
 
     if (getLisp().isLastCodePersist())
       object()
@@ -85,7 +85,8 @@ public:
 
   void handle(const String &topic, const Bytes &payload) override
   {
-    auto script = payload;
+    auto packet = CBORObject(payload);
+    auto script = Bytes(packet.getString("code"));
 
     auto newChecksum = script.terminate().checksum();
     auto isEqual = mChecksum == newChecksum;

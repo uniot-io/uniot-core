@@ -110,6 +110,7 @@ private:
           getLisp().serializeNamesOfPrimitives(arr.get());
           arr->closeArray();
 
+          info.put("timestamp", (long) getDate().now());
           info.put("creator", credentials.getCreatorId().c_str());
           info.put("mqtt_size", MQTT_MAX_PACKET_SIZE);
           info.put("d_in", UniotPinMap.getDigitalInputLength());

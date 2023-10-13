@@ -32,7 +32,9 @@ public:
   String buildDevicePath(const String &topic) const
   {
     return mPrefix + "/"
+            + "users/"
             + mpCredentials->getOwnerId() + "/"
+            + "devices/"
             + mpCredentials->getDeviceId() + "/"
             + topic;
   }

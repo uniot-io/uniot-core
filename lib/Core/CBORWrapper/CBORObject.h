@@ -18,11 +18,12 @@
 
 #pragma once
 
-#include <memory>
-#include <cn-cbor.h>
 #include <Arduino.h>
 #include <Bytes.h>
 #include <Logger.h>
+#include <cn-cbor.h>
+
+#include <memory>
 
 #include "CBORArray.h"
 
@@ -30,21 +31,18 @@
 #define UNIOT_DANGEROUS_CBOR_DATA_SIZE 256
 #endif
 
-namespace uniot
-{
-class CBORObject
-{
+namespace uniot {
+class CBORObject {
   friend class CBORArray;
-public:
+
+ public:
   CBORObject(const Bytes &buf)
       : mpMapNode(nullptr),
-        mDirty(false)
-  {
+        mDirty(false) {
     read(buf);
   }
 
-  CBORObject() : mDirty(false)
-  {
+  CBORObject() : mDirty(false) {
     _create();
   }
 
@@ -61,12 +59,16 @@ public:
     return std::unique_ptr<CBORArray>(new CBORArray(this, mpMapNode, cn_cbor_int_create(key, _errback())));
   }
 
-  std::unique_ptr<CBORArray> putArray(const char* key) {
+  std::unique_ptr<CBORArray> putArray(const char *key) {
     mDirty = true;
     return std::unique_ptr<CBORArray>(new CBORArray(this, mpMapNode, cn_cbor_string_create(key, _errback())));
   }
 
   CBORObject &put(int key, int value) {
+    return put(key, (long)value);
+  }
+
+  CBORObject &put(int key, long value) {
     auto existing = cn_cbor_mapget_int(mpMapNode, key);
     if (existing) {
       mDirty = cn_cbor_int_update(existing, value);
@@ -76,7 +78,7 @@ public:
     return *this;
   }
 
-  CBORObject &put(int key, const char* value) {
+  CBORObject &put(int key, const char *value) {
     auto existing = cn_cbor_mapget_int(mpMapNode, key);
     if (existing) {
       mDirty = cn_cbor_string_update(existing, value);
@@ -88,7 +90,11 @@ public:
     return *this;
   }
 
-  CBORObject &put(const char* key, int value) {
+  CBORObject &put(const char *key, int value) {
+    return put(key, (long)value);
+  }
+
+  CBORObject &put(const char *key, long value) {
     auto existing = cn_cbor_mapget_string(mpMapNode, key);
     if (existing) {
       mDirty = cn_cbor_int_update(existing, value);
@@ -98,7 +104,7 @@ public:
     return *this;
   }
 
-  CBORObject &put(const char* key, const char* value) {
+  CBORObject &put(const char *key, const char *value) {
     auto existing = cn_cbor_mapget_string(mpMapNode, key);
     if (existing) {
       mDirty = cn_cbor_string_update(existing, value);
@@ -111,11 +117,11 @@ public:
     return *this;
   }
 
-  int getInt(int key) const {
+  long getInt(int key) const {
     return _getInt(cn_cbor_mapget_int(mpMapNode, key));
   }
 
-  int getInt(const char* key) const {
+  long getInt(const char *key) const {
     return _getInt(cn_cbor_mapget_string(mpMapNode, key));
   }
 
@@ -123,7 +129,7 @@ public:
     return _getString(cn_cbor_mapget_int(mpMapNode, key));
   }
 
-  String getString(const char* key) const {
+  String getString(const char *key) const {
     return _getString(cn_cbor_mapget_string(mpMapNode, key));
   }
 
@@ -131,7 +137,7 @@ public:
     return put(key, from.getInt(key));
   }
 
-  CBORObject &copyInt(const CBORObject &from, const char* key) {
+  CBORObject &copyInt(const CBORObject &from, const char *key) {
     return put(key, from.getInt(key));
   }
 
@@ -141,7 +147,7 @@ public:
     return put(key, cb->v.str);
   }
 
-  CBORObject &copyStrPtr(const CBORObject &from, const char* key) {
+  CBORObject &copyStrPtr(const CBORObject &from, const char *key) {
     auto cb = cn_cbor_mapget_string(from.mpMapNode, key);
     // TODO: check types, set Err
     return put(key, cb->v.str);
@@ -155,16 +161,14 @@ public:
     }
   }
 
-  Bytes build()
-  {
+  Bytes build() {
     auto calculated = cn_cbor_encoder_write(NULL, 0, 0, mpMapNode);
     UNIOT_LOG_WARN_IF(calculated > UNIOT_DANGEROUS_CBOR_DATA_SIZE, "dangerous data size: %d", calculated);
 
     Bytes bytes(nullptr, calculated);
     auto written = bytes.fill([&](uint8_t *buf, size_t size) {
       auto actual = cn_cbor_encoder_write(buf, 0, size, mpMapNode);
-      if (actual < 0)
-      {
+      if (actual < 0) {
         UNIOT_LOG_ERROR("%s", "CBORObject build failed, buffer size too small");
         return 0;
       }
@@ -188,7 +192,7 @@ public:
     _create();
   }
 
-private:
+ private:
   void _create() {
     mErr.err = CN_CBOR_NO_ERROR;
     mErr.pos = 0;
@@ -205,19 +209,19 @@ private:
     mErr.pos = 0;
   }
 
-  long _getInt(cn_cbor* cb) const {
+  long _getInt(cn_cbor *cb) const {
     // if(!cb) throw "error"; // TODO: ???
-    if(cb && CN_CBOR_INT == cb->type) {
+    if (cb && CN_CBOR_INT == cb->type) {
       return cb->v.sint;
-    } else if(cb && CN_CBOR_UINT == cb->type) {
+    } else if (cb && CN_CBOR_UINT == cb->type) {
       return cb->v.uint;
     }
     return 0;
   }
 
-  String _getString(cn_cbor* cb) const {
+  String _getString(cn_cbor *cb) const {
     // if(!cb) throw "error"; // TODO: ???
-    if(cb && CN_CBOR_TEXT == cb->type) {
+    if (cb && CN_CBOR_TEXT == cb->type) {
       auto bytes = Bytes(cb->v.bytes, cb->length);
       bytes.terminate();
       return String(bytes.c_str());
@@ -225,8 +229,8 @@ private:
     return "";
   }
 
-  bool _isPtrEqual(cn_cbor* cb, const void *ptr) const {
-    return ptr == (const void *) cb->v.bytes;
+  bool _isPtrEqual(cn_cbor *cb, const void *ptr) const {
+    return ptr == (const void *)cb->v.bytes;
   }
 
   cn_cbor_errback *_errback() {
@@ -237,8 +241,8 @@ private:
     return &mErr;
   }
 
-  cn_cbor* mpMapNode;
+  cn_cbor *mpMapNode;
   cn_cbor_errback mErr;
   bool mDirty;
 };
-} // namespace uniot
+}  // namespace uniot
