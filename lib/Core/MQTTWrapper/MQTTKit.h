@@ -157,7 +157,7 @@ private:
   {
     packet
         .put("online", 1)
-        .put("id", mConnectionId++);
+        .put("connection_id", mConnectionId++);
 
     if (mInfoExtender)
       mInfoExtender(packet);
@@ -167,7 +167,7 @@ private:
   {
     packet
         .put("online", 0)
-        .put("id", mConnectionId);
+        .put("connection_id", mConnectionId);
 
     if (mInfoExtender)
       mInfoExtender(packet);
