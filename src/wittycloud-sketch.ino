@@ -4,7 +4,6 @@
 #include <LispPrimitives.h>
 #include <Logger.h>
 #include <Uniot.h>
-#include <NTPClient.h>
 
 using namespace uniot;
 

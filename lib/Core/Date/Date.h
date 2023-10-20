@@ -19,122 +19,78 @@
 #pragma once
 
 #include <CBORStorage.h>
-#include <CallbackEventListener.h>
-#include <EventBus.h>
-#include <IEventBusKitConnection.h>
+#include <ESP8266WiFi.h>
 #include <ISchedulerKitConnection.h>
-#include <NTPClient.h>
-#include <NetworkDevice.h>
-#include <WiFiUdp.h>
+#include <TaskScheduler.h>
+#include <coredecls.h>
+#include <time.h>
+
+uint32_t sntp_update_delay_MS_rfc_not_less_than_15000() {
+  return 10 * 60 * 1000UL;  // 10 minutes
+}
 
 namespace uniot {
-class Date : public ICoreEventBusKitConnection, public ISchedulerKitConnection, public CBORStorage {
+class Date : public ISchedulerKitConnection, public CBORStorage {
  public:
-  Date() : CBORStorage("date.cbor"), mNTPClient(mWiFiUDP) {
-    _restoreEpoch();
+  Date() : CBORStorage("date.cbor") {
+    settimeofday_cb([](bool from_sntp) {
+      UNIOT_LOG_INFO("Time is set from %s", from_sntp ? "SNTP" : "RTC");
+    });
+    configTime(0, 0, "pool.ntp.org", "time.google.com", "time.nist.gov");
+
+    this->restore();
     _initTasks();
-    _initSubscribers();
   }
 
-  unsigned long now() {
-    return mNTPClient.getEpochTime();
+  time_t now() {
+    return time(nullptr);
   }
 
   String getFormattedTime() {
-    return mNTPClient.getFormattedTime();
+    tm tm;
+    auto currentEpoc = this->now();
+    localtime_r(&currentEpoc, &tm);
+
+    auto hours = tm.tm_hour < 10 ? "0" + String(tm.tm_hour) : String(tm.tm_hour);
+    auto minutes = tm.tm_min < 10 ? "0" + String(tm.tm_min) : String(tm.tm_min);
+    auto seconds = tm.tm_sec < 10 ? "0" + String(tm.tm_sec) : String(tm.tm_sec);
+
+    return String(tm.tm_year + 1900) + "-" + String(tm.tm_mon + 1) + "-" + String(tm.tm_mday) + " " +
+           hours + ":" + minutes + ":" + seconds;
   }
 
   void pushTo(TaskScheduler *scheduler) override {
-    scheduler->push(mTaskNTPUpdate);
+    scheduler->push(mTaskStore);
   }
 
-  void attach() override {}
+  void attach() override {
+    mTaskStore->attach(5 * 60 * 1000UL);  // 5 minutes
+  }
 
   bool store() override {
-    object().put("epoch", (long) mNTPClient.getEpochTime());
+    CBORStorage::object().put("epoch", (long)this->now());
     return CBORStorage::store();
   }
 
   bool restore() override {
     if (CBORStorage::restore()) {
-      unsigned int currentEpoc = object().getInt("epoch");
-      mNTPClient.setEpochTime(currentEpoc);
+      auto currentEpoc = CBORStorage::object().getInt("epoch");
+      tune_timeshift64(currentEpoc * 1000000ULL);
       return true;
     }
     UNIOT_LOG_ERROR("%s", "epoch not restored");
     return false;
   }
 
-  void connect(CoreEventBus *eventBus) override {
-    eventBus->connect(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
-  }
-
-  void disconnect(CoreEventBus *eventBus) override {
-    eventBus->disconnect(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
-  }
-
  private:
-  void _restoreEpoch() {
-    restore();
-  }
-
   void _initTasks() {
-    mTaskNTPUpdate = TaskScheduler::make([&](short t) {
-      if (!mNTPClient.update()) {
-        UNIOT_LOG_ERROR("failed to update current epoch from NTP server");
-      }
-      if (!store()) {
+    mTaskStore = TaskScheduler::make([&](short t) {
+      if (!this->store()) {
         UNIOT_LOG_ERROR("failed to store current epoch in CBORStorage");
       }
     });
   }
 
-  void _initSubscribers() {
-    mpNetworkEventListener = std::unique_ptr<CoreEventListener>(new CoreCallbackEventListener([&](int topic, int msg) {
-      if (NetworkScheduler::CONNECTION == topic) {
-        switch (msg) {
-          case NetworkScheduler::SUCCESS:
-            Serial.print("Date Subscriber, epoch: ");
-            Serial.println(mNTPClient.getEpochTime());
-            mTaskNTPUpdate->attach(mNTPClient.getUpdateInterval());
-            mNTPClient.begin();
-            mNTPClient.forceUpdate();
-            break;
-
-          case NetworkScheduler::ACCESS_POINT:
-            Serial.println("Date Subscriber, ACCESS_POINT");
-            mTaskNTPUpdate->detach();
-            mNTPClient.end();
-            break;
-
-          case NetworkScheduler::CONNECTING:
-            Serial.println("Date Subscriber, CONNECTING");
-            mTaskNTPUpdate->detach();
-            mNTPClient.end();
-            break;
-
-          case NetworkScheduler::DISCONNECTED:
-            Serial.println("Date Subscriber, DISCONNECTED");
-            mTaskNTPUpdate->detach();
-            mNTPClient.end();
-            break;
-
-          case NetworkScheduler::FAILED:
-          default:
-            Serial.println("Date Subscriber, FAILED");
-            mTaskNTPUpdate->detach();
-            mNTPClient.end();
-            break;
-        }
-      }
-    }));
-  }
-
-  WiFiUDP mWiFiUDP;
-  NTPClient mNTPClient;
-
-  TaskScheduler::TaskPtr mTaskNTPUpdate;
-
-  UniquePointer<CoreEventListener> mpNetworkEventListener;
+  TaskScheduler::TaskPtr mTaskStore;
 };
 }  // namespace uniot

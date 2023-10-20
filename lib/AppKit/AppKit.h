@@ -89,7 +89,6 @@ public:
   {
     eventBus->connect(&mNetworkDevice);
     eventBus->connect(&getLisp());
-    eventBus->connect(&getDate());
     eventBus->connect(&mLispDevice);
     eventBus->connect(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
   }
@@ -98,7 +97,6 @@ public:
   {
     eventBus->disconnect(&mNetworkDevice);
     eventBus->disconnect(&getLisp());
-    eventBus->disconnect(&getDate());
     eventBus->disconnect(&mLispDevice);
     eventBus->disconnect(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
   }
