@@ -146,6 +146,20 @@ namespace uniot {
         }
       }));
       push(mTaskConnecting = make([this](short times) {
+        auto __processFailure = [this]() {
+          const int triesBeforeGivingUp = 3;
+          static int tries = 0;
+          if(++tries < triesBeforeGivingUp) {
+            UNIOT_LOG_INFO("Tries to connect until give up is %d", triesBeforeGivingUp - tries);
+            mTaskConnectSta->attach(500, 1);
+          } else {
+            tries = 0;
+            mTaskConfigAp->attach(500, 1);
+            CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
+            _printp(strFailed);
+          }
+        };
+
         switch(WiFi.status()){
           case WL_CONNECTED:
           mTaskConnecting->detach();
@@ -160,16 +174,12 @@ namespace uniot {
           case WL_NO_SSID_AVAIL:
           case WL_CONNECT_FAILED:
           mTaskConnecting->detach();
-          mTaskConfigAp->attach(500, 1);
-          _printp(strFailed);
-          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
+          __processFailure();
           break;
 
           case WL_DISCONNECTED:
           if(!times) {
-            mTaskConfigAp->attach(500, 1);
-            _printp(strFailed);
-            CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
+            __processFailure();
           }
           break;
 
