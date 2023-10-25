@@ -31,17 +31,17 @@ EventBus<T_topic, T_msg, T_data>::~EventBus() {
 }
 
 template <class T_topic, class T_msg, class T_data>
-void EventBus<T_topic, T_msg, T_data>::connect(IEventBusKitConnection<T_topic, T_msg, T_data> *connection) {
-  connection->connect(this);
+void EventBus<T_topic, T_msg, T_data>::registerKit(IEventBusConnectionKit<T_topic, T_msg, T_data> *connection) {
+  connection->registerWithBus(this);
 }
 
 template <class T_topic, class T_msg, class T_data>
-void EventBus<T_topic, T_msg, T_data>::disconnect(IEventBusKitConnection<T_topic, T_msg, T_data> *connection) {
-  connection->disconnect(this);
+void EventBus<T_topic, T_msg, T_data>::unregisterKit(IEventBusConnectionKit<T_topic, T_msg, T_data> *connection) {
+  connection->unregisterFromBus(this);
 }
 
 template <class T_topic, class T_msg, class T_data>
-bool EventBus<T_topic, T_msg, T_data>::connect(EventEmitter<T_topic, T_msg, T_data> *emitter) {
+bool EventBus<T_topic, T_msg, T_data>::registerEmitter(EventEmitter<T_topic, T_msg, T_data> *emitter) {
   if (emitter && emitter->connectUnique(this)) {
     mEmitters.pushUnique(emitter);
     return true;
@@ -50,7 +50,7 @@ bool EventBus<T_topic, T_msg, T_data>::connect(EventEmitter<T_topic, T_msg, T_da
 }
 
 template <class T_topic, class T_msg, class T_data>
-void EventBus<T_topic, T_msg, T_data>::disconnect(EventEmitter<T_topic, T_msg, T_data> *emitter) {
+void EventBus<T_topic, T_msg, T_data>::unregisterEmitter(EventEmitter<T_topic, T_msg, T_data> *emitter) {
   if (emitter) {
     mEmitters.removeOne(emitter);
     emitter->mEventBusQueue.removeOne(this);
@@ -58,7 +58,7 @@ void EventBus<T_topic, T_msg, T_data>::disconnect(EventEmitter<T_topic, T_msg, T
 }
 
 template <class T_topic, class T_msg, class T_data>
-bool EventBus<T_topic, T_msg, T_data>::connect(EventListener<T_topic, T_msg, T_data> *listener) {
+bool EventBus<T_topic, T_msg, T_data>::registerListener(EventListener<T_topic, T_msg, T_data> *listener) {
   if (listener && listener->connectUnique(this)) {
     mListeners.pushUnique(listener);
     return true;
@@ -67,7 +67,7 @@ bool EventBus<T_topic, T_msg, T_data>::connect(EventListener<T_topic, T_msg, T_d
 }
 
 template <class T_topic, class T_msg, class T_data>
-void EventBus<T_topic, T_msg, T_data>::disconnect(EventListener<T_topic, T_msg, T_data> *listener) {
+void EventBus<T_topic, T_msg, T_data>::unregisterListener(EventListener<T_topic, T_msg, T_data> *listener) {
   if (listener) {
     mListeners.removeOne(listener);
     listener->mEventBusQueue.removeOne(this);

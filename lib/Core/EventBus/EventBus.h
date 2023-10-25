@@ -23,7 +23,7 @@
 #include <DataChannels.h>
 #include <IExecutor.h>
 
-#include "IEventBusKitConnection.h"
+#include "IEventBusConnectionKit.h"
 
 namespace uniot {
 template <class T_topic, class T_msg, class T_data>
@@ -43,14 +43,14 @@ class EventBus : public uniot::IExecutor {
 
   unsigned int getId() { return mId; }
 
-  void connect(IEventBusKitConnection<T_topic, T_msg, T_data> *connection);
-  void disconnect(IEventBusKitConnection<T_topic, T_msg, T_data> *connection);
+  void registerKit(IEventBusConnectionKit<T_topic, T_msg, T_data> *connection);
+  void unregisterKit(IEventBusConnectionKit<T_topic, T_msg, T_data> *connection);
 
-  bool connect(EventEmitter<T_topic, T_msg, T_data> *emitter);
-  void disconnect(EventEmitter<T_topic, T_msg, T_data> *emitter);
+  bool registerEmitter(EventEmitter<T_topic, T_msg, T_data> *emitter);
+  void unregisterEmitter(EventEmitter<T_topic, T_msg, T_data> *emitter);
 
-  bool connect(EventListener<T_topic, T_msg, T_data> *listener);
-  void disconnect(EventListener<T_topic, T_msg, T_data> *listener);
+  bool registerListener(EventListener<T_topic, T_msg, T_data> *listener);
+  void unregisterListener(EventListener<T_topic, T_msg, T_data> *listener);
 
   void openDataChannel(T_topic topic, size_t limit);
   void closeDataChannel(T_topic topic);

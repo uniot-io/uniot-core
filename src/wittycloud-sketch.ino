@@ -23,7 +23,7 @@ void inject() {
   UniotPinMap.setAnalogOutput(3, RED, GREEN, BLUE);
   UniotPinMap.setAnalogInput(1, LDR);
 
-  MainEventBus.connect(&MainAppKit);
+  MainEventBus.registerKit(&MainAppKit);
 
   MainScheduler.push(&MainAppKit)
       ->push(taskPrintTime)

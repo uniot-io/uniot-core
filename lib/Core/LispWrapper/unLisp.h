@@ -41,7 +41,7 @@ class unLisp : public CoreEventEmitter
 {
 public:
   enum Topic { LISP = FOURCC(lisp) };
-  enum Msg { MSG_ADDED, MSG_REPLACED, ERROR };
+  enum Msg { MSG_ADDED, ERROR };
 
   unLisp(unLisp const &) = delete;
   void operator=(unLisp const &) = delete;
@@ -104,14 +104,6 @@ public:
       });
   }
 
-  String popOutput() {
-    return mOutputBuffer.popLimited("");
-  }
-
-  size_t sizeOutput() {
-    return mOutputBuffer.size();
-  }
-
   const String &getLastError()
   {
     return mLastError;
@@ -139,9 +131,8 @@ private:
       if (size > 0)
       {
         auto &instance = unLisp::getInstance();
-        auto alreadyFull = instance.mOutputBuffer.isFull();
-        instance.mOutputBuffer.pushLimited(String(msg));
-        instance.emitEvent(Topic::LISP, alreadyFull ? Msg::MSG_REPLACED : Msg::MSG_ADDED);
+        instance.sendDataToChannel(Topic::LISP, Bytes(msg));
+        instance.emitEvent(Topic::LISP, Msg::MSG_ADDED);
       }
       yield();
     };
@@ -160,8 +151,6 @@ private:
     lisp_set_printers(fnPrintOut, fnPrintErr);
 
     _constructLispEnv();
-
-    mOutputBuffer.limit(10);
 
     mTaskLispEval = TaskScheduler::make([this](short t) {
       auto root = mLispRoot;
@@ -232,7 +221,6 @@ private:
   bool mIsLastCodePersist;
   Bytes mLastCode;
   String mLastError;
-  LimitedQueue<String> mOutputBuffer;
   TaskScheduler::TaskPtr mTaskLispEval;
   ClearQueue<Pair<String, Primitive*>> mUserPrimitives;
 

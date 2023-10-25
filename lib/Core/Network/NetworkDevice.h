@@ -21,13 +21,13 @@
 #include <EventBus.h>
 #include <NetworkScheduler.h>
 #include <CallbackEventListener.h>
-#include <IEventBusKitConnection.h>
-#include <ISchedulerKitConnection.h>
+#include <IEventBusConnectionKit.h>
+#include <ISchedulerConnectionKit.h>
 #include <Button.h>
 
 namespace uniot
 {
-class NetworkDevice : public ICoreEventBusKitConnection, public ISchedulerKitConnection
+class NetworkDevice : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
 {
 public:
   NetworkDevice(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
@@ -61,16 +61,16 @@ public:
     return mNetwork;
   }
 
-  void connect(CoreEventBus *eventBus)
+  void registerWithBus(CoreEventBus *eventBus)
   {
-    eventBus->connect(&mNetwork);
-    eventBus->connect(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
+    eventBus->registerEmitter(&mNetwork);
+    eventBus->registerListener(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
   }
 
-  void disconnect(CoreEventBus *eventBus)
+  void unregisterFromBus(CoreEventBus *eventBus)
   {
-    eventBus->disconnect(&mNetwork);
-    eventBus->disconnect(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
+    eventBus->unregisterEmitter(&mNetwork);
+    eventBus->unregisterListener(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
   }
 
   void pushTo(TaskScheduler *scheduler) {

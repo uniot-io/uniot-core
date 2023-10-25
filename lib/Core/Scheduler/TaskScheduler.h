@@ -21,7 +21,7 @@
 #include <functional>
 #include <Common.h>
 #include <IExecutor.h>
-#include <ISchedulerKitConnection.h>
+#include <ISchedulerConnectionKit.h>
 #include <ClearQueue.h>
 #include <memory>
 #include "Task.h"
@@ -93,7 +93,7 @@ public:
     return this;
   }
 
-  TaskScheduler *push(ISchedulerKitConnection *connection)
+  TaskScheduler *push(ISchedulerConnectionKit *connection)
   {
     connection->pushTo(this);
     return this;

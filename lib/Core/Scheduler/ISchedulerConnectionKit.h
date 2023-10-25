@@ -22,10 +22,10 @@ namespace uniot
 {
 class TaskScheduler;
 
-class ISchedulerKitConnection
+class ISchedulerConnectionKit
 {
 public:
-  virtual ~ISchedulerKitConnection() {}
+  virtual ~ISchedulerConnectionKit() {}
   virtual void pushTo(TaskScheduler *scheduler) = 0;
   virtual void attach() = 0;
 };

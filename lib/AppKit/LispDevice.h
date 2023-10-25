@@ -77,9 +77,9 @@ public:
     }
     else if (msg == unLisp::MSG_ADDED)
     {
-      auto size = getLisp().sizeOutput();
-      auto result = getLisp().popOutput();
-      UNIOT_LOG_INFO("%s, %d msgs to read; %s", msg == unLisp::MSG_ADDED ? "added" : "replaced", size, result.c_str());
+      CoreEventListener::receiveDataFromChannel(unLisp::LISP, [](unsigned int id, bool empty, Bytes data) {
+        UNIOT_LOG_INFO("event bus id: %d, channel empty: %d, lisp: %s", id, empty, data.toString().c_str());
+      });
     }
   }
 

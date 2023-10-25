@@ -25,12 +25,12 @@ template <class T_topic, class T_msg, class T_data>
 class EventBus;
 
 template <class T_topic, class T_msg, class T_data>
-class IEventBusKitConnection {
+class IEventBusConnectionKit {
  public:
-  virtual ~IEventBusKitConnection() {}
-  virtual void connect(EventBus<T_topic, T_msg, T_data> *eventBus) = 0;
-  virtual void disconnect(EventBus<T_topic, T_msg, T_data> *eventBus) = 0;
+  virtual ~IEventBusConnectionKit() {}
+  virtual void registerWithBus(EventBus<T_topic, T_msg, T_data> *eventBus) = 0;
+  virtual void unregisterFromBus(EventBus<T_topic, T_msg, T_data> *eventBus) = 0;
 };
 
-using ICoreEventBusKitConnection = IEventBusKitConnection<unsigned int, int, Bytes>;
+using ICoreEventBusConnectionKit = IEventBusConnectionKit<unsigned int, int, Bytes>;
 }  // namespace uniot

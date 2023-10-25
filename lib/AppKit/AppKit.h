@@ -24,8 +24,8 @@
 #include <CallbackEventListener.h>
 #include <MQTTKit.h>
 #include <unLisp.h>
-#include <IEventBusKitConnection.h>
-#include <ISchedulerKitConnection.h>
+#include <IEventBusConnectionKit.h>
+#include <ISchedulerConnectionKit.h>
 #include <Logger.h>
 #include <LispDevice.h>
 #include <LispPrimitives.h>
@@ -34,7 +34,7 @@
 
 namespace uniot
 {
-class AppKit : public ICoreEventBusKitConnection, public ISchedulerKitConnection
+class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
 {
 public:
   AppKit(AppKit const &) = delete;
@@ -85,20 +85,22 @@ public:
     mTaskLispButton->attach(100);
   }
 
-  void connect(CoreEventBus *eventBus) override
+  void registerWithBus(CoreEventBus *eventBus) override
   {
-    eventBus->connect(&mNetworkDevice);
-    eventBus->connect(&getLisp());
-    eventBus->connect(&mLispDevice);
-    eventBus->connect(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
+    eventBus->openDataChannel(unLisp::Topic::LISP, 10);
+    eventBus->registerKit(&mNetworkDevice);
+    eventBus->registerEmitter(&getLisp());
+    eventBus->registerListener(&mLispDevice);
+    eventBus->registerListener(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
   }
 
-  void disconnect(CoreEventBus *eventBus) override
+  void unregisterFromBus(CoreEventBus *eventBus) override
   {
-    eventBus->disconnect(&mNetworkDevice);
-    eventBus->disconnect(&getLisp());
-    eventBus->disconnect(&mLispDevice);
-    eventBus->disconnect(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
+    eventBus->closeDataChannel(unLisp::Topic::LISP);
+    eventBus->unregisterKit(&mNetworkDevice);
+    eventBus->unregisterEmitter(&getLisp());
+    eventBus->unregisterListener(&mLispDevice);
+    eventBus->unregisterListener(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
   }
 
 private:

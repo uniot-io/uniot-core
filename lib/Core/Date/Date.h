@@ -20,7 +20,7 @@
 
 #include <CBORStorage.h>
 #include <ESP8266WiFi.h>
-#include <ISchedulerKitConnection.h>
+#include <ISchedulerConnectionKit.h>
 #include <TaskScheduler.h>
 #include <coredecls.h>
 #include <time.h>
@@ -30,7 +30,7 @@ uint32_t sntp_update_delay_MS_rfc_not_less_than_15000() {
 }
 
 namespace uniot {
-class Date : public ISchedulerKitConnection, public CBORStorage {
+class Date : public ISchedulerConnectionKit, public CBORStorage {
  public:
   Date() : CBORStorage("date.cbor") {
     settimeofday_cb([](bool from_sntp) {
