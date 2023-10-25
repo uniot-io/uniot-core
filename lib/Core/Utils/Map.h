@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,50 +19,59 @@
 #pragma once
 
 #include <Common.h>
+
 #include "IterableQueue.h"
 
-namespace uniot
-{
+namespace uniot {
 
 template <typename T_Key, typename T_Value>
-class Map : public IterableQueue<Pair<T_Key, T_Value>>
-{
-public:
+class Map : public IterableQueue<Pair<T_Key, T_Value>> {
+ public:
   using MapItem = Pair<T_Key, T_Value>;
 
-  bool put(const T_Key &key, const T_Value &value)
-  {
-    if (exist(key))
+  bool put(const T_Key &key, const T_Value &value) {
+    if (exist(key)) {
       return false;
+    }
     IterableQueue<MapItem>::push(MakePair(key, value));
     return true;
   }
 
-  T_Value get(const T_Key &key, const T_Value &defaultValue = {})
-  {
+  T_Value get(const T_Key &key, const T_Value &defaultValue = {}) {
     IterableQueue<MapItem>::begin();
-    while (!IterableQueue<MapItem>::isEnd())
-    {
+    while (!IterableQueue<MapItem>::isEnd()) {
       auto item = IterableQueue<MapItem>::current();
-      if (item.first == key)
+      if (item.first == key) {
         return item.second;
+      }
       IterableQueue<MapItem>::next();
     }
     return defaultValue;
   }
 
-  bool exist(const T_Key &key)
-  {
+  bool exist(const T_Key &key) {
     IterableQueue<MapItem>::begin();
-    while (!IterableQueue<MapItem>::isEnd())
-    {
+    while (!IterableQueue<MapItem>::isEnd()) {
       auto item = IterableQueue<MapItem>::current();
-      if (item.first == key)
+      if (item.first == key) {
         return true;
+      }
+      IterableQueue<MapItem>::next();
+    }
+    return false;
+  }
+
+  bool remove(const T_Key &key) {
+    IterableQueue<MapItem>::begin();
+    while (!IterableQueue<MapItem>::isEnd()) {
+      auto item = IterableQueue<MapItem>::current();
+      if (item.first == key) {
+        return IterableQueue<MapItem>::removeOne(item);
+      }
       IterableQueue<MapItem>::next();
     }
     return false;
   }
 };
 
-} // namespace uniot
+}  // namespace uniot

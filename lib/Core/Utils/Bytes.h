@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,19 @@
 
 #pragma once
 
+#include <Common.h>
+#include <WString.h>
+
 #include <functional>
 #include <type_traits>
-#include <Common.h>
 
-class Bytes
-{
-public:
+class Bytes {
+ public:
   using Filler = std::function<size_t(uint8_t *buf, size_t size)>;
 
-  Bytes() : Bytes(nullptr, 0)
-  {}
+  Bytes() : Bytes(nullptr, 0) {}
 
-  Bytes(const uint8_t* data, size_t size) {
+  Bytes(const uint8_t *data, size_t size) {
     _init();
     if (data) {
       _copy(data, size);
@@ -39,12 +39,11 @@ public:
     }
   }
 
-  Bytes(const char *str) : Bytes((uint8_t *)str, strlen(str) + 1) // + 1 null terminator
+  Bytes(const char *str) : Bytes((uint8_t *)str, strlen(str) + 1)  // + 1 null terminator
   {}
 
   template <typename T>
-  Bytes(T value) : Bytes(((uint8_t *) &value), sizeof(T))
-  {
+  Bytes(T value) : Bytes(((uint8_t *)&value), sizeof(T)) {
     static_assert(std::is_fundamental<T>::value, "only fundamental types are allowed");
   }
 
@@ -62,9 +61,9 @@ public:
     _invalidate();
   }
 
-  Bytes & operator =(const Bytes &rhs) {
-    if(this != &rhs) {
-      if(rhs.mBuffer) {
+  Bytes &operator=(const Bytes &rhs) {
+    if (this != &rhs) {
+      if (rhs.mBuffer) {
         _copy(rhs.mBuffer, rhs.mSize);
       } else {
         _invalidate();
@@ -73,8 +72,8 @@ public:
     return *this;
   }
 
-  Bytes & operator =(const String &rhs) {
-    if(rhs.length()) {
+  Bytes &operator=(const String &rhs) {
+    if (rhs.length()) {
       _copy((const uint8_t *)rhs.c_str(), rhs.length());
     } else {
       _invalidate();
@@ -87,8 +86,7 @@ public:
     return *((T *)mBuffer);
   }
 
-  size_t fill(Filler filler)
-  {
+  size_t fill(Filler filler) {
     if (filler) {
       return filler(mBuffer, mSize);
     }
@@ -102,12 +100,11 @@ public:
     return *this;
   }
 
-  uint8_t* raw() const {
+  uint8_t *raw() const {
     return mBuffer;
   }
 
-  Bytes &terminate()
-  {
+  Bytes &terminate() {
     if (mBuffer[mSize - 1] != '\0') {
       _reserve(mSize + 1);
       mBuffer[mSize - 1] = '\0';
@@ -117,6 +114,10 @@ public:
 
   const char *c_str() const {
     return (const char *)mBuffer;
+  }
+
+  String toString() const {
+    return String(this->c_str());
   }
 
   size_t size() const {
@@ -131,31 +132,30 @@ public:
     return CRC32(mBuffer, mSize);
   }
 
-private:
-
+ private:
   inline void _init(void) {
     mBuffer = nullptr;
     mSize = 0;
   }
 
   void _invalidate(void) {
-    if(mBuffer) {
+    if (mBuffer) {
       free(mBuffer);
     }
     _init();
   }
 
   bool _reserve(size_t newSize) {
-    mBuffer = (uint8_t*) realloc(mBuffer, newSize);
-    if(mBuffer && (newSize > mSize)) {
+    mBuffer = (uint8_t *)realloc(mBuffer, newSize);
+    if (mBuffer && (newSize > mSize)) {
       memset(mBuffer + mSize, 0, newSize - mSize);
     }
     mSize = newSize;
     return mBuffer;
   }
 
-  Bytes & _copy(const uint8_t* data, size_t size) {
-    if(_reserve(size)) {
+  Bytes &_copy(const uint8_t *data, size_t size) {
+    if (_reserve(size)) {
       memcpy(mBuffer, data, size);
     } else {
       _invalidate();
@@ -163,6 +163,6 @@ private:
     return *this;
   }
 
-  uint8_t* mBuffer;
+  uint8_t *mBuffer;
   size_t mSize;
 };
