@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,32 +18,34 @@
 
 #pragma once
 
+#include <Bytes.h>
 #include <ClearQueue.h>
+#include <IterableQueue.h>
 
-namespace uniot
-{
-template <class T_topic, class T_msg>
+#include "EventEntity.h"
+
+namespace uniot {
+template <class T_topic, class T_msg, class T_data>
 class EventBus;
 
-template <class T_topic, class T_msg>
-class EventListener
-{
-  friend class EventBus<T_topic, T_msg>;
+template <class T_topic, class T_msg, class T_data>
+class EventListener : public EventEntity<T_topic, T_msg, T_data> {
+  friend class EventBus<T_topic, T_msg, T_data>;
 
-public:
+ public:
+  using DataChannelCallback = std::function<void(unsigned int, bool, T_data)>;
+
   virtual ~EventListener();
 
   EventListener *listenToEvent(T_topic topic);
   EventListener *stopListeningToEvent(T_topic topic);
   bool isListeningToEvent(T_topic topic);
-  void connect(EventBus<T_topic, T_msg> *eventBus);
-  void disconnect(EventBus<T_topic, T_msg> *eventBus);
+  void receiveDataFromChannel(T_topic channel, DataChannelCallback callback);
   virtual void onEventReceived(T_topic topic, T_msg msg) = 0;
 
-private:
-  ClearQueue<EventBus<T_topic, T_msg> *> mEventBusQueue;
+ private:
   ClearQueue<T_topic> mTopics;
 };
 
-using CoreEventListener = EventListener<unsigned int, int>;
-} // namespace uniot
+using CoreEventListener = EventListener<unsigned int, int, Bytes>;
+}  // namespace uniot

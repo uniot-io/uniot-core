@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,24 @@
 
 #pragma once
 
+#include <Bytes.h>
+
 #include <functional>
+
 #include "EventListener.h"
 
-namespace uniot
-{
-template <class T_topic, class T_msg>
-class CallbackEventListener : public EventListener<T_topic, T_msg>
-{
-public:
+namespace uniot {
+template <class T_topic, class T_msg, class T_data>
+class CallbackEventListener : public EventListener<T_topic, T_msg, T_data> {
+ public:
   using EventListenerCallback = std::function<void(T_topic, T_msg)>;
 
   CallbackEventListener(EventListenerCallback callback);
   virtual void onEventReceived(T_topic topic, T_msg msg);
 
-private:
+ private:
   EventListenerCallback mCallback;
 };
 
-using CoreCallbackEventListener = CallbackEventListener<unsigned int, int>;
-} // namespace uniot
+using CoreCallbackEventListener = CallbackEventListener<unsigned int, int, Bytes>;
+}  // namespace uniot

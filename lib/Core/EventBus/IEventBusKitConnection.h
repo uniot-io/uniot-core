@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,19 +20,17 @@
 
 #include "EventBus.h"
 
-namespace uniot
-{
-template <class T_topic, class T_msg>
+namespace uniot {
+template <class T_topic, class T_msg, class T_data>
 class EventBus;
 
-template <class T_topic, class T_msg>
-class IEventBusKitConnection
-{
-public:
+template <class T_topic, class T_msg, class T_data>
+class IEventBusKitConnection {
+ public:
   virtual ~IEventBusKitConnection() {}
-  virtual void connect(EventBus<T_topic, T_msg> *eventBus) = 0;
-  virtual void disconnect(EventBus<T_topic, T_msg> *eventBus) = 0;
+  virtual void connect(EventBus<T_topic, T_msg, T_data> *eventBus) = 0;
+  virtual void disconnect(EventBus<T_topic, T_msg, T_data> *eventBus) = 0;
 };
 
-using ICoreEventBusKitConnection = IEventBusKitConnection<unsigned int, int>;
-} // namespace uniot
+using ICoreEventBusKitConnection = IEventBusKitConnection<unsigned int, int, Bytes>;
+}  // namespace uniot

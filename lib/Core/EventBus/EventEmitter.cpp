@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,41 +16,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Arduino.h>
 #include "EventEmitter.h"
+
+#include <Arduino.h>
+
 #include "EventBus.h"
 
-namespace uniot
-{
-template <class T_topic, class T_msg>
-EventEmitter<T_topic, T_msg>::~EventEmitter()
-{
-  mEventBusQueue.forEach([this](EventBus<T_topic, T_msg> *eventBus) { eventBus->mEmitters.removeOne(this); });
+namespace uniot {
+template <class T_topic, class T_msg, class T_data>
+EventEmitter<T_topic, T_msg, T_data>::~EventEmitter() {
+  this->mEventBusQueue.forEach([this](EventBus<T_topic, T_msg, T_data> *eventBus) {
+    eventBus->mEmitters.removeOne(this);
+    yield();
+  });
 }
 
-template <class T_topic, class T_msg>
-void EventEmitter<T_topic, T_msg>::emitEvent(T_topic topic, T_msg msg)
-{
-  mEventBusQueue.forEach([&](EventBus<T_topic, T_msg> *eventBus) { eventBus->emitEvent(topic, msg); yield(); });
+template <class T_topic, class T_msg, class T_data>
+void EventEmitter<T_topic, T_msg, T_data>::emitEvent(T_topic topic, T_msg msg) {
+  this->mEventBusQueue.forEach([&](EventBus<T_topic, T_msg, T_data> *eventBus) {
+    eventBus->emitEvent(topic, msg);
+    yield();
+  });
 }
 
-template <class T_topic, class T_msg>
-void EventEmitter<T_topic, T_msg>::connect(EventBus<T_topic, T_msg> *eventBus)
-{
-  if (eventBus)
-  {
-    eventBus->connect(this);
-  }
+template <class T_topic, class T_msg, class T_data>
+bool EventEmitter<T_topic, T_msg, T_data>::sendDataToChannel(T_topic channel, T_data data) {
+  auto sentSomewhere = false;
+  this->mEventBusQueue.forEach([&](EventBus<T_topic, T_msg, T_data> *eventBus) {
+    auto sent = eventBus->mDataChannels.send(channel, data);
+    sentSomewhere |= sent;
+    yield();
+  });
+  return sentSomewhere;
 }
+}  // namespace uniot
 
-template <class T_topic, class T_msg>
-void EventEmitter<T_topic, T_msg>::disconnect(EventBus<T_topic, T_msg> *eventBus)
-{
-  if (eventBus)
-  {
-    eventBus->disconnect(this);
-  }
-}
-} // namespace uniot
-
-template class uniot::EventEmitter<unsigned int, int>;
+template class uniot::EventEmitter<unsigned int, int, Bytes>;

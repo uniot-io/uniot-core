@@ -16,19 +16,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "CallbackEventListener.h"
+#pragma once
 
-namespace uniot
-{
-template <class T_topic, class T_msg, class T_data>
-CallbackEventListener<T_topic, T_msg, T_data>::CallbackEventListener(EventListenerCallback callback)
-    : mCallback(callback) {}
+#include <Bytes.h>
+#include <LimitedQueue.h>
+#include <Map.h>
 
-template <class T_topic, class T_msg, class T_data>
-void CallbackEventListener<T_topic, T_msg, T_data>::onEventReceived(T_topic topic, T_msg msg)
-{
-  mCallback(topic, msg);
-}
-} // namespace uniot
+namespace uniot {
+template <class T_channel, class T_data>
+class DataChannels {
+ public:
+  virtual ~DataChannels() = default;
 
-template class uniot::CallbackEventListener<unsigned int, int, Bytes>;
+  bool open(T_channel channel, size_t limit);
+  bool close(T_channel channel);
+  bool send(T_channel channel, T_data data);
+  T_data receive(T_channel channel);
+  bool isEmpty(T_channel channel);
+
+ private:
+  Map<T_channel, SharedPointer<LimitedQueue<T_data>>> mChannels;
+};
+}  // namespace uniot

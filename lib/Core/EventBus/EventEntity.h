@@ -16,19 +16,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "CallbackEventListener.h"
+#pragma once
 
-namespace uniot
-{
+#include <IterableQueue.h>
+#include <Logger.h>
+
+namespace uniot {
 template <class T_topic, class T_msg, class T_data>
-CallbackEventListener<T_topic, T_msg, T_data>::CallbackEventListener(EventListenerCallback callback)
-    : mCallback(callback) {}
+class EventBus;
 
 template <class T_topic, class T_msg, class T_data>
-void CallbackEventListener<T_topic, T_msg, T_data>::onEventReceived(T_topic topic, T_msg msg)
-{
-  mCallback(topic, msg);
-}
-} // namespace uniot
+class EventEntity {
+ public:
+  virtual ~EventEntity() = default;
 
-template class uniot::CallbackEventListener<unsigned int, int, Bytes>;
+ protected:
+  bool connectUnique(EventBus<T_topic, T_msg, T_data> *eventBus) {
+    mEventBusQueue.begin();
+    while (!mEventBusQueue.isEnd()) {
+      auto connectedEventBus = mEventBusQueue.current();
+      if (connectedEventBus->getId() == eventBus->getId()) {
+        UNIOT_LOG_INFO("EventBus with id %d already connected", eventBus->getId());
+        return false;
+      }
+      mEventBusQueue.next();
+    }
+    return mEventBusQueue.pushUnique(eventBus);
+  }
+
+  IterableQueue<EventBus<T_topic, T_msg, T_data> *> mEventBusQueue;
+};
+}  // namespace uniot

@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,44 +18,58 @@
 
 #pragma once
 
-#include <IExecutor.h>
+#include <Bytes.h>
 #include <ClearQueue.h>
+#include <DataChannels.h>
+#include <IExecutor.h>
+
 #include "IEventBusKitConnection.h"
 
-namespace uniot
-{
-template <class T_topic, class T_msg>
+namespace uniot {
+template <class T_topic, class T_msg, class T_data>
 class EventListener;
 
-template <class T_topic, class T_msg>
+template <class T_topic, class T_msg, class T_data>
 class EventEmitter;
 
-template <class T_topic, class T_msg>
-class EventBus : public uniot::IExecutor
-{
-  friend class EventListener<T_topic, T_msg>;
-  friend class EventEmitter<T_topic, T_msg>;
+template <class T_topic, class T_msg, class T_data>
+class EventBus : public uniot::IExecutor {
+  friend class EventListener<T_topic, T_msg, T_data>;
+  friend class EventEmitter<T_topic, T_msg, T_data>;
 
-public:
+ public:
+  EventBus(unsigned int id) : mId(id) {}
   virtual ~EventBus();
 
-  void connect(IEventBusKitConnection<T_topic, T_msg> *connection);
-  void disconnect(IEventBusKitConnection<T_topic, T_msg> *connection);
+  unsigned int getId() { return mId; }
 
-  void connect(EventEmitter<T_topic, T_msg> *emitter);
-  void disconnect(EventEmitter<T_topic, T_msg> *emitter);
+  void connect(IEventBusKitConnection<T_topic, T_msg, T_data> *connection);
+  void disconnect(IEventBusKitConnection<T_topic, T_msg, T_data> *connection);
 
-  void connect(EventListener<T_topic, T_msg> *listener);
-  void disconnect(EventListener<T_topic, T_msg> *listener);
+  bool connect(EventEmitter<T_topic, T_msg, T_data> *emitter);
+  void disconnect(EventEmitter<T_topic, T_msg, T_data> *emitter);
+
+  bool connect(EventListener<T_topic, T_msg, T_data> *listener);
+  void disconnect(EventListener<T_topic, T_msg, T_data> *listener);
+
+  void openDataChannel(T_topic topic, size_t limit);
+  void closeDataChannel(T_topic topic);
+  void sendDataToChannel(T_topic topic, String data);
+  T_data receiveDataFromChannel(T_topic topic);
+  bool isDataChannelEmpty(T_topic topic);
 
   void emitEvent(T_topic topic, T_msg msg);
   virtual uint8_t execute() override;
 
-private:
-  ClearQueue<EventListener<T_topic, T_msg> *> mListeners; // TODO: need real set; std::set is broken into esp xtensa sdk
-  ClearQueue<EventEmitter<T_topic, T_msg> *> mEmitters;
+ private:
+  ClearQueue<EventListener<T_topic, T_msg, T_data> *> mListeners;  // TODO: need real set; std::set is broken into esp xtensa sdk
+  ClearQueue<EventEmitter<T_topic, T_msg, T_data> *> mEmitters;
   ClearQueue<std::pair<T_topic, T_msg>> mEvents;
+
+  DataChannels<T_topic, T_data> mDataChannels;
+
+  unsigned int mId;
 };
 
-using CoreEventBus = EventBus<unsigned int, int>;
-} // namespace uniot
+using CoreEventBus = EventBus<unsigned int, int, Bytes>;
+}  // namespace uniot

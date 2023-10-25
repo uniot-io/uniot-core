@@ -20,7 +20,7 @@
 #include <CrashStorage.h>
 
 uniot::TaskScheduler MainScheduler;
-uniot::CoreEventBus MainEventBus;
+uniot::CoreEventBus MainEventBus(FOURCC(main));
 uniot::Credentials MyCredentials;
 
 
