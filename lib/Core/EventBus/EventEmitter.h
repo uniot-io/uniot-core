@@ -35,7 +35,6 @@ class EventEmitter : public EventEntity<T_topic, T_msg, T_data> {
   virtual ~EventEmitter();
 
   void emitEvent(T_topic topic, T_msg msg);
-  bool sendDataToChannel(T_topic channel, T_data data);
 };
 
 using CoreEventEmitter = EventEmitter<unsigned int, int, Bytes>;

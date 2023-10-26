@@ -75,18 +75,18 @@ void EventBus<T_topic, T_msg, T_data>::unregisterListener(EventListener<T_topic,
 }
 
 template <class T_topic, class T_msg, class T_data>
-void EventBus<T_topic, T_msg, T_data>::openDataChannel(T_topic topic, size_t limit) {
-  mDataChannels.open(topic, limit);
+bool EventBus<T_topic, T_msg, T_data>::openDataChannel(T_topic topic, size_t limit) {
+  return mDataChannels.open(topic, limit);
 }
 
 template <class T_topic, class T_msg, class T_data>
-void EventBus<T_topic, T_msg, T_data>::closeDataChannel(T_topic topic) {
-  mDataChannels.close(topic);
+bool EventBus<T_topic, T_msg, T_data>::closeDataChannel(T_topic topic) {
+  return mDataChannels.close(topic);
 }
 
 template <class T_topic, class T_msg, class T_data>
-void EventBus<T_topic, T_msg, T_data>::sendDataToChannel(T_topic topic, String data) {
-  mDataChannels.send(topic, data);
+bool EventBus<T_topic, T_msg, T_data>::sendDataToChannel(T_topic topic, String data) {
+  return mDataChannels.send(topic, data);
 }
 
 template <class T_topic, class T_msg, class T_data>

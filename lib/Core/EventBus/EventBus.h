@@ -52,9 +52,9 @@ class EventBus : public uniot::IExecutor {
   bool registerListener(EventListener<T_topic, T_msg, T_data> *listener);
   void unregisterListener(EventListener<T_topic, T_msg, T_data> *listener);
 
-  void openDataChannel(T_topic topic, size_t limit);
-  void closeDataChannel(T_topic topic);
-  void sendDataToChannel(T_topic topic, String data);
+  bool openDataChannel(T_topic topic, size_t limit);
+  bool closeDataChannel(T_topic topic);
+  bool sendDataToChannel(T_topic topic, String data);
   T_data receiveDataFromChannel(T_topic topic);
   bool isDataChannelEmpty(T_topic topic);
 

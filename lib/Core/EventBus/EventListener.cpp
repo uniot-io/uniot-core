@@ -47,18 +47,6 @@ template <class T_topic, class T_msg, class T_data>
 bool EventListener<T_topic, T_msg, T_data>::isListeningToEvent(T_topic topic) {
   return mTopics.contains(topic);
 }
-
-template <class T_topic, class T_msg, class T_data>
-void EventListener<T_topic, T_msg, T_data>::receiveDataFromChannel(T_topic channel, DataChannelCallback callback) {
-  this->mEventBusQueue.forEach([&](EventBus<T_topic, T_msg, T_data> *eventBus) {
-    if (callback) {
-      auto empty = eventBus->mDataChannels.isEmpty(channel);
-      auto data = eventBus->mDataChannels.receive(channel);
-      callback(eventBus->mId, empty, data);
-    }
-    yield();
-  });
-}
 }  // namespace uniot
 
 template class uniot::EventListener<unsigned int, int, Bytes>;

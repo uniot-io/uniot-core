@@ -38,17 +38,6 @@ void EventEmitter<T_topic, T_msg, T_data>::emitEvent(T_topic topic, T_msg msg) {
     yield();
   });
 }
-
-template <class T_topic, class T_msg, class T_data>
-bool EventEmitter<T_topic, T_msg, T_data>::sendDataToChannel(T_topic channel, T_data data) {
-  auto sentSomewhere = false;
-  this->mEventBusQueue.forEach([&](EventBus<T_topic, T_msg, T_data> *eventBus) {
-    auto sent = eventBus->mDataChannels.send(channel, data);
-    sentSomewhere |= sent;
-    yield();
-  });
-  return sentSomewhere;
-}
 }  // namespace uniot
 
 template class uniot::EventEmitter<unsigned int, int, Bytes>;

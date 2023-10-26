@@ -28,7 +28,30 @@ class EventBus;
 template <class T_topic, class T_msg, class T_data>
 class EventEntity {
  public:
+  using DataChannelCallback = std::function<void(unsigned int, bool, T_data)>;
+
   virtual ~EventEntity() = default;
+
+  bool sendDataToChannel(T_topic channel, T_data data) {
+    auto sentSomewhere = false;
+    this->mEventBusQueue.forEach([&](EventBus<T_topic, T_msg, T_data> *eventBus) {
+      auto sent = eventBus->sendDataToChannel(channel, data);
+      sentSomewhere |= sent;
+      yield();
+    });
+    return sentSomewhere;
+  }
+
+  void receiveDataFromChannel(T_topic channel, DataChannelCallback callback) {
+    this->mEventBusQueue.forEach([&](EventBus<T_topic, T_msg, T_data> *eventBus) {
+      if (callback) {
+        auto empty = eventBus->isDataChannelEmpty(channel);
+        auto data = eventBus->receiveDataFromChannel(channel);
+        callback(eventBus->getId(), empty, data);
+      }
+      yield();
+    });
+  }
 
  protected:
   bool connectUnique(EventBus<T_topic, T_msg, T_data> *eventBus) {

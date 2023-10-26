@@ -33,14 +33,11 @@ class EventListener : public EventEntity<T_topic, T_msg, T_data> {
   friend class EventBus<T_topic, T_msg, T_data>;
 
  public:
-  using DataChannelCallback = std::function<void(unsigned int, bool, T_data)>;
-
   virtual ~EventListener();
 
   EventListener *listenToEvent(T_topic topic);
   EventListener *stopListeningToEvent(T_topic topic);
   bool isListeningToEvent(T_topic topic);
-  void receiveDataFromChannel(T_topic channel, DataChannelCallback callback);
   virtual void onEventReceived(T_topic topic, T_msg msg) = 0;
 
  private:
