@@ -28,8 +28,8 @@ namespace uniot {
 class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListener {
  public:
   LispDevice() : MQTTDevice(), CBORStorage("lisp.cbor"), CoreEventListener(), mFirstPacketReceived(false) {
-    CoreEventListener::listenToEvent(unLisp::Topic::LISP_OUT);
-    CoreEventListener::listenToEvent(unLisp::Topic::LISP_REQUEST);
+    CoreEventListener::listenToEvent(unLisp::Topic::OUT_LISP_MSG);
+    CoreEventListener::listenToEvent(unLisp::Topic::OUT_LISP_REQUEST);
   }
 
   void syncSubscriptions() override {
@@ -66,23 +66,28 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
   }
 
   virtual void onEventReceived(unsigned int topic, int msg) override {
-    if (topic == unLisp::Topic::LISP_OUT) {
-      if (msg == unLisp::ERROR) {
-        auto lastError = getLisp().getLastError();
-        publishDevice("script_error", lastError);
-        UNIOT_LOG_ERROR("lisp error: %s", lastError.c_str());
+    if (topic == unLisp::Topic::OUT_LISP_MSG) {
+      if (msg == unLisp::Msg::OUT_MSG_ERROR) {
+        CoreEventListener::receiveDataFromChannel(unLisp::Channel::OUT_LISP_ERR, [this](unsigned int id, bool empty, Bytes data) {
+          if (!empty) {
+            publishDevice("script/error", data);
+            UNIOT_LOG_ERROR("lisp error: %s", data.c_str());
+          }
+        });
         return;
       }
-      if (msg == unLisp::MSG_ADDED) {
-        CoreEventListener::receiveDataFromChannel(unLisp::Channel::LISP_OUTPUT, [](unsigned int id, bool empty, Bytes data) {
-          UNIOT_LOG_INFO("event bus id: %d, channel empty: %d, lisp: %s", id, empty, data.toString().c_str());
+      if (msg == unLisp::Msg::OUT_MSG_ADDED) {
+        CoreEventListener::receiveDataFromChannel(unLisp::Channel::OUT_LISP, [](unsigned int id, bool empty, Bytes data) {
+          // NOTE: it is currently only used for debugging purposes
+          // UNIOT_LOG_INFO_IF(!empty, "lisp: %s", data.toString().c_str());
         });
         return;
       }
       return;
     }
-    if (topic == unLisp::Topic::LISP_REQUEST) {
-      if (msg == unLisp::Msg::REFRESH_EVENTS) {
+    if (topic == unLisp::Topic::OUT_LISP_REQUEST) {
+      if (msg == unLisp::Msg::OUT_REFRESH_EVENTS) {
+        // This is necessary to retrieve events marked as `retained` during the execution of a new script
         this->unsubscribe(mTopicEvents);
         this->subscribe(mTopicEvents);
         return;
@@ -92,14 +97,11 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
   }
 
   void handle(const String &topic, const Bytes &payload) override {
-    UNIOT_LOG_INFO("lisp device handle: %s", topic.c_str());
     if (MQTTDevice::isTopicMatch(mTopicScript, topic)) {
-      UNIOT_LOG_INFO("script received");
       handleScript(payload);
       return;
     }
     if (MQTTDevice::isTopicMatch(mTopicEvents, topic)) {
-      UNIOT_LOG_INFO("event received");
       handleEvent(payload);
       return;
     }
@@ -138,8 +140,9 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
 
   void handleEvent(const Bytes &payload) {
     if (payload.size() > 0) {
-      CoreEventListener::sendDataToChannel(unLisp::Channel::EVENT, payload);
-      CoreEventListener::emitEvent(unLisp::Topic::LISP_EVENT, unLisp::Msg::NEW_EVENT);
+      // TODO: implement event validation
+      CoreEventListener::sendDataToChannel(unLisp::Channel::IN_EVENT, payload);
+      CoreEventListener::emitEvent(unLisp::Topic::IN_LISP_EVENT, unLisp::Msg::IN_NEW_EVENT);
     }
   }
 

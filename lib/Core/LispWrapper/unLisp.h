@@ -19,7 +19,7 @@
 #pragma once
 
 #include <Bytes.h>
-#include <CBORArray.h>
+#include <CBORObject.h>
 #include <Common.h>
 #include <EventListener.h>
 #include <LimitedQueue.h>
@@ -39,19 +39,20 @@ using namespace lisp;
 class unLisp : public CoreEventListener {
  public:
   enum Channel {
-    LISP_OUTPUT = FOURCC(lout),
-    EVENT = FOURCC(evnt)
+    OUT_LISP = FOURCC(lout),
+    OUT_LISP_ERR = FOURCC(lerr),
+    IN_EVENT = FOURCC(evnt)
   };
   enum Topic {
-    LISP_OUT = FOURCC(lisp),
-    LISP_EVENT = FOURCC(lspe),
-    LISP_REQUEST = FOURCC(lreq)
+    OUT_LISP_MSG = FOURCC(lisp),
+    OUT_LISP_REQUEST = FOURCC(lreq),
+    IN_LISP_EVENT = FOURCC(lspe)
   };
   enum Msg {
-    MSG_ADDED,
-    ERROR,
-    NEW_EVENT,
-    REFRESH_EVENTS
+    OUT_MSG_ADDED,
+    OUT_MSG_ERROR,
+    OUT_REFRESH_EVENTS,
+    IN_NEW_EVENT
   };
 
   unLisp(unLisp const &) = delete;
@@ -84,7 +85,6 @@ class unLisp : public CoreEventListener {
 
     mIsLastCodePersist = false;
     mLastCode = data;
-    mLastError = "";
 
     mTaskLispEval->detach();
     _destroyMachine();
@@ -113,10 +113,6 @@ class unLisp : public CoreEventListener {
     }
   }
 
-  const String &getLastError() {
-    return mLastError;
-  }
-
   const Bytes &getLastCode() {
     UNIOT_LOG_WARN_IF(!mLastCode.size(), "there is no last saved code");
     return mLastCode;
@@ -131,36 +127,34 @@ class unLisp : public CoreEventListener {
   }
 
   virtual void onEventReceived(unsigned int topic, int msg) override {
-    UNIOT_LOG_INFO("Received event: %d, %d", topic, msg);
-
-    CoreEventListener::receiveDataFromChannel(unLisp::Channel::EVENT, [&](unsigned int id, bool empty, Bytes data) {
-      UNIOT_LOG_INFO("event bus id: %d, channel empty: %d, event size: %d", id, empty, data.checksum());
-
-      auto packet = CBORObject(data);
-      auto eventID = packet.getString("eventID");
-      auto value = packet.getValueAsString("value");
-      auto sender = packet.getMap("sender").getString("id");
-      UNIOT_LOG_INFO("eventID: %s, value: %s, sender: %s", eventID.c_str(), value.c_str(), sender.c_str());
-    });
+    if (topic == unLisp::Topic::IN_LISP_EVENT) {
+      if (msg == unLisp::Msg::IN_NEW_EVENT) {
+        CoreEventListener::receiveDataFromChannel(unLisp::Channel::IN_EVENT, [&](unsigned int id, bool empty, Bytes data) {
+          _pushEvent(data);
+        });
+        return;
+      }
+      return;
+    }
   }
 
  private:
   unLisp() : mIsLastCodePersist(false) {
-    CoreEventListener::listenToEvent(unLisp::Topic::LISP_EVENT);
+    CoreEventListener::listenToEvent(unLisp::Topic::IN_LISP_EVENT);
 
     auto fnPrintOut = [](const char *msg, int size) {
       if (size > 0) {
         auto &instance = unLisp::getInstance();
-        instance.sendDataToChannel(Topic::LISP_OUT, Bytes((uint8_t *)msg, size).terminate());
-        instance.emitEvent(Topic::LISP_OUT, Msg::MSG_ADDED);
+        instance.sendDataToChannel(unLisp::Channel::OUT_LISP, Bytes((uint8_t *)msg, size).terminate());
+        instance.emitEvent(Topic::OUT_LISP_MSG, Msg::OUT_MSG_ADDED);
       }
       yield();
     };
 
     auto fnPrintErr = [](const char *msg, int size) {
       auto &instance = unLisp::getInstance();
-      instance.mLastError = msg;
-      instance.emitEvent(Topic::LISP_OUT, ERROR);
+      instance.sendDataToChannel(unLisp::Channel::OUT_LISP_ERR, Bytes((uint8_t *)msg, size).terminate());
+      instance.emitEvent(Topic::OUT_LISP_MSG, OUT_MSG_ERROR);
 
       // TODO: do we need a special error callback?
       instance.mTaskLispEval->detach();
@@ -206,6 +200,8 @@ class unLisp : public CoreEventListener {
     add_constant(mLispRoot, mLispEnv, "#t_obj", &Nil);
     add_constant_int(mLispRoot, mLispEnv, "#t_pass", 0);
     add_primitive(mLispRoot, mLispEnv, "task", mPrimitiveTask);
+    add_primitive(mLispRoot, mLispEnv, "is_event", mPrimitiveIsEventAvailable);
+    add_primitive(mLispRoot, mLispEnv, "pop_event", mPrimitivePopEvent);
 
     mUserPrimitives.forEach([this](Pair<const String &, Primitive *> holder) {
       add_primitive(mLispRoot, mLispEnv, holder.first.c_str(), holder.second);
@@ -218,7 +214,34 @@ class unLisp : public CoreEventListener {
 
   void _refreshEvents() {
     mEvents.clean();
-    this->emitEvent(Topic::LISP_REQUEST, Msg::REFRESH_EVENTS);
+    this->emitEvent(Topic::OUT_LISP_REQUEST, Msg::OUT_REFRESH_EVENTS);
+  }
+
+  void _pushEvent(const Bytes &eventData) {
+    constexpr size_t EVENTS_LIMIT = 5;
+
+    auto event = CBORObject(eventData);
+    auto eventID = event.getString("eventID");
+    auto value = event.getValueAsString("value");  // NOTE: this is only used here to verify the correctness of the event
+
+    if (!eventID.isEmpty() && !value.isEmpty()) {
+      if (!mEvents.exist(eventID)) {
+        mEvents.put(eventID, std::make_shared<LimitedQueue<Bytes>>());
+        mEvents.get(eventID)->limit(EVENTS_LIMIT);
+      }
+      mEvents.get(eventID)->pushLimited(eventData);
+    }
+  }
+
+  bool _isEventAvailable(const String &eventID) {
+    return mEvents.exist(eventID) && mEvents.get(eventID)->size();
+  }
+
+  Bytes _popEvent(const String &eventID) {
+    if (_isEventAvailable(eventID)) {
+      return mEvents.get(eventID)->popLimited({});
+    }
+    return {};
   }
 
   inline Object _primTask(Root root, VarObject env, VarObject list) {
@@ -239,13 +262,41 @@ class unLisp : public CoreEventListener {
     return expeditor.makeBool(true);
   }
 
+  inline Object _primIsEventAvailable(Root root, VarObject env, VarObject list) {
+    PrimitiveExpeditor expeditor("is_event", root, env, list);
+    expeditor.assertArgs(1, Lisp::Symbol);
+
+    auto eventId = expeditor.getArgSymbol(0);
+    auto available = _isEventAvailable(eventId);
+
+    return expeditor.makeBool(available);
+  }
+
+  inline Object _primPopEvent(Root root, VarObject env, VarObject list) {
+    PrimitiveExpeditor expeditor("pop_event", root, env, list);
+    expeditor.assertArgs(1, Lisp::Symbol);
+
+    auto eventId = expeditor.getArgSymbol(0);
+    auto eventData = _popEvent(eventId);
+    auto event = CBORObject(eventData);
+    auto value = event.getValueAsString("value");
+
+    auto number = value.toInt();
+    auto isNumber = number || value == "0";
+
+    UNIOT_LOG_WARN_IF(!isNumber, "event value is not a number");
+
+    return expeditor.makeInt(number);
+  }
+
   bool mIsLastCodePersist;
   Bytes mLastCode;
-  String mLastError;
   TaskScheduler::TaskPtr mTaskLispEval;
   ClearQueue<Pair<String, Primitive *>> mUserPrimitives;
 
   const Primitive *mPrimitiveTask = [](Root root, VarObject env, VarObject list) { return getInstance()._primTask(root, env, list); };
+  const Primitive *mPrimitiveIsEventAvailable = [](Root root, VarObject env, VarObject list) { return getInstance()._primIsEventAvailable(root, env, list); };
+  const Primitive *mPrimitivePopEvent = [](Root root, VarObject env, VarObject list) { return getInstance()._primPopEvent(root, env, list); };
 
   void *mLispEnvConstructor[3];
   Root mLispRoot;

@@ -93,8 +93,9 @@ public:
 
   void registerWithBus(CoreEventBus *eventBus) override
   {
-    eventBus->openDataChannel(unLisp::Channel::LISP_OUTPUT, 10);
-    eventBus->openDataChannel(unLisp::Channel::EVENT, 20);
+    eventBus->openDataChannel(unLisp::Channel::OUT_LISP, 10);
+    eventBus->openDataChannel(unLisp::Channel::OUT_LISP_ERR, 1);
+    eventBus->openDataChannel(unLisp::Channel::IN_EVENT, 20);
     eventBus->registerKit(&mNetworkDevice);
     eventBus->registerEntity(&getLisp());
     eventBus->registerEntity(&mLispDevice);
@@ -103,8 +104,9 @@ public:
 
   void unregisterFromBus(CoreEventBus *eventBus) override
   {
-    eventBus->closeDataChannel(unLisp::Channel::LISP_OUTPUT);
-    eventBus->closeDataChannel(unLisp::Channel::EVENT);
+    eventBus->closeDataChannel(unLisp::Channel::OUT_LISP);
+    eventBus->closeDataChannel(unLisp::Channel::OUT_LISP_ERR);
+    eventBus->closeDataChannel(unLisp::Channel::IN_EVENT);
     eventBus->unregisterKit(&mNetworkDevice);
     eventBus->unregisterEntity(&getLisp());
     eventBus->unregisterEntity(&mLispDevice);
