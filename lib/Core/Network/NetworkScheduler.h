@@ -166,7 +166,7 @@ namespace uniot {
           mTaskStop->attach(500, 1);
           mTaskMonitoring->attach(2000);
           mWifiStorage.store();
-          mpCredentials->store();
+          mpCredentials->store(); // NOTE: it is stored each time it is connected to the network
           _printp(strSuccess);
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::SUCCESS);
           break;

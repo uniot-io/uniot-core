@@ -32,6 +32,7 @@ public:
   {
     mCreatorId = UNIOT_CREATOR_ID;
     mDeviceId = _calcDeviceId();
+    Credentials::restore();
   }
 
   bool store() override

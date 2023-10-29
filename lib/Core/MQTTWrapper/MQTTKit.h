@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,61 +18,58 @@
 
 #pragma once
 
-#include <functional>
-#include <Common.h>
-#include <IExecutor.h>
-#include <EventEmitter.h>
-#include <ClearQueue.h>
-#include <ESP8266WiFi.h>
-#include <PubSubClient.h>
 #include <Bytes.h>
 #include <CBORObject.h>
-#include "MQTTDevice.h"
+#include <ClearQueue.h>
+#include <Common.h>
+#include <ESP8266WiFi.h>
+#include <EventEmitter.h>
+#include <IExecutor.h>
+#include <PubSubClient.h>
+
+#include <functional>
+
 #include "CallbackMQTTDevice.h"
+#include "MQTTDevice.h"
 #include "MQTTPath.h"
 
-namespace uniot
-{
-class MQTTKit : public IExecutor, public CoreEventEmitter
-{
+namespace uniot {
+class MQTTKit : public IExecutor, public CoreEventEmitter {
   typedef std::function<void(CBORObject &)> CBORExtender;
   friend class MQTTDevice;
 
-public:
+ public:
   enum Topic { CONNECTION = FOURCC(mqtt) };
-  enum Msg { FAILED = 0, SUCCESS };
+  enum Msg {
+    FAILED = 0,
+    SUCCESS
+  };
 
   MQTTKit(const Credentials &credentials, CBORExtender infoExtender = nullptr)
       : mPath(credentials),
         mInfoExtender(infoExtender),
         mPubSubClient(mWiFiClient),
         mConnectionId(0),
-        mClientId(credentials.getShortDeviceId())
-  {
+        mClientId(credentials.getShortDeviceId()) {
     mPubSubClient.setCallback([this](char *topic, uint8_t *payload, unsigned int length) {
       mDevices.forEach([&](MQTTDevice *device) {
-        if (device->isSubscribed(String(topic)))
-        {
+        if (device->isSubscribed(String(topic))) {
           device->handle(topic, Bytes(payload, length));
         }
       });
     });
   }
 
-  ~MQTTKit()
-  {
+  ~MQTTKit() {
     // TODO: implement, remove all devices
   }
 
-  void setServer(const char *domain, uint16_t port)
-  {
+  void setServer(const char *domain, uint16_t port) {
     mPubSubClient.setServer(domain, port);
   }
 
-  void addDevice(MQTTDevice *device)
-  {
-    if (mDevices.pushUnique(device))
-    {
+  void addDevice(MQTTDevice *device) {
+    if (mDevices.pushUnique(device)) {
       device->kit(this);
       device->topics()->forEach([this](String topic) {
         mPubSubClient.subscribe(topic.c_str());
@@ -80,19 +77,8 @@ public:
     }
   }
 
-  void addDevice(MQTTDevice *device, const String &subTopic)
-  {
-    if (!mDevices.contains(device))
-    {
-      addDevice(device);
-      device->subscribeDevice(subTopic);
-    }
-  }
-
-  void removeDevice(MQTTDevice *device)
-  {
-    if (mDevices.removeOne(device))
-    {
+  void removeDevice(MQTTDevice *device) {
+    if (mDevices.removeOne(device)) {
       device->kit(nullptr);
       device->topics()->forEach([this](String topic) {
         mPubSubClient.unsubscribe(topic.c_str());
@@ -100,15 +86,19 @@ public:
     }
   }
 
-  const MQTTPath &getPath()
-  {
+  const MQTTPath &getPath() {
     return mPath;
   }
 
-  virtual uint8_t execute() override
-  {
-    if (!mPubSubClient.connected())
-    {
+  void renewSubscriptions() {
+    mDevices.forEach([this](MQTTDevice *device) {
+      device->unsubscribeFromAll();
+      device->syncSubscriptions();
+    });
+  }
+
+  virtual uint8_t execute() override {
+    if (!mPubSubClient.connected()) {
       Serial.print("Attempting MQTT connection...    ");
       Serial.println(mConnectionId);
       CBORObject offlineCBOR;
@@ -120,8 +110,7 @@ public:
               0,
               true,
               offlinePacket.raw(),
-              offlinePacket.size()))
-      {
+              offlinePacket.size())) {
         CBORObject onlineCBOR;
         _prepareOnlinePacket(onlineCBOR);
         auto onlinePacket = onlineCBOR.build();
@@ -129,16 +118,14 @@ public:
             mPath.buildDevicePath("status").c_str(),
             onlinePacket.raw(),
             onlinePacket.size(),
-            true); // publish an announcement
+            true);  // publish an announcement
         mDevices.forEach([this](MQTTDevice *device) {
           device->topics()->forEach([this](String topic) {
             mPubSubClient.subscribe(topic.c_str());
           });
         });
         CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::SUCCESS);
-      }
-      else
-      {
+      } else {
         CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
       }
     }
@@ -146,15 +133,13 @@ public:
     return 0;
   }
 
-protected:
-  PubSubClient *client()
-  {
+ protected:
+  PubSubClient *client() {
     return &mPubSubClient;
   }
 
-private:
-  void _prepareOnlinePacket(CBORObject &packet)
-  {
+ private:
+  void _prepareOnlinePacket(CBORObject &packet) {
     packet
         .put("online", 1)
         .put("connection_id", mConnectionId++);
@@ -163,8 +148,7 @@ private:
       mInfoExtender(packet);
   }
 
-  void _prepareOfflinePacket(CBORObject &packet)
-  {
+  void _prepareOfflinePacket(CBORObject &packet) {
     packet
         .put("online", 0)
         .put("connection_id", mConnectionId);
@@ -183,4 +167,4 @@ private:
   WiFiClient mWiFiClient;
   ClearQueue<MQTTDevice *> mDevices;
 };
-} // namespace uniot
+}  // namespace uniot

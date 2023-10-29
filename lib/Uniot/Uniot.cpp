@@ -21,8 +21,6 @@
 
 uniot::TaskScheduler MainScheduler;
 uniot::CoreEventBus MainEventBus(FOURCC(main));
-uniot::Credentials MyCredentials;
-
 
 void setup()
 {
@@ -31,7 +29,6 @@ void setup()
   auto taskHandleEventBus = uniot::TaskScheduler::make(&MainEventBus);
   MainScheduler.push(taskHandleEventBus);
   taskHandleEventBus->attach(100);
-  MyCredentials.restore();
 
   inject();
 }

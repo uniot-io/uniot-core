@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,79 +16,116 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Arduino.h>
-#include <Logger.h>
-#include "MQTTKit.h"
 #include "MQTTDevice.h"
 
-namespace uniot
-{
-MQTTDevice::~MQTTDevice()
-{
-  if (mpKit)
-  {
+#include <Arduino.h>
+#include <Logger.h>
+
+#include "MQTTKit.h"
+
+namespace uniot {
+MQTTDevice::~MQTTDevice() {
+  if (mpKit) {
     mpKit->removeDevice(this);
     mpKit = nullptr;
   }
 }
 
-void MQTTDevice::unsubscribeFromAll()
-{
-  while (!mTopics.isEmpty())
-  {
+void MQTTDevice::unsubscribeFromAll() {
+  while (!mTopics.isEmpty()) {
     auto topic = mTopics.hardPop();
-    if (mpKit)
+    if (mpKit) {
       mpKit->client()->unsubscribe(topic.c_str());
+    }
   }
 }
 
-void MQTTDevice::subscribe(const String &topic)
-{
+const String& MQTTDevice::subscribe(const String &topic) {
   mTopics.push(topic);
-  if (mpKit)
-  {
+  if (mpKit) {
     mpKit->client()->subscribe(topic.c_str());
   }
+  return topic;
 }
 
-void MQTTDevice::subscribeDevice(const String &subTopic)
-{
-  if (mpKit)
-    subscribe(mpKit->getPath().buildDevicePath(subTopic));
-  else
+String MQTTDevice::subscribeDevice(const String &subTopic) {
+  if (mpKit) {
+    return subscribe(mpKit->getPath().buildDevicePath(subTopic));
+  } else {
     UNIOT_LOG_WARN("use detailed subscription after adding device to kit");
+  }
+  return {};
 }
 
-void MQTTDevice::subscribeGroup(const String &subTopic)
-{
-  if (mpKit)
-    subscribe(mpKit->getPath().buildGroupPath(subTopic));
-  else
+String MQTTDevice::subscribeGroup(const String &groupId, const String &subTopic) {
+  if (mpKit) {
+    return subscribe(mpKit->getPath().buildGroupPath(groupId, subTopic));
+  } else {
     UNIOT_LOG_WARN("use detailed subscription after adding device to kit");
+  }
+  return {};
 }
 
-void MQTTDevice::publish(const String &topic, const Bytes &payload, bool retained)
-{
-  if (mpKit)
-  {
+void MQTTDevice::publish(const String &topic, const Bytes &payload, bool retained) {
+  if (mpKit) {
     mpKit->client()->publish(topic.c_str(), payload.raw(), payload.size(), retained);
   }
 }
 
-void MQTTDevice::publishDevice(const String &subTopic, const Bytes &payload, bool retained)
-{
-  if (mpKit)
+void MQTTDevice::publishDevice(const String &subTopic, const Bytes &payload, bool retained) {
+  if (mpKit) {
     publish(mpKit->getPath().buildDevicePath(subTopic), payload, retained);
+  }
 }
 
-void MQTTDevice::publishGroup(const String &subTopic, const Bytes &payload, bool retained)
-{
-  if (mpKit)
-    publish(mpKit->getPath().buildGroupPath(subTopic), payload, retained);
+void MQTTDevice::publishGroup(const String &groupId, const String &subTopic, const Bytes &payload, bool retained) {
+  if (mpKit) {
+    publish(mpKit->getPath().buildGroupPath(groupId, subTopic), payload, retained);
+  }
 }
 
-bool MQTTDevice::isSubscribed(const String &topic)
-{
-  return mTopics.contains(topic);
+bool MQTTDevice::isSubscribed(const String &topic) {
+  mTopics.begin();
+  while (!mTopics.isEnd()) {
+    if (isTopicMatch(mTopics.current(), topic)) {
+      return true;
+    }
+    mTopics.next();
+  }
+  return false;
 }
-} // namespace uniot
+
+bool MQTTDevice::isTopicMatch(const String &storedTopic, const String &incomingTopic) const {
+  unsigned int storedPos = 0, incomingPos = 0;
+
+  while (storedPos < storedTopic.length() && incomingPos < incomingTopic.length()) {
+    auto storedSlashPos = storedTopic.indexOf('/', storedPos);
+    auto incomingSlashPos = incomingTopic.indexOf('/', incomingPos);
+
+    if (storedPos < storedTopic.length() && storedTopic[storedPos] == '#') {
+      return true;
+    }
+
+    // If no separator found, set to end of string
+    if (storedSlashPos == -1) {
+      storedSlashPos = storedTopic.length();
+    }
+    if (incomingSlashPos == -1) {
+      incomingSlashPos = incomingTopic.length();
+    }
+
+    auto storedSegment = storedTopic.substring(storedPos, storedSlashPos);
+    auto incomingSegment = incomingTopic.substring(incomingPos, incomingSlashPos);
+
+    if (!(storedSegment == "+" || storedSegment == incomingSegment /* || storedSegment == "" */)) {
+      break;
+    }
+
+    storedPos = storedSlashPos + 1;
+    incomingPos = incomingSlashPos + 1;
+  }
+
+  // Check if both topics have been fully traversed
+  return storedPos >= storedTopic.length() && incomingPos >= incomingTopic.length();
+}
+}  // namespace uniot

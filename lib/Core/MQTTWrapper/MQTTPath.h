@@ -39,10 +39,13 @@ public:
             + topic;
   }
 
-  String buildGroupPath(const String &topic) const
+  String buildGroupPath(const String& groupId, const String &topic) const
   {
     return mPrefix + "/"
+            + "users/"
             + mpCredentials->getOwnerId() + "/"
+            + "groups/"
+            + groupId + "/"
             + topic;
   }
 

@@ -31,4 +31,3 @@ extern "C" {
 
 extern uniot::TaskScheduler MainScheduler;
 extern uniot::CoreEventBus MainEventBus;
-extern uniot::Credentials MyCredentials;

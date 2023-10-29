@@ -63,14 +63,14 @@ public:
 
   void registerWithBus(CoreEventBus *eventBus)
   {
-    eventBus->registerEmitter(&mNetwork);
-    eventBus->registerListener(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
+    eventBus->registerEntity(&mNetwork);
+    eventBus->registerEntity(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
   }
 
   void unregisterFromBus(CoreEventBus *eventBus)
   {
-    eventBus->unregisterEmitter(&mNetwork);
-    eventBus->unregisterListener(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
+    eventBus->unregisterEntity(&mNetwork);
+    eventBus->unregisterEntity(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
   }
 
   void pushTo(TaskScheduler *scheduler) {

@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,36 +18,44 @@
 
 #pragma once
 
-#include <libminilisp.h>
-#include <TaskScheduler.h>
-#include <LimitedQueue.h>
-#include <EventEmitter.h>
-#include <CBORArray.h>
 #include <Bytes.h>
+#include <CBORArray.h>
 #include <Common.h>
+#include <EventListener.h>
+#include <LimitedQueue.h>
 #include <LispHelper.h>
-#include <PrimitiveExpeditor.h>
 #include <Logger.h>
+#include <PrimitiveExpeditor.h>
+#include <TaskScheduler.h>
+#include <libminilisp.h>
 
 #ifndef UNIOT_LISP_HEAP
 #define UNIOT_LISP_HEAP 8000
 #endif
 
-namespace uniot
-{
+namespace uniot {
 using namespace lisp;
 
-class unLisp : public CoreEventEmitter
-{
-public:
-  enum Topic { LISP = FOURCC(lisp) };
-  enum Msg { MSG_ADDED, ERROR };
+class unLisp : public CoreEventListener {
+ public:
+  enum Channel {
+    LISP_OUTPUT = FOURCC(lout),
+    EVENT = FOURCC(evnt)
+  };
+  enum Topic {
+    LISP_OUT = FOURCC(lisp),
+    LISP_EVENT = FOURCC(lspe)
+  };
+  enum Msg {
+    MSG_ADDED,
+    ERROR,
+    NEW_EVENT
+  };
 
   unLisp(unLisp const &) = delete;
   void operator=(unLisp const &) = delete;
 
-  static unLisp &getInstance()
-  {
+  static unLisp &getInstance() {
     static unLisp instance;
     return instance;
   }
@@ -56,13 +64,11 @@ public:
     return mTaskLispEval;
   }
 
-  bool isCreated()
-  {
+  bool isCreated() {
     return lisp_is_created();
   }
 
-  bool taskIsRunning()
-  {
+  bool taskIsRunning() {
     return mTaskLispEval->isAtached();
   }
 
@@ -70,7 +76,7 @@ public:
     return lisp_mem_used();
   }
 
-  void runCode(const Bytes& data) {
+  void runCode(const Bytes &data) {
     if (!data.size())
       return;
 
@@ -90,33 +96,28 @@ public:
       _destroyMachine();
   }
 
-  unLisp *pushPrimitive(const String &name, Primitive *primitive)
-  {
+  unLisp *pushPrimitive(const String &name, Primitive *primitive) {
     mUserPrimitives.push(MakePair(name, primitive));
     return this;
   }
 
-  void serializeNamesOfPrimitives(CBORArray *arr)
-  {
+  void serializeNamesOfPrimitives(CBORArray *arr) {
     if (arr)
-      mUserPrimitives.forEach([&](Pair<const String&, Primitive *> holder) {
+      mUserPrimitives.forEach([&](Pair<const String &, Primitive *> holder) {
         arr->put(holder.first.c_str());
       });
   }
 
-  const String &getLastError()
-  {
+  const String &getLastError() {
     return mLastError;
   }
 
-  const Bytes &getLastCode()
-  {
+  const Bytes &getLastCode() {
     UNIOT_LOG_WARN_IF(!mLastCode.size(), "there is no last saved code");
     return mLastCode;
   }
 
-  bool isLastCodePersist()
-  {
+  bool isLastCodePersist() {
     return mIsLastCodePersist;
   }
 
@@ -124,15 +125,29 @@ public:
     mLastCode.clean();
   }
 
-private:
-  unLisp() : mIsLastCodePersist(false)
-  {
+  virtual void onEventReceived(unsigned int topic, int msg) override {
+    UNIOT_LOG_INFO("Received event: %d, %d", topic, msg);
+
+    CoreEventListener::receiveDataFromChannel(unLisp::Channel::EVENT, [&](unsigned int id, bool empty, Bytes data) {
+      UNIOT_LOG_INFO("event bus id: %d, channel empty: %d, event size: %d", id, empty, data.checksum());
+
+      auto packet = CBORObject(data);
+      auto eventID = packet.getString("eventID");
+      auto value = packet.getValueAsString("value");
+      auto sender = packet.getMap("sender").getString("id");
+      UNIOT_LOG_INFO("eventID: %s, value: %s, sender: %s", eventID.c_str(), value.c_str(), sender.c_str());
+    });
+  }
+
+ private:
+  unLisp() : mIsLastCodePersist(false) {
+    CoreEventListener::listenToEvent(unLisp::Topic::LISP_EVENT);
+
     auto fnPrintOut = [](const char *msg, int size) {
-      if (size > 0)
-      {
+      if (size > 0) {
         auto &instance = unLisp::getInstance();
-        instance.sendDataToChannel(Topic::LISP, Bytes(msg));
-        instance.emitEvent(Topic::LISP, Msg::MSG_ADDED);
+        instance.sendDataToChannel(Topic::LISP_OUT, Bytes((uint8_t *)msg, size).terminate());
+        instance.emitEvent(Topic::LISP_OUT, Msg::MSG_ADDED);
       }
       yield();
     };
@@ -140,7 +155,7 @@ private:
     auto fnPrintErr = [](const char *msg, int size) {
       auto &instance = unLisp::getInstance();
       instance.mLastError = msg;
-      instance.emitEvent(Topic::LISP, ERROR);
+      instance.emitEvent(Topic::LISP_OUT, ERROR);
 
       // TODO: do we need a special error callback?
       instance.mTaskLispEval->detach();
@@ -168,8 +183,7 @@ private:
     });
   }
 
-  void _constructLispEnv()
-  {
+  void _constructLispEnv() {
     mLispEnvConstructor[0] = NULL;
     mLispEnvConstructor[1] = NULL;
     mLispEnvConstructor[2] = ROOT_END;
@@ -177,8 +191,7 @@ private:
     mLispEnv = (Obj **)(mLispEnvConstructor + 1);
   }
 
-  void _createMachine()
-  {
+  void _createMachine() {
     lisp_create(UNIOT_LISP_HEAP);
 
     *mLispEnv = make_env(mLispRoot, &Nil, &Nil);
@@ -189,18 +202,16 @@ private:
     add_constant_int(mLispRoot, mLispEnv, "#t_pass", 0);
     add_primitive(mLispRoot, mLispEnv, "task", mPrimitiveTask);
 
-    mUserPrimitives.forEach([this](Pair<const String&, Primitive *> holder) {
+    mUserPrimitives.forEach([this](Pair<const String &, Primitive *> holder) {
       add_primitive(mLispRoot, mLispEnv, holder.first.c_str(), holder.second);
     });
   }
 
-  void _destroyMachine()
-  {
+  void _destroyMachine() {
     lisp_destroy();
   }
 
-  inline Object _primTask(Root root, VarObject env, VarObject list)
-  {
+  inline Object _primTask(Root root, VarObject env, VarObject list) {
     PrimitiveExpeditor expeditor("task", root, env, list);
     expeditor.assertArgs(3, Lisp::Int, Lisp::Int, Lisp::Cell);
 
@@ -222,7 +233,7 @@ private:
   Bytes mLastCode;
   String mLastError;
   TaskScheduler::TaskPtr mTaskLispEval;
-  ClearQueue<Pair<String, Primitive*>> mUserPrimitives;
+  ClearQueue<Pair<String, Primitive *>> mUserPrimitives;
 
   const Primitive *mPrimitiveTask = [](Root root, VarObject env, VarObject list) { return getInstance()._primTask(root, env, list); };
 
@@ -231,4 +242,4 @@ private:
   VarObject mLispEnv;
 };
 
-} // namespace uniot
+}  // namespace uniot

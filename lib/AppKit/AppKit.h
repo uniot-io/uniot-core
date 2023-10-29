@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,9 +40,9 @@ public:
   AppKit(AppKit const &) = delete;
   void operator=(AppKit const &) = delete;
 
-  static AppKit &getInstance(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
+  static AppKit &getInstance(uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
   {
-    static AppKit instance(credentials, pinBtn, activeLevelBtn, pinLed);
+    static AppKit instance(pinBtn, activeLevelBtn, pinLed);
     return instance;
   }
 
@@ -60,6 +60,11 @@ public:
   MQTTKit &getMQTT()
   {
     return mMQTT;
+  }
+
+  const Credentials &getCredentials()
+  {
+    return mCredentials;
   }
 
   void begin()
@@ -87,38 +92,41 @@ public:
 
   void registerWithBus(CoreEventBus *eventBus) override
   {
-    eventBus->openDataChannel(unLisp::Topic::LISP, 10);
+    eventBus->openDataChannel(unLisp::Channel::LISP_OUTPUT, 10);
+    eventBus->openDataChannel(unLisp::Channel::EVENT, 20);
     eventBus->registerKit(&mNetworkDevice);
-    eventBus->registerEmitter(&getLisp());
-    eventBus->registerListener(&mLispDevice);
-    eventBus->registerListener(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
+    eventBus->registerEntity(&getLisp());
+    eventBus->registerEntity(&mLispDevice);
+    eventBus->registerEntity(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
   }
 
   void unregisterFromBus(CoreEventBus *eventBus) override
   {
-    eventBus->closeDataChannel(unLisp::Topic::LISP);
+    eventBus->closeDataChannel(unLisp::Channel::LISP_OUTPUT);
+    eventBus->closeDataChannel(unLisp::Channel::EVENT);
     eventBus->unregisterKit(&mNetworkDevice);
-    eventBus->unregisterEmitter(&getLisp());
-    eventBus->unregisterListener(&mLispDevice);
-    eventBus->unregisterListener(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
+    eventBus->unregisterEntity(&getLisp());
+    eventBus->unregisterEntity(&mLispDevice);
+    eventBus->unregisterEntity(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
   }
 
 private:
-  AppKit(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
-      : mMQTT(credentials, [this, &credentials](CBORObject &info) {
+  AppKit(uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
+      : mMQTT(mCredentials, [this](CBORObject &info) {
           auto arr = info.putArray("primitives");
           getLisp().serializeNamesOfPrimitives(arr.get());
           arr->closeArray();
 
           info.put("timestamp", (long) getDate().now());
-          info.put("creator", credentials.getCreatorId().c_str());
+          info.put("creator", mCredentials.getCreatorId().c_str());
           info.put("mqtt_size", MQTT_MAX_PACKET_SIZE);
           info.put("d_in", UniotPinMap.getDigitalInputLength());
           info.put("d_out", UniotPinMap.getDigitalOutputLength());
           info.put("a_in", UniotPinMap.getAnalogInputLength());
           info.put("a_out", UniotPinMap.getAnalogOutputLength());
         }),
-        mLispButton(pinBtn, activeLevelBtn, 30), mNetworkDevice(credentials, pinBtn, activeLevelBtn, pinLed)
+        mLispButton(pinBtn, activeLevelBtn, 30),
+        mNetworkDevice(mCredentials, pinBtn, activeLevelBtn, pinLed)
   {
     _initMqtt();
     _initTasks();
@@ -130,13 +138,8 @@ private:
   {
     // TODO: should I move configs to the Credentials class?
     mMQTT.setServer("mqtt.uniot.io", 1883);
-    mMQTT.addDevice(&mLispDevice, "script");
-  }
-
-  void _refreshMqttDevices()
-  {
-    mLispDevice.unsubscribeFromAll();
-    mLispDevice.subscribeDevice("script");
+    mMQTT.addDevice(&mLispDevice);
+    mLispDevice.syncSubscriptions();
   }
 
   void _initTasks()
@@ -167,7 +170,7 @@ private:
           Serial.print("AppKit Subscriber, ip: ");
           Serial.println(WiFi.localIP());
           mTaskMQTT->attach(10);
-          _refreshMqttDevices();
+          mMQTT.renewSubscriptions();
           break;
         case NetworkScheduler::ACCESS_POINT:
           Serial.println("AppKit Subscriber, ACCESS_POINT ");
@@ -194,6 +197,7 @@ private:
     }));
   }
 
+  Credentials mCredentials;
   MQTTKit mMQTT;
   LispDevice mLispDevice;
   Button mLispButton;

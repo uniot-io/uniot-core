@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,43 +18,46 @@
 
 #pragma once
 
-#include <ClearQueue.h>
 #include <Bytes.h>
+#include <IterableQueue.h>
 
-namespace uniot
-{
+namespace uniot {
 class MQTTKit;
 
-class MQTTDevice
-{
+class MQTTDevice {
   friend class MQTTKit;
 
-protected:
-  ClearQueue<String> *topics()
-  {
+ public:
+  MQTTDevice() : mpKit(nullptr) {}
+  virtual ~MQTTDevice();
+
+  const String &subscribe(const String &topic);
+  String subscribeDevice(const String &subTopic);
+  String subscribeGroup(const String &groupId, const String &subTopic);
+
+  virtual void syncSubscriptions() = 0;  // NOTE: subscriptions that depend on credentials should be reconstructed here
+  void unsubscribeFromAll();
+
+  bool isSubscribed(const String &topic);
+  bool isTopicMatch(const String &storedTopic, const String &incomingTopic) const;
+
+  void publish(const String &topic, const Bytes &payload, bool retained = false);
+  void publishDevice(const String &subTopic, const Bytes &payload, bool retained = false);
+  void publishGroup(const String &groupId, const String &subTopic, const Bytes &payload, bool retained = false);
+
+ protected:
+  virtual void handle(const String &topic, const Bytes &payload) = 0;
+
+ private:
+  IterableQueue<String> *topics() {
     return &mTopics;
   }
 
-  void kit(MQTTKit *kit)
-  {
+  void kit(MQTTKit *kit) {
     mpKit = kit;
   }
 
-  virtual void handle(const String &topic, const Bytes &payload) = 0; 
-
-  ClearQueue<String> mTopics;
+  IterableQueue<String> mTopics;
   MQTTKit *mpKit;
-
-public:
-  MQTTDevice() : mpKit(nullptr) {}
-  virtual ~MQTTDevice();
-  void unsubscribeFromAll();
-  void subscribe(const String &topic);
-  void subscribeDevice(const String &subTopic);
-  void subscribeGroup(const String &subTopic);
-  void publish(const String &topic, const Bytes &payload, bool retained = false);
-  void publishDevice(const String &subTopic, const Bytes &payload, bool retained = false);
-  void publishGroup(const String &subTopic, const Bytes &payload, bool retained = false);
-  bool isSubscribed(const String &topic);
 };
-} // namespace uniot
+}  // namespace uniot
