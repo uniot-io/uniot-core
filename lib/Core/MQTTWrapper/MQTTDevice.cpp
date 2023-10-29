@@ -40,10 +40,21 @@ void MQTTDevice::unsubscribeFromAll() {
   }
 }
 
-const String& MQTTDevice::subscribe(const String &topic) {
-  mTopics.push(topic);
+bool MQTTDevice::unsubscribe(const String &topic) {
+  mTopics.removeOne(topic);
   if (mpKit) {
-    mpKit->client()->subscribe(topic.c_str());
+    auto unsubscribed = mpKit->client()->unsubscribe(topic.c_str());
+    UNIOT_LOG_WARN_IF(!unsubscribed, "failed to unsubscribe from topic: %s", topic.c_str());
+    return unsubscribed;
+  }
+  return true;
+}
+
+const String &MQTTDevice::subscribe(const String &topic) {
+  mTopics.pushUnique(topic);
+  if (mpKit) {
+    auto subscribed = mpKit->client()->subscribe(topic.c_str());
+    UNIOT_LOG_WARN_IF(!subscribed, "failed to subscribe to topic: %s", topic.c_str());
   }
   return topic;
 }

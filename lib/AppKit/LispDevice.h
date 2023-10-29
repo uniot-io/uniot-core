@@ -29,6 +29,7 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
  public:
   LispDevice() : MQTTDevice(), CBORStorage("lisp.cbor"), CoreEventListener(), mFirstPacketReceived(false) {
     CoreEventListener::listenToEvent(unLisp::Topic::LISP_OUT);
+    CoreEventListener::listenToEvent(unLisp::Topic::LISP_REQUEST);
   }
 
   void syncSubscriptions() override {
@@ -65,14 +66,28 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
   }
 
   virtual void onEventReceived(unsigned int topic, int msg) override {
-    if (msg == unLisp::ERROR) {
-      auto lastError = getLisp().getLastError();
-      publishDevice("script_error", lastError);
-      UNIOT_LOG_ERROR("lisp error: %s", lastError.c_str());
-    } else if (msg == unLisp::MSG_ADDED) {
-      CoreEventListener::receiveDataFromChannel(unLisp::Channel::LISP_OUTPUT, [](unsigned int id, bool empty, Bytes data) {
-        UNIOT_LOG_INFO("event bus id: %d, channel empty: %d, lisp: %s", id, empty, data.toString().c_str());
-      });
+    if (topic == unLisp::Topic::LISP_OUT) {
+      if (msg == unLisp::ERROR) {
+        auto lastError = getLisp().getLastError();
+        publishDevice("script_error", lastError);
+        UNIOT_LOG_ERROR("lisp error: %s", lastError.c_str());
+        return;
+      }
+      if (msg == unLisp::MSG_ADDED) {
+        CoreEventListener::receiveDataFromChannel(unLisp::Channel::LISP_OUTPUT, [](unsigned int id, bool empty, Bytes data) {
+          UNIOT_LOG_INFO("event bus id: %d, channel empty: %d, lisp: %s", id, empty, data.toString().c_str());
+        });
+        return;
+      }
+      return;
+    }
+    if (topic == unLisp::Topic::LISP_REQUEST) {
+      if (msg == unLisp::Msg::REFRESH_EVENTS) {
+        this->unsubscribe(mTopicEvents);
+        this->subscribe(mTopicEvents);
+        return;
+      }
+      return;
     }
   }
 
@@ -122,8 +137,10 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
   }
 
   void handleEvent(const Bytes &payload) {
-    CoreEventListener::sendDataToChannel(unLisp::Channel::EVENT, payload);
-    CoreEventListener::emitEvent(unLisp::Topic::LISP_EVENT, unLisp::Msg::NEW_EVENT);
+    if (payload.size() > 0) {
+      CoreEventListener::sendDataToChannel(unLisp::Channel::EVENT, payload);
+      CoreEventListener::emitEvent(unLisp::Topic::LISP_EVENT, unLisp::Msg::NEW_EVENT);
+    }
   }
 
  private:

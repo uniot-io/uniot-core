@@ -71,7 +71,8 @@ public:
   {
     attach();
     mNetworkDevice.begin();
-    mLispDevice.runStoredCode();
+    // TODO: temporary disabled
+    // mLispDevice.runStoredCode();
   }
 
   void pushTo(TaskScheduler *scheduler) override

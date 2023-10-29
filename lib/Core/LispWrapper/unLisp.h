@@ -44,12 +44,14 @@ class unLisp : public CoreEventListener {
   };
   enum Topic {
     LISP_OUT = FOURCC(lisp),
-    LISP_EVENT = FOURCC(lspe)
+    LISP_EVENT = FOURCC(lspe),
+    LISP_REQUEST = FOURCC(lreq)
   };
   enum Msg {
     MSG_ADDED,
     ERROR,
-    NEW_EVENT
+    NEW_EVENT,
+    REFRESH_EVENTS
   };
 
   unLisp(unLisp const &) = delete;
@@ -91,9 +93,11 @@ class unLisp : public CoreEventListener {
     auto code = mLastCode.terminate().c_str();
     UNIOT_LOG_DEBUG("eval: %s", code);
 
+    _refreshEvents();
     lisp_eval(mLispRoot, mLispEnv, code);
-    if (!mTaskLispEval->isAtached())
+    if (!mTaskLispEval->isAtached()) {
       _destroyMachine();
+    }
   }
 
   unLisp *pushPrimitive(const String &name, Primitive *primitive) {
@@ -102,10 +106,11 @@ class unLisp : public CoreEventListener {
   }
 
   void serializeNamesOfPrimitives(CBORArray *arr) {
-    if (arr)
+    if (arr) {
       mUserPrimitives.forEach([&](Pair<const String &, Primitive *> holder) {
         arr->put(holder.first.c_str());
       });
+    }
   }
 
   const String &getLastError() {
@@ -211,6 +216,11 @@ class unLisp : public CoreEventListener {
     lisp_destroy();
   }
 
+  void _refreshEvents() {
+    mEvents.clean();
+    this->emitEvent(Topic::LISP_REQUEST, Msg::REFRESH_EVENTS);
+  }
+
   inline Object _primTask(Root root, VarObject env, VarObject list) {
     PrimitiveExpeditor expeditor("task", root, env, list);
     expeditor.assertArgs(3, Lisp::Int, Lisp::Int, Lisp::Cell);
@@ -240,6 +250,7 @@ class unLisp : public CoreEventListener {
   void *mLispEnvConstructor[3];
   Root mLispRoot;
   VarObject mLispEnv;
+  Map<String, SharedPointer<LimitedQueue<Bytes>>> mEvents;
 };
 
 }  // namespace uniot

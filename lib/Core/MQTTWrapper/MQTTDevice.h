@@ -34,6 +34,7 @@ class MQTTDevice {
   const String &subscribe(const String &topic);
   String subscribeDevice(const String &subTopic);
   String subscribeGroup(const String &groupId, const String &subTopic);
+  bool unsubscribe(const String &topic);
 
   virtual void syncSubscriptions() = 0;  // NOTE: subscriptions that depend on credentials should be reconstructed here
   void unsubscribeFromAll();
