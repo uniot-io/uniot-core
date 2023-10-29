@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,9 +36,16 @@ class CBORObject {
   friend class CBORArray;
 
  public:
-  CBORObject(const Bytes &buf)
-      : mpMapNode(nullptr),
+  CBORObject(CBORObject const &) = delete;
+  void operator=(CBORObject const &) = delete;
+
+  CBORObject(Bytes buf)
+      : mpParentObject(nullptr),
+        mpMapNode(nullptr),
         mDirty(false) {
+    mErr.err = CN_CBOR_NO_ERROR;
+    mErr.pos = 0;
+
     read(buf);
   }
 
@@ -55,12 +62,12 @@ class CBORObject {
   }
 
   std::unique_ptr<CBORArray> putArray(int key) {
-    mDirty = true;
+    _markAsDirty(true);
     return std::unique_ptr<CBORArray>(new CBORArray(this, mpMapNode, cn_cbor_int_create(key, _errback())));
   }
 
   std::unique_ptr<CBORArray> putArray(const char *key) {
-    mDirty = true;
+    _markAsDirty(true);
     return std::unique_ptr<CBORArray>(new CBORArray(this, mpMapNode, cn_cbor_string_create(key, _errback())));
   }
 
@@ -69,24 +76,29 @@ class CBORObject {
   }
 
   CBORObject &put(int key, long value) {
+    bool updated = false;
     auto existing = cn_cbor_mapget_int(mpMapNode, key);
     if (existing) {
-      mDirty = cn_cbor_int_update(existing, value);
+      updated = cn_cbor_int_update(existing, value);
     } else {
-      mDirty = cn_cbor_mapput_int(mpMapNode, key, cn_cbor_int_create(value, _errback()), _errback());
+      updated = cn_cbor_mapput_int(mpMapNode, key, cn_cbor_int_create(value, _errback()), _errback());
     }
+    _markAsDirty(updated);
     return *this;
   }
 
   CBORObject &put(int key, const char *value) {
+    bool updated = false;
     auto existing = cn_cbor_mapget_int(mpMapNode, key);
     if (existing) {
-      mDirty = cn_cbor_string_update(existing, value);
-      if (!mDirty)
+      updated = cn_cbor_string_update(existing, value);
+      if (!updated) {
         UNIOT_LOG_WARN_IF(_isPtrEqual(existing, value), "pointer to the same value is specified for '%s'", key);
+      }
     } else {
-      mDirty = cn_cbor_mapput_int(mpMapNode, key, cn_cbor_string_create(value, _errback()), _errback());
+      updated = cn_cbor_mapput_int(mpMapNode, key, cn_cbor_string_create(value, _errback()), _errback());
     }
+    _markAsDirty(updated);
     return *this;
   }
 
@@ -95,26 +107,38 @@ class CBORObject {
   }
 
   CBORObject &put(const char *key, long value) {
+    bool updated = false;
     auto existing = cn_cbor_mapget_string(mpMapNode, key);
     if (existing) {
-      mDirty = cn_cbor_int_update(existing, value);
+      updated = cn_cbor_int_update(existing, value);
     } else {
-      mDirty = cn_cbor_mapput_string(mpMapNode, key, cn_cbor_int_create(value, _errback()), _errback());
+      updated = cn_cbor_mapput_string(mpMapNode, key, cn_cbor_int_create(value, _errback()), _errback());
     }
+    _markAsDirty(updated);
     return *this;
   }
 
   CBORObject &put(const char *key, const char *value) {
+    bool updated = false;
     auto existing = cn_cbor_mapget_string(mpMapNode, key);
     if (existing) {
-      mDirty = cn_cbor_string_update(existing, value);
-      if (!mDirty)
+      updated = cn_cbor_string_update(existing, value);
+      if (!updated) {
         UNIOT_LOG_WARN_IF(_isPtrEqual(existing, value), "pointer to the same value is specified for '%s'", key);
+      }
     } else {
-      mDirty = cn_cbor_mapput_string(mpMapNode, key, cn_cbor_string_create(value, _errback()), _errback());
+      updated = cn_cbor_mapput_string(mpMapNode, key, cn_cbor_string_create(value, _errback()), _errback());
     }
-
+    _markAsDirty(updated);
     return *this;
+  }
+
+  CBORObject getMap(int key) {
+    return _getMap(cn_cbor_mapget_int(mpMapNode, key));
+  }
+
+  CBORObject getMap(const char *key) {
+    return _getMap(cn_cbor_mapget_string(mpMapNode, key));
   }
 
   long getInt(int key) const {
@@ -133,29 +157,23 @@ class CBORObject {
     return _getString(cn_cbor_mapget_string(mpMapNode, key));
   }
 
-  CBORObject &copyInt(const CBORObject &from, int key) {
-    return put(key, from.getInt(key));
+  String getValueAsString(int key) const {
+    return _getValueAsString(cn_cbor_mapget_int(mpMapNode, key));
   }
 
-  CBORObject &copyInt(const CBORObject &from, const char *key) {
-    return put(key, from.getInt(key));
-  }
-
-  CBORObject &copyStrPtr(const CBORObject &from, int key) {
-    auto cb = cn_cbor_mapget_int(from.mpMapNode, key);
-    // TODO: check types, set Err
-    return put(key, cb->v.str);
-  }
-
-  CBORObject &copyStrPtr(const CBORObject &from, const char *key) {
-    auto cb = cn_cbor_mapget_string(from.mpMapNode, key);
-    // TODO: check types, set Err
-    return put(key, cb->v.str);
+  String getValueAsString(const char *key) const {
+    return _getValueAsString(cn_cbor_mapget_string(mpMapNode, key));
   }
 
   void read(const Bytes &buf) {
+    if (mpParentObject) {
+      UNIOT_LOG_WARN("the parent node is not null, the object is not read");
+      return;
+    }
+
     _clean();
-    mpMapNode = cn_cbor_decode(buf.raw(), buf.size(), _errback());
+    mBuf = buf;
+    mpMapNode = cn_cbor_decode(mBuf.raw(), mBuf.size(), _errback());
     if (!mpMapNode) {
       _create();
     }
@@ -183,8 +201,8 @@ class CBORObject {
   }
 
   void forceDirty() {
-    UNIOT_LOG_WARN("%s", "the data forced marked as dirty");
-    mDirty = true;
+    UNIOT_LOG_WARN("the data forced marked as dirty");
+    _markAsDirty(true);
   }
 
   void clean() {
@@ -193,20 +211,42 @@ class CBORObject {
   }
 
  private:
+  CBORObject(CBORObject *parent, cn_cbor *child) : mDirty(false) {
+    mErr.err = CN_CBOR_NO_ERROR;
+    mErr.pos = 0;
+    mpMapNode = child;
+    mpParentObject = parent;
+  }
+
   void _create() {
     mErr.err = CN_CBOR_NO_ERROR;
     mErr.pos = 0;
     mDirty = false;
     mpMapNode = cn_cbor_map_create(_errback());
+    mpParentObject = nullptr;
   }
 
   void _clean() {
-    if (mpMapNode) {
-      cn_cbor_free(mpMapNode);
-      mpMapNode = nullptr;
+    if (!mpParentObject) {
+      if (mpMapNode) {
+        cn_cbor_free(mpMapNode);
+      }
     }
+    mpMapNode = nullptr;
+    mpParentObject = nullptr;
     mErr.err = CN_CBOR_NO_ERROR;
     mErr.pos = 0;
+    mBuf.clean();
+  }
+
+  CBORObject _getMap(cn_cbor *cb) {
+    // if(!cb) throw "error"; // TODO: ???
+    if (cb && CN_CBOR_MAP == cb->type) {
+      return CBORObject(this, cb);
+    }
+
+    UNIOT_LOG_WARN("the map is not found");
+    return CBORObject();
   }
 
   long _getInt(cn_cbor *cb) const {
@@ -229,8 +269,47 @@ class CBORObject {
     return "";
   }
 
+  String _getValueAsString(cn_cbor *cb) const {
+    // if(!cb) throw "error"; // TODO: ???
+    if (cb) {
+      if (CN_CBOR_TEXT == cb->type) {
+        auto bytes = Bytes(cb->v.bytes, cb->length);
+        bytes.terminate();
+        return String(bytes.c_str());
+      }
+      if (CN_CBOR_INT == cb->type) {
+        return String(cb->v.sint);
+      }
+      if (CN_CBOR_UINT == cb->type) {
+        return String(cb->v.uint);
+      }
+      if (CN_CBOR_FLOAT == cb->type) {
+        return String(cb->v.f);
+      }
+      if (CN_CBOR_DOUBLE == cb->type) {
+        return String(cb->v.dbl);
+      }
+      if (CN_CBOR_TRUE == cb->type) {
+        return String("1");
+      }
+      if (CN_CBOR_FALSE == cb->type) {
+        return String("0");
+      }
+    }
+    return "";
+  }
+
   bool _isPtrEqual(cn_cbor *cb, const void *ptr) const {
     return ptr == (const void *)cb->v.bytes;
+  }
+
+  void _markAsDirty(bool updated) {
+    if (updated) {
+      mDirty = true;
+      if (mpParentObject) {
+        mpParentObject->_markAsDirty(true);
+      }
+    }
   }
 
   cn_cbor_errback *_errback() {
@@ -241,8 +320,10 @@ class CBORObject {
     return &mErr;
   }
 
+  CBORObject *mpParentObject;
   cn_cbor *mpMapNode;
   cn_cbor_errback mErr;
   bool mDirty;
+  Bytes mBuf;
 };
 }  // namespace uniot

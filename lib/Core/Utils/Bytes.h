@@ -19,6 +19,7 @@
 #pragma once
 
 #include <Common.h>
+#include <Logger.h>
 #include <WString.h>
 
 #include <functional>
@@ -78,12 +79,29 @@ class Bytes {
     } else {
       _invalidate();
     }
-    return *this;
+    return this->terminate();
   }
 
   template <typename T>
   operator T() {
     return *((T *)mBuffer);
+  }
+
+  static Bytes fromHexString(const String &hexStr) {
+    size_t len = hexStr.length();
+    if (len % 2 != 0) {
+      UNIOT_LOG_ERROR("invalid hex string length");
+      return Bytes();
+    }
+
+    Bytes bytes;
+    bytes._reserve(len / 2);
+    for (size_t i = 0; i < len; i += 2) {
+      char buf[3] = {hexStr.charAt(i), hexStr.charAt(i + 1), '\0'};
+      byte b = strtol(buf, nullptr, 16);
+      bytes.mBuffer[i / 2] = b;
+    }
+    return bytes;
   }
 
   size_t fill(Filler filler) {
@@ -118,6 +136,16 @@ class Bytes {
 
   String toString() const {
     return String(this->c_str());
+  }
+
+  String toHexString() const {
+    String result = "";
+    for (size_t i = 0; i < mSize; i++) {
+      char buf[3];
+      snprintf(buf, sizeof(buf), "%02X", mBuffer[i]);
+      result += buf;
+    }
+    return result;
   }
 
   size_t size() const {

@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,15 @@
 
 #include <cn-cbor.h>
 
-namespace uniot
-{
+namespace uniot {
 class CBORObject;
-class CBORArray
-{
+class CBORArray {
   friend class CBORObject;
-public:
+
+ public:
+  CBORArray(CBORArray const&) = delete;
+  void operator=(CBORArray const&) = delete;
+
   ~CBORArray() {
     mpContext = nullptr;
     mpMapNode = mpKey = mpArrayNode = nullptr;
@@ -39,27 +41,28 @@ public:
   CBORArray* put(int value) {
     cn_cbor_array_append(mpArrayNode, cn_cbor_int_create(value, &mErr), &mErr);
     return this;
-  } 
+  }
 
   CBORArray* put(const char* value) {
     cn_cbor_array_append(mpArrayNode, cn_cbor_string_create(value, &mErr), &mErr);
     return this;
-  } 
+  }
 
-  CBORObject &closeArray() {
+  CBORObject& closeArray() {
     cn_cbor_map_put(mpMapNode, mpKey, mpArrayNode, &mErr);
     return *mpContext;
   }
-private:
+
+ private:
   CBORArray(CBORObject* context, cn_cbor* mapNode, cn_cbor* key)
-  : mpContext(context), mpMapNode(mapNode), mpKey(key) {
+      : mpContext(context), mpMapNode(mapNode), mpKey(key) {
     mpArrayNode = cn_cbor_array_create(&mErr);
   }
-  
+
   CBORObject* mpContext;
   cn_cbor* mpMapNode;
   cn_cbor* mpKey;
   cn_cbor* mpArrayNode;
   cn_cbor_errback mErr;
 };
-} // namespace uniot
+}  // namespace uniot
