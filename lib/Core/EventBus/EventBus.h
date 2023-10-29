@@ -27,15 +27,17 @@
 
 namespace uniot {
 template <class T_topic, class T_msg, class T_data>
-class EventListener;
+class EventEntity;
 
 template <class T_topic, class T_msg, class T_data>
 class EventEmitter;
 
 template <class T_topic, class T_msg, class T_data>
+class EventListener;
+
+template <class T_topic, class T_msg, class T_data>
 class EventBus : public uniot::IExecutor {
-  friend class EventListener<T_topic, T_msg, T_data>;
-  friend class EventEmitter<T_topic, T_msg, T_data>;
+  friend class EventEntity<T_topic, T_msg, T_data>;
 
  public:
   EventBus(unsigned int id) : mId(id) {}
@@ -46,15 +48,12 @@ class EventBus : public uniot::IExecutor {
   void registerKit(IEventBusConnectionKit<T_topic, T_msg, T_data> *connection);
   void unregisterKit(IEventBusConnectionKit<T_topic, T_msg, T_data> *connection);
 
-  bool registerEmitter(EventEmitter<T_topic, T_msg, T_data> *emitter);
-  void unregisterEmitter(EventEmitter<T_topic, T_msg, T_data> *emitter);
-
-  bool registerListener(EventListener<T_topic, T_msg, T_data> *listener);
-  void unregisterListener(EventListener<T_topic, T_msg, T_data> *listener);
+  bool registerEntity(EventEntity<T_topic, T_msg, T_data> *entity);
+  void unregisterEntity(EventEntity<T_topic, T_msg, T_data> *entity);
 
   bool openDataChannel(T_topic topic, size_t limit);
   bool closeDataChannel(T_topic topic);
-  bool sendDataToChannel(T_topic topic, String data);
+  bool sendDataToChannel(T_topic topic, T_data data);
   T_data receiveDataFromChannel(T_topic topic);
   bool isDataChannelEmpty(T_topic topic);
 
@@ -62,8 +61,7 @@ class EventBus : public uniot::IExecutor {
   virtual uint8_t execute() override;
 
  private:
-  ClearQueue<EventListener<T_topic, T_msg, T_data> *> mListeners;  // TODO: need real set; std::set is broken into esp xtensa sdk
-  ClearQueue<EventEmitter<T_topic, T_msg, T_data> *> mEmitters;
+  ClearQueue<EventEntity<T_topic, T_msg, T_data> *> mEntities; // TODO: need real set; std::set is broken into esp xtensa sdk
   ClearQueue<std::pair<T_topic, T_msg>> mEvents;
 
   DataChannels<T_topic, T_data> mDataChannels;

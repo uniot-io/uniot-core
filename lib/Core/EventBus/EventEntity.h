@@ -21,16 +21,24 @@
 #include <IterableQueue.h>
 #include <Logger.h>
 
+#include "EventEntityType.h"
+
 namespace uniot {
 template <class T_topic, class T_msg, class T_data>
 class EventBus;
 
 template <class T_topic, class T_msg, class T_data>
 class EventEntity {
+  friend class EventBus<T_topic, T_msg, T_data>;
+
  public:
   using DataChannelCallback = std::function<void(unsigned int, bool, T_data)>;
 
-  virtual ~EventEntity() = default;
+  virtual ~EventEntity();
+
+  virtual EventEntityType getType() const {
+    return EventEntityType::EventEntity;
+  }
 
   bool sendDataToChannel(T_topic channel, T_data data) {
     auto sentSomewhere = false;

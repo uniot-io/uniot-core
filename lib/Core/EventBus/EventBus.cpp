@@ -21,13 +21,14 @@
 #include <Arduino.h>
 
 #include "EventEmitter.h"
+#include "EventEntity.h"
+#include "EventEntityType.h"
 #include "EventListener.h"
 
 namespace uniot {
 template <class T_topic, class T_msg, class T_data>
 EventBus<T_topic, T_msg, T_data>::~EventBus() {
-  mListeners.forEach([this](EventListener<T_topic, T_msg, T_data> *listener) { listener->mEventBusQueue.removeOne(this); });
-  mEmitters.forEach([this](EventEmitter<T_topic, T_msg, T_data> *emitter) { emitter->mEventBusQueue.removeOne(this); });
+  mEntities.forEach([this](EventEntity<T_topic, T_msg, T_data> *entity) { entity->mEventBusQueue.removeOne(this); });
 }
 
 template <class T_topic, class T_msg, class T_data>
@@ -41,36 +42,19 @@ void EventBus<T_topic, T_msg, T_data>::unregisterKit(IEventBusConnectionKit<T_to
 }
 
 template <class T_topic, class T_msg, class T_data>
-bool EventBus<T_topic, T_msg, T_data>::registerEmitter(EventEmitter<T_topic, T_msg, T_data> *emitter) {
-  if (emitter && emitter->connectUnique(this)) {
-    mEmitters.pushUnique(emitter);
+bool EventBus<T_topic, T_msg, T_data>::registerEntity(EventEntity<T_topic, T_msg, T_data> *entity) {
+  if (entity && entity->connectUnique(this)) {
+    mEntities.pushUnique(entity);
     return true;
   }
   return false;
 }
 
 template <class T_topic, class T_msg, class T_data>
-void EventBus<T_topic, T_msg, T_data>::unregisterEmitter(EventEmitter<T_topic, T_msg, T_data> *emitter) {
-  if (emitter) {
-    mEmitters.removeOne(emitter);
-    emitter->mEventBusQueue.removeOne(this);
-  }
-}
-
-template <class T_topic, class T_msg, class T_data>
-bool EventBus<T_topic, T_msg, T_data>::registerListener(EventListener<T_topic, T_msg, T_data> *listener) {
-  if (listener && listener->connectUnique(this)) {
-    mListeners.pushUnique(listener);
-    return true;
-  }
-  return false;
-}
-
-template <class T_topic, class T_msg, class T_data>
-void EventBus<T_topic, T_msg, T_data>::unregisterListener(EventListener<T_topic, T_msg, T_data> *listener) {
-  if (listener) {
-    mListeners.removeOne(listener);
-    listener->mEventBusQueue.removeOne(this);
+void EventBus<T_topic, T_msg, T_data>::unregisterEntity(EventEntity<T_topic, T_msg, T_data> *entity) {
+  if (entity) {
+    mEntities.removeOne(entity);
+    entity->mEventBusQueue.removeOne(this);
   }
 }
 
@@ -85,7 +69,7 @@ bool EventBus<T_topic, T_msg, T_data>::closeDataChannel(T_topic topic) {
 }
 
 template <class T_topic, class T_msg, class T_data>
-bool EventBus<T_topic, T_msg, T_data>::sendDataToChannel(T_topic topic, String data) {
+bool EventBus<T_topic, T_msg, T_data>::sendDataToChannel(T_topic topic, T_data data) {
   return mDataChannels.send(topic, data);
 }
 
@@ -108,11 +92,19 @@ template <class T_topic, class T_msg, class T_data>
 uint8_t EventBus<T_topic, T_msg, T_data>::execute() {
   while (!mEvents.isEmpty()) {
     auto event = mEvents.hardPop();
-    mListeners.forEach([&](EventListener<T_topic, T_msg, T_data> *listener) {
-      if (listener->isListeningToEvent(event.first)) {
-        listener->onEventReceived(event.first, event.second);
-        yield();
+    // NOTE: Is it worth making a separate list for listeners to reduce the number of iterations?
+    // Which is better - saving RAM or CPU time?
+    mEntities.forEach([&](EventEntity<T_topic, T_msg, T_data> *entity) {
+      if (entity->getType() == EventEntityType::EventListener) {
+        // NOTE: This is a hack to avoid `dynamic_cast`.
+        // The `dynamic_cast` operation requires RTTI to determine the dynamic type of an object at runtime,
+        // but in many embedded systems, RTTI is disabled by default to save memory and reduce code size.
+        auto *listener = static_cast<EventListener<T_topic, T_msg, T_data> *>(entity);
+        if (listener->isListeningToEvent(event.first)) {
+          listener->onEventReceived(event.first, event.second);
+        }
       }
+      yield();
     });
   }
   return 0;

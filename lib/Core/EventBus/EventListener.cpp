@@ -25,13 +25,6 @@
 
 namespace uniot {
 template <class T_topic, class T_msg, class T_data>
-EventListener<T_topic, T_msg, T_data>::~EventListener() {
-  this->mEventBusQueue.forEach([this](EventBus<T_topic, T_msg, T_data> *eventBus) {
-    eventBus->mListeners.removeOne(this);
-  });
-}
-
-template <class T_topic, class T_msg, class T_data>
 EventListener<T_topic, T_msg, T_data> *EventListener<T_topic, T_msg, T_data>::listenToEvent(T_topic topic) {
   mTopics.pushUnique(topic);
   return this;

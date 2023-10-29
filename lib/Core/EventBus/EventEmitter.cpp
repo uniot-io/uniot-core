@@ -24,14 +24,6 @@
 
 namespace uniot {
 template <class T_topic, class T_msg, class T_data>
-EventEmitter<T_topic, T_msg, T_data>::~EventEmitter() {
-  this->mEventBusQueue.forEach([this](EventBus<T_topic, T_msg, T_data> *eventBus) {
-    eventBus->mEmitters.removeOne(this);
-    yield();
-  });
-}
-
-template <class T_topic, class T_msg, class T_data>
 void EventEmitter<T_topic, T_msg, T_data>::emitEvent(T_topic topic, T_msg msg) {
   this->mEventBusQueue.forEach([&](EventBus<T_topic, T_msg, T_data> *eventBus) {
     eventBus->emitEvent(topic, msg);

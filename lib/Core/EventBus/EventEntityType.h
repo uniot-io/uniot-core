@@ -18,31 +18,10 @@
 
 #pragma once
 
-#include <Bytes.h>
-#include <ClearQueue.h>
-#include <IterableQueue.h>
-
-#include "EventEmitter.h"
-#include "EventEntityType.h"
-
 namespace uniot {
-template <class T_topic, class T_msg, class T_data>
-class EventListener : public EventEmitter<T_topic, T_msg, T_data> {
- public:
-  virtual ~EventListener() = default;
-
-  virtual EventEntityType getType() const override {
-    return EventEntityType::EventListener;
-  }
-
-  EventListener *listenToEvent(T_topic topic);
-  EventListener *stopListeningToEvent(T_topic topic);
-  bool isListeningToEvent(T_topic topic);
-  virtual void onEventReceived(T_topic topic, T_msg msg) = 0;
-
- private:
-  ClearQueue<T_topic> mTopics;
+enum class EventEntityType {
+  EventEntity,
+  EventEmitter,
+  EventListener
 };
-
-using CoreEventListener = EventListener<unsigned int, int, Bytes>;
 }  // namespace uniot
