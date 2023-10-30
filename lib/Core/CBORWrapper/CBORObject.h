@@ -133,6 +133,21 @@ class CBORObject {
     return *this;
   }
 
+  CBORObject putMap(const char *key) {
+    auto existing = cn_cbor_mapget_string(mpMapNode, key);
+    if (existing) {
+      return _getMap(existing);
+    }
+
+    auto newMap = cn_cbor_map_create(_errback());
+    auto success = cn_cbor_mapput_string(mpMapNode, key, newMap, _errback());
+    if (success) {
+      _markAsDirty(true);
+      return CBORObject(this, newMap);
+    }
+    return {};
+  }
+
   CBORObject getMap(int key) {
     return _getMap(cn_cbor_mapget_int(mpMapNode, key));
   }

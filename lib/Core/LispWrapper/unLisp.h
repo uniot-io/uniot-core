@@ -41,17 +41,20 @@ class unLisp : public CoreEventListener {
   enum Channel {
     OUT_LISP = FOURCC(lout),
     OUT_LISP_ERR = FOURCC(lerr),
-    IN_EVENT = FOURCC(evnt)
+    OUT_EVENT = FOURCC(evou),
+    IN_EVENT = FOURCC(evin),
   };
   enum Topic {
     OUT_LISP_MSG = FOURCC(lisp),
-    OUT_LISP_REQUEST = FOURCC(lreq),
-    IN_LISP_EVENT = FOURCC(lspe)
+    OUT_LISP_REQUEST = FOURCC(lspr),
+    OUT_LISP_EVENT = FOURCC(levo),
+    IN_LISP_EVENT = FOURCC(levi)
   };
   enum Msg {
     OUT_MSG_ADDED,
     OUT_MSG_ERROR,
     OUT_REFRESH_EVENTS,
+    OUT_NEW_EVENT,
     IN_NEW_EVENT
   };
 
@@ -93,7 +96,7 @@ class unLisp : public CoreEventListener {
     auto code = mLastCode.terminate().c_str();
     UNIOT_LOG_DEBUG("eval: %s", code);
 
-    _refreshEvents();
+    _refreshIncomingEvents();
     lisp_eval(mLispRoot, mLispEnv, code);
     if (!mTaskLispEval->isAtached()) {
       _destroyMachine();
@@ -130,7 +133,7 @@ class unLisp : public CoreEventListener {
     if (topic == unLisp::Topic::IN_LISP_EVENT) {
       if (msg == unLisp::Msg::IN_NEW_EVENT) {
         CoreEventListener::receiveDataFromChannel(unLisp::Channel::IN_EVENT, [&](unsigned int id, bool empty, Bytes data) {
-          _pushEvent(data);
+          _pushIncomingEvent(data);
         });
         return;
       }
@@ -202,6 +205,7 @@ class unLisp : public CoreEventListener {
     add_primitive(mLispRoot, mLispEnv, "task", mPrimitiveTask);
     add_primitive(mLispRoot, mLispEnv, "is_event", mPrimitiveIsEventAvailable);
     add_primitive(mLispRoot, mLispEnv, "pop_event", mPrimitivePopEvent);
+    add_primitive(mLispRoot, mLispEnv, "push_event", mPrimitivePushEvent);
 
     mUserPrimitives.forEach([this](Pair<const String &, Primitive *> holder) {
       add_primitive(mLispRoot, mLispEnv, holder.first.c_str(), holder.second);
@@ -212,12 +216,12 @@ class unLisp : public CoreEventListener {
     lisp_destroy();
   }
 
-  void _refreshEvents() {
-    mEvents.clean();
+  void _refreshIncomingEvents() {
+    mIncomingEvents.clean();
     this->emitEvent(Topic::OUT_LISP_REQUEST, Msg::OUT_REFRESH_EVENTS);
   }
 
-  void _pushEvent(const Bytes &eventData) {
+  void _pushIncomingEvent(const Bytes &eventData) {
     constexpr size_t EVENTS_LIMIT = 5;
 
     auto event = CBORObject(eventData);
@@ -225,23 +229,33 @@ class unLisp : public CoreEventListener {
     auto value = event.getValueAsString("value");  // NOTE: this is only used here to verify the correctness of the event
 
     if (!eventID.isEmpty() && !value.isEmpty()) {
-      if (!mEvents.exist(eventID)) {
-        mEvents.put(eventID, std::make_shared<LimitedQueue<Bytes>>());
-        mEvents.get(eventID)->limit(EVENTS_LIMIT);
+      if (!mIncomingEvents.exist(eventID)) {
+        mIncomingEvents.put(eventID, std::make_shared<LimitedQueue<Bytes>>());
+        mIncomingEvents.get(eventID)->limit(EVENTS_LIMIT);
       }
-      mEvents.get(eventID)->pushLimited(eventData);
+      mIncomingEvents.get(eventID)->pushLimited(eventData);
     }
   }
 
-  bool _isEventAvailable(const String &eventID) {
-    return mEvents.exist(eventID) && mEvents.get(eventID)->size();
+  bool _isIncomingEventAvailable(const String &eventID) {
+    return mIncomingEvents.exist(eventID) && mIncomingEvents.get(eventID)->size();
   }
 
-  Bytes _popEvent(const String &eventID) {
-    if (_isEventAvailable(eventID)) {
-      return mEvents.get(eventID)->popLimited({});
+  Bytes _popIncomingEvent(const String &eventID) {
+    if (_isIncomingEventAvailable(eventID)) {
+      return mIncomingEvents.get(eventID)->popLimited({});
     }
     return {};
+  }
+
+  bool _pushOutgoingEvent(String eventID, int value) {
+    auto event = CBORObject();
+    event.put("eventID", eventID.c_str());
+    event.put("value", value);
+
+    auto sent = this->sendDataToChannel(unLisp::Channel::OUT_EVENT, event.build());
+    this->emitEvent(Topic::OUT_LISP_EVENT, Msg::OUT_NEW_EVENT);
+    return sent;
   }
 
   inline Object _primTask(Root root, VarObject env, VarObject list) {
@@ -267,7 +281,7 @@ class unLisp : public CoreEventListener {
     expeditor.assertArgs(1, Lisp::Symbol);
 
     auto eventId = expeditor.getArgSymbol(0);
-    auto available = _isEventAvailable(eventId);
+    auto available = _isIncomingEventAvailable(eventId);
 
     return expeditor.makeBool(available);
   }
@@ -277,7 +291,7 @@ class unLisp : public CoreEventListener {
     expeditor.assertArgs(1, Lisp::Symbol);
 
     auto eventId = expeditor.getArgSymbol(0);
-    auto eventData = _popEvent(eventId);
+    auto eventData = _popIncomingEvent(eventId);
     auto event = CBORObject(eventData);
     auto value = event.getValueAsString("value");
 
@@ -289,6 +303,18 @@ class unLisp : public CoreEventListener {
     return expeditor.makeInt(number);
   }
 
+  inline Object _primPushEvent(Root root, VarObject env, VarObject list) {
+    PrimitiveExpeditor expeditor("push_event", root, env, list);
+    expeditor.assertArgs(2, Lisp::Symbol, Lisp::Int);
+
+    auto eventId = expeditor.getArgSymbol(0);
+    auto value = expeditor.getArgInt(1);
+
+    auto sent = _pushOutgoingEvent(eventId, value);
+
+    return expeditor.makeBool(sent);
+  }
+
   bool mIsLastCodePersist;
   Bytes mLastCode;
   TaskScheduler::TaskPtr mTaskLispEval;
@@ -297,11 +323,12 @@ class unLisp : public CoreEventListener {
   const Primitive *mPrimitiveTask = [](Root root, VarObject env, VarObject list) { return getInstance()._primTask(root, env, list); };
   const Primitive *mPrimitiveIsEventAvailable = [](Root root, VarObject env, VarObject list) { return getInstance()._primIsEventAvailable(root, env, list); };
   const Primitive *mPrimitivePopEvent = [](Root root, VarObject env, VarObject list) { return getInstance()._primPopEvent(root, env, list); };
+  const Primitive *mPrimitivePushEvent = [](Root root, VarObject env, VarObject list) { return getInstance()._primPushEvent(root, env, list); };
 
   void *mLispEnvConstructor[3];
   Root mLispRoot;
   VarObject mLispEnv;
-  Map<String, SharedPointer<LimitedQueue<Bytes>>> mEvents;
+  Map<String, SharedPointer<LimitedQueue<Bytes>>> mIncomingEvents;
 };
 
 }  // namespace uniot
