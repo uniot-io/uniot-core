@@ -305,7 +305,7 @@ class unLisp : public CoreEventListener {
 
   inline Object _primPushEvent(Root root, VarObject env, VarObject list) {
     PrimitiveExpeditor expeditor("push_event", root, env, list);
-    expeditor.assertArgs(2, Lisp::Symbol, Lisp::Int);
+    expeditor.assertArgs(2, Lisp::Symbol, Lisp::BoolInt);
 
     auto eventId = expeditor.getArgSymbol(0);
     auto value = expeditor.getArgInt(1);

@@ -181,16 +181,26 @@ public:
     }
   }
 
-  int getArgInt(int idx)
+  int getArgInt(int idx, bool acceptsBool = true)
   {
     auto arg = getArg(idx);
     if (!mEvalList)
       arg = evalObj(&arg);
 
-    if (!checkType(arg, Lisp::Int))
-      error_invalid_type(idx, Lisp::Int);
+    auto type = acceptsBool ? Lisp::BoolInt : Lisp::Int;
+    if (!checkType(arg, type))
+      error_invalid_type(idx, type);
 
-    return arg->value;
+    switch (arg->type)
+    {
+    case TINT:
+      return arg->value;
+    case TTRUE:
+      return 1;
+    case TNIL:
+    default:
+      return 0;
+    }
   }
 
   const char *getArgSymbol(int idx)
