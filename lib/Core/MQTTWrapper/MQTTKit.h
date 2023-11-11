@@ -22,6 +22,7 @@
 #include <CBORObject.h>
 #include <ClearQueue.h>
 #include <Common.h>
+#include <Date.h>
 #include <ESP8266WiFi.h>
 #include <EventEmitter.h>
 #include <IExecutor.h>
@@ -46,11 +47,11 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
   };
 
   MQTTKit(const Credentials &credentials, CBORExtender infoExtender = nullptr)
-      : mPath(credentials),
+      : mpCredentials(&credentials),
+        mPath(credentials),
         mInfoExtender(infoExtender),
         mPubSubClient(mWiFiClient),
-        mConnectionId(0),
-        mClientId(credentials.getShortDeviceId()) {
+        mConnectionId(0) {
     mPubSubClient.setCallback([this](char *topic, uint8_t *payload, unsigned int length) {
       mDevices.forEach([&](MQTTDevice *device) {
         if (device->isSubscribed(String(topic))) {
@@ -58,6 +59,9 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
         }
       });
     });
+
+    // mWiFiClient.allowSelfSignedCerts();
+    // mWiFiClient.setInsecure();
   }
 
   ~MQTTKit() {
@@ -104,13 +108,18 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
       CBORObject offlineCBOR;
       _prepareOfflinePacket(offlineCBOR);
       auto offlinePacket = offlineCBOR.build();
+      auto password = _getUserPassword();
       if (mPubSubClient.connect(
-              mPath.getCredentials()->getDeviceId().c_str(),
+              _getClientId().c_str(),
+              _getUserLogin().c_str(),
+              (const char *)password.raw(),
+              password.size(),
               mPath.buildDevicePath("status").c_str(),
               0,
               true,
-              offlinePacket.raw(),
-              offlinePacket.size())) {
+              (const char *)offlinePacket.raw(),
+              offlinePacket.size(),
+              true)) {
         CBORObject onlineCBOR;
         _prepareOnlinePacket(onlineCBOR);
         auto onlinePacket = onlineCBOR.build();
@@ -157,14 +166,40 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
       mInfoExtender(packet);
   }
 
+  String _getClientId() {
+    return "device:" + mpCredentials->getDeviceId();
+  }
+
+  String _getUserLogin() {
+    return mpCredentials->getPublicKey();
+  }
+
+  Bytes _getUserPassword() {
+    CBORObject password;
+    auto protectedData = password.putMap("protected");
+    protectedData.put("device", mpCredentials->getDeviceId().c_str());
+    protectedData.put("owner", mpCredentials->getOwnerId().c_str());
+    protectedData.put("creator", mpCredentials->getCreatorId().c_str());
+    protectedData.put("timestamp", (long)Date::now());
+    auto unprotectedData = password.putMap("unprotected");
+    unprotectedData.put("alg", "EdDSA");
+
+    auto signature = mpCredentials->sign(protectedData.build());
+    password.put("signature", signature.raw(), signature.size());
+
+    return password.build();
+  }
+
+  const Credentials *mpCredentials;
+
   MQTTPath mPath;
   CBORExtender mInfoExtender;
   PubSubClient mPubSubClient;
 
   long mConnectionId;
-  long mClientId;
 
   WiFiClient mWiFiClient;
+  // WiFiClientSecure mWiFiClient;
   ClearQueue<MQTTDevice *> mDevices;
 };
 }  // namespace uniot
