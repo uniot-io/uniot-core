@@ -12,7 +12,7 @@ auto taskPrintHeap = TaskScheduler::make([](short t) {
 });
 
 auto taskPrintTime = TaskScheduler::make([](short t) {
-  Serial.println(AppKit::getDate().getFormattedTime());
+  Serial.println(Date::getFormattedTime());
 });
 
 void inject() {

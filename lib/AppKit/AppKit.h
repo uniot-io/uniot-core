@@ -43,11 +43,6 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     return instance;
   }
 
-  static Date &getDate() {
-    static Date date;
-    return date;
-  }
-
   unLisp &getLisp() {
     return unLisp::getInstance();
   }
@@ -72,11 +67,9 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     scheduler->push(mTaskMQTT);
     scheduler->push(mTaskLispButton);
     scheduler->push(getLisp().getTask());
-    scheduler->push(&getDate());
   }
 
   void attach() override {
-    getDate().attach();
     mNetworkDevice.attach();
     mTaskLispButton->attach(100);
   }
@@ -112,7 +105,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
           getLisp().serializeNamesOfPrimitives(arr.get());
           arr->closeArray();
 
-          info.put("timestamp", (long)getDate().now());
+          info.put("timestamp", (long)Date::now());
           info.put("creator", mCredentials.getCreatorId().c_str());
           info.put("mqtt_size", MQTT_MAX_PACKET_SIZE);
           info.put("debug", UNIOT_LOG_ENABLED);
@@ -190,7 +183,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
         mpLispEventListener->receiveDataFromChannel(unLisp::Channel::OUT_EVENT, [this](unsigned int id, bool empty, Bytes data) {
           if (!empty) {
             auto event = CBORObject(data);
-            event.put("timestamp", (long)getDate().now())
+            event.put("timestamp", (long)Date::now())
                 .putMap("sender")
                 .put("type", "device")
                 .put("id", mCredentials.getDeviceId().c_str());

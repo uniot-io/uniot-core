@@ -20,55 +20,31 @@
 
 #include <CBORStorage.h>
 #include <ESP8266WiFi.h>
-#include <ISchedulerConnectionKit.h>
 #include <TaskScheduler.h>
 #include <coredecls.h>
 #include <time.h>
 
-uint32_t sntp_update_delay_MS_rfc_not_less_than_15000() {
-  return 10 * 60 * 1000UL;  // 10 minutes
-}
-
 namespace uniot {
-class Date : public ISchedulerConnectionKit, public CBORStorage {
+class Date : public IExecutor, public CBORStorage {
  public:
-  Date() : CBORStorage("date.cbor") {
-    settimeofday_cb([](bool from_sntp) {
-      UNIOT_LOG_INFO("Time is set from %s", from_sntp ? "SNTP" : "RTC");
-    });
-    configTime(0, 0, "pool.ntp.org", "time.google.com", "time.nist.gov");
+  Date(Date const &) = delete;
+  void operator=(Date const &) = delete;
 
-    this->restore();
-    _initTasks();
+  static Date &getInstance() {
+    static Date instance;
+    return instance;
   }
 
-  time_t now() {
-    return time(nullptr);
+  static time_t now() {
+    return getInstance()._now();
   }
 
-  String getFormattedTime() {
-    tm tm;
-    auto currentEpoc = this->now();
-    localtime_r(&currentEpoc, &tm);
-
-    auto hours = tm.tm_hour < 10 ? "0" + String(tm.tm_hour) : String(tm.tm_hour);
-    auto minutes = tm.tm_min < 10 ? "0" + String(tm.tm_min) : String(tm.tm_min);
-    auto seconds = tm.tm_sec < 10 ? "0" + String(tm.tm_sec) : String(tm.tm_sec);
-
-    return String(tm.tm_year + 1900) + "-" + String(tm.tm_mon + 1) + "-" + String(tm.tm_mday) + " " +
-           hours + ":" + minutes + ":" + seconds;
-  }
-
-  void pushTo(TaskScheduler *scheduler) override {
-    scheduler->push(mTaskStore);
-  }
-
-  void attach() override {
-    mTaskStore->attach(5 * 60 * 1000UL);  // 5 minutes
+  static String getFormattedTime() {
+    return getInstance()._getFormattedTime();
   }
 
   bool store() override {
-    CBORStorage::object().put("epoch", (long)this->now());
+    CBORStorage::object().put("epoch", (long)this->_now());
     return CBORStorage::store();
   }
 
@@ -82,15 +58,38 @@ class Date : public ISchedulerConnectionKit, public CBORStorage {
     return false;
   }
 
- private:
-  void _initTasks() {
-    mTaskStore = TaskScheduler::make([&](short t) {
-      if (!this->store()) {
-        UNIOT_LOG_ERROR("failed to store current epoch in CBORStorage");
-      }
-    });
+  virtual uint8_t execute() override {
+    if (!this->store()) {
+      UNIOT_LOG_ERROR("failed to store current epoch in CBORStorage");
+    }
+    return 0;
   }
 
-  TaskScheduler::TaskPtr mTaskStore;
+ private:
+  Date() : CBORStorage("date.cbor") {
+    settimeofday_cb([this](bool from_sntp) {
+      UNIOT_LOG_INFO("Time is set from %s", from_sntp ? "SNTP" : "RTC");
+    });
+    configTime(0, 0, "pool.ntp.org", "time.google.com", "time.nist.gov");
+
+    this->restore();
+  }
+
+  time_t _now() {
+    return time(nullptr);
+  }
+
+  String _getFormattedTime() {
+    tm tm;
+    auto currentEpoc = this->_now();
+    localtime_r(&currentEpoc, &tm);
+
+    auto hours = tm.tm_hour < 10 ? "0" + String(tm.tm_hour) : String(tm.tm_hour);
+    auto minutes = tm.tm_min < 10 ? "0" + String(tm.tm_min) : String(tm.tm_min);
+    auto seconds = tm.tm_sec < 10 ? "0" + String(tm.tm_sec) : String(tm.tm_sec);
+
+    return String(tm.tm_year + 1900) + "-" + String(tm.tm_mon + 1) + "-" + String(tm.tm_mday) + " " +
+           hours + ":" + minutes + ":" + seconds;
+  }
 };
 }  // namespace uniot

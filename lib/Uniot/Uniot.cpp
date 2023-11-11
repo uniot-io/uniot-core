@@ -17,6 +17,7 @@
  */
 
 #include <Uniot.h>
+#include <Date.h>
 #include <CrashStorage.h>
 
 uniot::TaskScheduler MainScheduler;
@@ -29,6 +30,10 @@ void setup()
   auto taskHandleEventBus = uniot::TaskScheduler::make(&MainEventBus);
   MainScheduler.push(taskHandleEventBus);
   taskHandleEventBus->attach(100);
+
+  auto taskStoreDate = uniot::TaskScheduler::make(&uniot::Date::getInstance());
+  MainScheduler.push(taskStoreDate);
+  taskStoreDate->attach(5 * 60 * 1000UL);  // 5 minutes
 
   inject();
 }
