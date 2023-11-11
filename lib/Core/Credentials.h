@@ -19,67 +19,77 @@
 #pragma once
 
 #include <Arduino.h>
+#include <CBORStorage.h>
+#include <Crypto.h>
+#include <Ed25519.h>
+#include <RNG.h>
 #include <user_interface.h>
 
-#include <CBORStorage.h>
-
-namespace uniot
-{
-class Credentials : public CBORStorage
-{
-public:
-  Credentials() : CBORStorage("credentials.cbor")
-  {
+namespace uniot {
+class Credentials : public CBORStorage {
+ public:
+  Credentials() : CBORStorage("credentials.cbor") {
     mCreatorId = UNIOT_CREATOR_ID;
     mDeviceId = _calcDeviceId();
     Credentials::restore();
+
+    if (mPrivateKey.size() == 0) {
+      _generatePrivateKey();
+      Credentials::store();
+    }
+    _derivePublicKey();
   }
 
-  bool store() override
-  {
+  bool store() override {
     object().put("account", mOwnerId.c_str());
+    object().put("private_key", mPrivateKey.raw(), mPrivateKey.size());
     return CBORStorage::store();
   }
 
-  bool restore() override
-  {
-    if (CBORStorage::restore())
-    {
+  bool restore() override {
+    if (CBORStorage::restore()) {
       mOwnerId = object().getString("account");
+      mPrivateKey = object().getBytes("private_key");
       return true;
     }
     UNIOT_LOG_ERROR("%s", "credentials not restored");
     return false;
   }
 
-  void setOwnerId(const String &id)
-  {
+  void setOwnerId(const String &id) {
     mOwnerId = id;
   }
 
-  const String &getOwnerId() const
-  {
+  const String &getOwnerId() const {
     return mOwnerId;
   }
 
-  const String &getCreatorId() const
-  {
+  const String &getCreatorId() const {
     return mCreatorId;
   }
 
-  const String &getDeviceId() const
-  {
+  const String &getDeviceId() const {
     return mDeviceId;
   }
 
-  uint32_t getShortDeviceId() const
-  {
+  const String &getPublicKey() const {
+    return mPublicKey;
+  }
+
+  uint32_t getShortDeviceId() const {
     return ESP.getChipId();
   }
 
-private:
-  String _calcDeviceId()
-  {
+  Bytes sign(const Bytes &data) const {
+    uint8_t signature[64];
+    uint8_t publicKey[32];
+    Ed25519::derivePublicKey(publicKey, mPrivateKey.raw());
+    Ed25519::sign(signature, mPrivateKey.raw(), publicKey, data.raw(), data.size());
+    return Bytes(signature, sizeof(signature));
+  }
+
+ private:
+  String _calcDeviceId() {
     uint8_t mac[6];
     char macStr[13] = {0};
     wifi_get_macaddr(STATION_IF, mac);
@@ -90,8 +100,24 @@ private:
     return String(macStr);
   }
 
+  void _generatePrivateKey() {
+    RNG.begin(String("uniot::entropy::" + mCreatorId + "::" + mDeviceId).c_str());
+
+    uint8_t privateKey[32];
+    Ed25519::generatePrivateKey(privateKey);
+    mPrivateKey = Bytes(privateKey, sizeof(privateKey));
+  }
+
+  void _derivePublicKey() {
+    uint8_t publicKey[32];
+    Ed25519::derivePublicKey(publicKey, mPrivateKey.raw());
+    mPublicKey = Bytes(publicKey, sizeof(publicKey)).toHexString();
+  }
+
   String mOwnerId;
   String mCreatorId;
   String mDeviceId;
+  Bytes mPrivateKey;
+  String mPublicKey;
 };
-} // namespace uniot
+}  // namespace uniot

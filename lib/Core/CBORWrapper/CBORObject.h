@@ -133,6 +133,21 @@ class CBORObject {
     return *this;
   }
 
+  CBORObject &put(const char *key, const uint8_t *value, int size) {
+    bool updated = false;
+    auto existing = cn_cbor_mapget_string(mpMapNode, key);
+    if (existing) {
+      updated = cn_cbor_data_update(existing, value, size);
+      if (!updated) {
+        UNIOT_LOG_WARN_IF(_isPtrEqual(existing, value), "pointer to the same value is specified for '%s'", key);
+      }
+    } else {
+      updated = cn_cbor_mapput_string(mpMapNode, key, cn_cbor_data_create(value, size, _errback()), _errback());
+    }
+    _markAsDirty(updated);
+    return *this;
+  }
+
   CBORObject putMap(const char *key) {
     auto existing = cn_cbor_mapget_string(mpMapNode, key);
     if (existing) {
@@ -180,6 +195,14 @@ class CBORObject {
     return _getValueAsString(cn_cbor_mapget_string(mpMapNode, key));
   }
 
+  Bytes getBytes(int key) const {
+    return _getBytes(cn_cbor_mapget_int(mpMapNode, key));
+  }
+
+  Bytes getBytes(const char *key) const {
+    return _getBytes(cn_cbor_mapget_string(mpMapNode, key));
+  }
+
   void read(const Bytes &buf) {
     if (mpParentObject) {
       UNIOT_LOG_WARN("the parent node is not null, the object is not read");
@@ -195,12 +218,13 @@ class CBORObject {
   }
 
   Bytes build() {
-    auto calculated = cn_cbor_encoder_write(NULL, 0, 0, mpMapNode);
+    auto visitSiblings = mpParentObject == nullptr;
+    auto calculated = cn_cbor_encoder_write(NULL, 0, 0, mpMapNode, visitSiblings);
     UNIOT_LOG_WARN_IF(calculated > UNIOT_DANGEROUS_CBOR_DATA_SIZE, "dangerous data size: %d", calculated);
 
     Bytes bytes(nullptr, calculated);
     auto written = bytes.fill([&](uint8_t *buf, size_t size) {
-      auto actual = cn_cbor_encoder_write(buf, 0, size, mpMapNode);
+      auto actual = cn_cbor_encoder_write(buf, 0, size, mpMapNode, visitSiblings);
       if (actual < 0) {
         UNIOT_LOG_ERROR("%s", "CBORObject build failed, buffer size too small");
         return 0;
@@ -282,6 +306,14 @@ class CBORObject {
       return String(bytes.c_str());
     }
     return "";
+  }
+
+  Bytes _getBytes(cn_cbor *cb) const {
+    // if(!cb) throw "error"; // TODO: ???
+    if (cb && CN_CBOR_BYTES == cb->type) {
+      return Bytes(cb->v.bytes, cb->length);
+    }
+    return {};
   }
 
   String _getValueAsString(cn_cbor *cb) const {

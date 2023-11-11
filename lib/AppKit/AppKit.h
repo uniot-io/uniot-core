@@ -107,6 +107,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
 
           info.put("timestamp", (long)Date::now());
           info.put("creator", mCredentials.getCreatorId().c_str());
+          info.put("public_key", mCredentials.getPublicKey().c_str());
           info.put("mqtt_size", MQTT_MAX_PACKET_SIZE);
           info.put("debug", UNIOT_LOG_ENABLED);
           info.put("d_in", UniotPinMap.getDigitalInputLength());
