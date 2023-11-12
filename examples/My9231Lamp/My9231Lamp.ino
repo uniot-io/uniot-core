@@ -17,13 +17,51 @@
  */
 
 #include <AppKit.h>
-#include <Board-WittyCloud.h>
 #include <Date.h>
 #include <LispPrimitives.h>
 #include <Logger.h>
 #include <Uniot.h>
 
+#include "My9231Lamp.h"
+
 using namespace uniot;
+
+My9231Lamp Lamp;
+
+CoreCallbackEventListener NetworkLedListener([](int topic, int msg) {
+  if (topic == NetworkDevice::Topic::NETWORK_LED) {
+    Lamp.off();
+    Lamp.setRed(msg ? 100 : 0);
+    Lamp.update();
+  }
+});
+
+namespace uniot {
+namespace primitive {
+Object lamp_update(Root root, VarObject env, VarObject list) {
+  exportPrimitiveNameTo(name);
+  PrimitiveExpeditor expiditor(name, root, env, list);
+  expiditor.assertArgs(5, Lisp::Int, Lisp::Int, Lisp::Int, Lisp::BoolInt, Lisp::BoolInt);
+  auto red = expiditor.getArgInt(0);
+  auto green = expiditor.getArgInt(1);
+  auto blue = expiditor.getArgInt(2);
+  auto warm = expiditor.getArgInt(3);
+  auto cool = expiditor.getArgInt(4);
+
+  red = std::min(255, std::max(0, red));
+  green = std::min(255, std::max(0, green));
+  blue = std::min(255, std::max(0, blue));
+  warm = warm > 0 ? 255 : 0;
+  cool = cool > 0 ? 255 : 0;
+
+  Lamp.off();
+  Lamp.set(red, green, blue, warm, cool);
+  Lamp.update();
+
+  return expiditor.makeBool(false);
+}
+}  // namespace primitive
+}  // namespace uniot
 
 auto taskPrintHeap = TaskScheduler::make([](short t) {
   Serial.println(ESP.getFreeHeap());
@@ -34,13 +72,13 @@ auto taskPrintTime = TaskScheduler::make([](short t) {
 });
 
 void inject() {
-  auto &MainAppKit = AppKit::getInstance(PIN_BUTTON, BTN_PIN_LEVEL, RED);
-  UniotPinMap.setDigitalOutput(3, RED, GREEN, BLUE);
-  UniotPinMap.setDigitalInput(3, RED, GREEN, BLUE);
-  UniotPinMap.setAnalogOutput(3, RED, GREEN, BLUE);
-  UniotPinMap.setAnalogInput(1, LDR);
+  Lamp.off();
+  auto &MainAppKit = AppKit::getInstance(0, LOW, 2);
+
+  MainAppKit.getLisp().pushPrimitive(globalPrimitive(lamp_update));
 
   MainEventBus.registerKit(&MainAppKit);
+  MainEventBus.registerEntity(NetworkLedListener.listenToEvent(NetworkDevice::Topic::NETWORK_LED));
 
   MainScheduler.push(&MainAppKit)
       ->push(taskPrintTime)

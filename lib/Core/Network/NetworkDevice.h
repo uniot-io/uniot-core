@@ -30,6 +30,8 @@ namespace uniot
 class NetworkDevice : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
 {
 public:
+  enum Topic { NETWORK_LED = FOURCC(nled) };
+
   NetworkDevice(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
       : mNetwork(credentials, new SerialLightPrinter()),
         mNetworkLastState(NetworkScheduler::SUCCESS),
@@ -78,6 +80,7 @@ public:
     scheduler->push(mpTaskSignalLed = TaskScheduler::make([&](short t) {
       static bool pinLevel = true;
       digitalWrite(mPinLed, pinLevel = (!pinLevel && t));
+      mNetwork.emitEvent(Topic::NETWORK_LED, pinLevel);
     }));
     scheduler->push(mpTaskConfigBtn = TaskScheduler::make(mConfigBtn.getTaskCallback()));
     scheduler->push(mpTaskResetClickCounter = TaskScheduler::make([&](short t) {
