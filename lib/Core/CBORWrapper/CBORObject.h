@@ -171,6 +171,14 @@ class CBORObject {
     return _getMap(cn_cbor_mapget_string(mpMapNode, key));
   }
 
+  bool getBool(int key) const {
+    return _getBool(cn_cbor_mapget_int(mpMapNode, key));
+  }
+
+  bool getBool(const char *key) const {
+    return _getBool(cn_cbor_mapget_string(mpMapNode, key));
+  }
+
   long getInt(int key) const {
     return _getInt(cn_cbor_mapget_int(mpMapNode, key));
   }
@@ -286,6 +294,19 @@ class CBORObject {
 
     UNIOT_LOG_WARN("the map is not found");
     return CBORObject();
+  }
+
+  long _getBool(cn_cbor *cb) const {
+    // if(!cb) throw "error"; // TODO: ???
+    if (cb) {
+      if (CN_CBOR_TRUE == cb->type) {
+        return true;
+      }
+      if (CN_CBOR_FALSE == cb->type) {
+        return false;
+      }
+    }
+    return false;
   }
 
   long _getInt(cn_cbor *cb) const {

@@ -86,7 +86,6 @@ class unLisp : public CoreEventListener {
     if (!data.size())
       return;
 
-    mIsLastCodePersist = false;
     mLastCode = data;
 
     mTaskLispEval->detach();
@@ -121,10 +120,6 @@ class unLisp : public CoreEventListener {
     return mLastCode;
   }
 
-  bool isLastCodePersist() {
-    return mIsLastCodePersist;
-  }
-
   void cleanLastCode() {
     mLastCode.clean();
   }
@@ -142,7 +137,7 @@ class unLisp : public CoreEventListener {
   }
 
  private:
-  unLisp() : mIsLastCodePersist(false) {
+  unLisp() {
     CoreEventListener::listenToEvent(unLisp::Topic::IN_LISP_EVENT);
 
     auto fnPrintOut = [](const char *msg, int size) {
@@ -159,7 +154,6 @@ class unLisp : public CoreEventListener {
       instance.sendDataToChannel(unLisp::Channel::OUT_LISP_ERR, Bytes((uint8_t *)msg, size).terminate());
       instance.emitEvent(Topic::OUT_LISP_MSG, OUT_MSG_ERROR);
 
-      // TODO: do we need a special error callback?
       instance.mTaskLispEval->detach();
       instance._destroyMachine();
     };
@@ -271,7 +265,6 @@ class unLisp : public CoreEventListener {
     (*t_obj)->cdr = obj;
 
     mTaskLispEval->attach(ms, times);
-    mIsLastCodePersist = times <= 0;
 
     return expeditor.makeBool(true);
   }
@@ -315,7 +308,6 @@ class unLisp : public CoreEventListener {
     return expeditor.makeBool(sent);
   }
 
-  bool mIsLastCodePersist;
   Bytes mLastCode;
   TaskScheduler::TaskPtr mTaskLispEval;
   ClearQueue<Pair<String, Primitive *>> mUserPrimitives;

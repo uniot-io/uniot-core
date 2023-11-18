@@ -58,8 +58,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
   void begin() {
     attach();
     mNetworkDevice.begin();
-    // TODO: temporary disabled
-    // mLispDevice.runStoredCode();
+    mLispDevice.runStoredCode();
   }
 
   void pushTo(TaskScheduler *scheduler) override {
@@ -105,6 +104,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
           getLisp().serializeNamesOfPrimitives(arr.get());
           arr->closeArray();
 
+          // TODO: add uniot core version
           info.put("timestamp", (long)Date::now());
           info.put("creator", mCredentials.getCreatorId().c_str());
           info.put("public_key", mCredentials.getPublicKey().c_str());
