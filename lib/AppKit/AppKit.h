@@ -56,6 +56,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
   }
 
   void begin() {
+    analogWriteRange(1023);
     attach();
     mNetworkDevice.begin();
     mLispDevice.runStoredCode();
