@@ -34,6 +34,7 @@
 namespace uniot {
 class CBORObject {
   friend class CBORArray;
+  friend class COSEMessage;
 
  public:
   CBORObject(CBORObject const &) = delete;
@@ -46,6 +47,11 @@ class CBORObject {
     mErr.err = CN_CBOR_NO_ERROR;
     mErr.pos = 0;
 
+    // NOTE: In C++, when a constructor of a derived class is executing, the object is not yet of the derived class type;
+    // it's still of the base class type.
+    // This means that virtual functions do not behave polymorphically within constructors (and destructors).
+    // If `read` is overridden in a class derived from `CBORObject`,
+    // that overridden version will not be called in the `CBORObject` constructor.
     read(buf);
   }
 
@@ -53,7 +59,7 @@ class CBORObject {
     _create();
   }
 
-  ~CBORObject() {
+  virtual ~CBORObject() {
     _clean();
   }
 
@@ -148,7 +154,7 @@ class CBORObject {
     return *this;
   }
 
-  CBORObject putMap(const char *key) {
+  inline CBORObject putMap(const char *key) {
     auto existing = cn_cbor_mapget_string(mpMapNode, key);
     if (existing) {
       return _getMap(existing);
@@ -163,11 +169,11 @@ class CBORObject {
     return {};
   }
 
-  CBORObject getMap(int key) {
+  inline CBORObject getMap(int key) {
     return _getMap(cn_cbor_mapget_int(mpMapNode, key));
   }
 
-  CBORObject getMap(const char *key) {
+  inline CBORObject getMap(const char *key) {
     return _getMap(cn_cbor_mapget_string(mpMapNode, key));
   }
 
@@ -225,25 +231,12 @@ class CBORObject {
     }
   }
 
-  Bytes build() {
+  Bytes build() const {
     auto visitSiblings = mpParentObject == nullptr;
-    auto calculated = cn_cbor_encoder_write(NULL, 0, 0, mpMapNode, visitSiblings);
-    UNIOT_LOG_WARN_IF(calculated > UNIOT_DANGEROUS_CBOR_DATA_SIZE, "dangerous data size: %d", calculated);
-
-    Bytes bytes(nullptr, calculated);
-    auto written = bytes.fill([&](uint8_t *buf, size_t size) {
-      auto actual = cn_cbor_encoder_write(buf, 0, size, mpMapNode, visitSiblings);
-      if (actual < 0) {
-        UNIOT_LOG_ERROR("%s", "CBORObject build failed, buffer size too small");
-        return 0;
-      }
-      return actual;
-    });
-
-    return bytes.prune(written);
+    return _build(mpMapNode, visitSiblings);
   }
 
-  bool dirty() {
+  bool dirty() const {
     return mDirty;
   }
 
@@ -281,12 +274,30 @@ class CBORObject {
     }
     mpMapNode = nullptr;
     mpParentObject = nullptr;
+    mDirty = false;
     mErr.err = CN_CBOR_NO_ERROR;
     mErr.pos = 0;
     mBuf.clean();
   }
 
-  CBORObject _getMap(cn_cbor *cb) {
+  Bytes _build(cn_cbor *cb, bool visitSiblings = true) const {
+    auto calculated = cn_cbor_encoder_write(NULL, 0, 0, cb, visitSiblings);
+    UNIOT_LOG_WARN_IF(calculated > UNIOT_DANGEROUS_CBOR_DATA_SIZE, "dangerous data size: %d", calculated);
+
+    Bytes bytes(nullptr, calculated);
+    auto written = bytes.fill([&](uint8_t *buf, size_t size) {
+      auto actual = cn_cbor_encoder_write(buf, 0, size, cb, visitSiblings);
+      if (actual < 0) {
+        UNIOT_LOG_ERROR("%s", "CBORObject build failed, buffer size too small");
+        return 0;
+      }
+      return actual;
+    });
+
+    return bytes.prune(written);
+  }
+
+  inline CBORObject _getMap(cn_cbor *cb) {
     // if(!cb) throw "error"; // TODO: ???
     if (cb && CN_CBOR_MAP == cb->type) {
       return CBORObject(this, cb);

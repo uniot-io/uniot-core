@@ -38,7 +38,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
   AppKit(AppKit const &) = delete;
   void operator=(AppKit const &) = delete;
 
-  static AppKit &getInstance(uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed) {
+  static AppKit &getInstance(uint8_t pinBtn = 0, uint8_t activeLevelBtn = LOW, uint8_t pinLed = 2) {
     static AppKit instance(pinBtn, activeLevelBtn, pinLed);
     return instance;
   }

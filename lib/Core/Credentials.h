@@ -22,11 +22,12 @@
 #include <CBORStorage.h>
 #include <Crypto.h>
 #include <Ed25519.h>
+#include <ICOSESigner.h>
 #include <RNG.h>
 #include <user_interface.h>
 
 namespace uniot {
-class Credentials : public CBORStorage {
+class Credentials : public CBORStorage, public ICOSESigner {
  public:
   Credentials() : CBORStorage("credentials.cbor") {
     mCreatorId = UNIOT_CREATOR_ID;
@@ -80,12 +81,16 @@ class Credentials : public CBORStorage {
     return ESP.getChipId();
   }
 
-  Bytes sign(const Bytes &data) const {
+  virtual Bytes sign(const Bytes &data) const override {
     uint8_t signature[64];
     uint8_t publicKey[32];
     Ed25519::derivePublicKey(publicKey, mPrivateKey.raw());
     Ed25519::sign(signature, mPrivateKey.raw(), publicKey, data.raw(), data.size());
     return Bytes(signature, sizeof(signature));
+  }
+
+  virtual COSEAlgorithm signerAlgorithm() const override {
+    return COSEAlgorithm::EdDSA;
   }
 
  private:

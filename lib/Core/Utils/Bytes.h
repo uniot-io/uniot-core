@@ -82,10 +82,10 @@ class Bytes {
     return this->terminate();
   }
 
-  template <typename T>
-  operator T() {
-    return *((T *)mBuffer);
-  }
+  // template <typename T>
+  // operator T() {
+  //   return *((T *)mBuffer);
+  // }
 
   static Bytes fromHexString(const String &hexStr) {
     size_t len = hexStr.length();
