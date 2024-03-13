@@ -22,8 +22,8 @@
 
 #define DELAY_US 25  // > 12us
 
-#define DI_PIN 12   // GPIO12
-#define DCK_PIN 14  // GPIO14
+#define DI_PIN 13   // 12 for Sonoff B1R2
+#define DCK_PIN 15  // 14 for Sonoff B1R2
 
 class My9231Lamp {
  public:
@@ -120,7 +120,8 @@ class My9231Lamp {
   }
 
   void _write(uint8_t r, uint8_t g, uint8_t b, uint8_t w, uint8_t c) {
-    uint8_t duty[6] = {c, w, 0, g, r, b};  // RGBWC channels.
+    // uint8_t duty[6] = {c, w, 0, g, r, b};  // RGBWC channels for Sonoff B1R2
+    uint8_t duty[6] = {r, g, b, w, c, 0};  // RGBWC channels.
 
     delayMicroseconds(DELAY_US);  // TStop > 12us.
     for (uint8_t channel = 0; channel < 6; channel++) {

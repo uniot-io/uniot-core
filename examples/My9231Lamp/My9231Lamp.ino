@@ -31,37 +31,36 @@ My9231Lamp Lamp;
 CoreCallbackEventListener NetworkLedListener([](int topic, int msg) {
   if (topic == NetworkDevice::Topic::NETWORK_LED) {
     Lamp.off();
-    Lamp.setRed(msg ? 100 : 0);
+    Lamp.setRed(msg ? 10 : 0);
     Lamp.update();
   }
 });
 
-namespace uniot {
-namespace primitive {
 Object lamp_update(Root root, VarObject env, VarObject list) {
-  exportPrimitiveNameTo(name);
-  PrimitiveExpeditor expiditor(name, root, env, list);
-  expiditor.assertArgs(5, Lisp::Int, Lisp::Int, Lisp::Int, Lisp::BoolInt, Lisp::BoolInt);
-  auto red = expiditor.getArgInt(0);
-  auto green = expiditor.getArgInt(1);
-  auto blue = expiditor.getArgInt(2);
-  auto warm = expiditor.getArgInt(3);
-  auto cool = expiditor.getArgInt(4);
+  auto expeditor = PrimitiveExpeditor::describe(getPrimitiveName(), Lisp::Bool, 5, Lisp::Int, Lisp::Int, Lisp::Int, Lisp::BoolInt, Lisp::BoolInt)
+                       .init(root, env, list);
+  expeditor.assertDescribedArgs();
+  auto red = expeditor.getArgInt(0);
+  auto green = expeditor.getArgInt(1);
+  auto blue = expeditor.getArgInt(2);
+  auto warm = expeditor.getArgInt(3);
+  auto cool = expeditor.getArgInt(4);
 
   red = std::min(255, std::max(0, red));
   green = std::min(255, std::max(0, green));
   blue = std::min(255, std::max(0, blue));
-  warm = warm > 0 ? 255 : 0;
-  cool = cool > 0 ? 255 : 0;
+
+  warm = std::min(255, std::max(0, warm));
+  cool = std::min(255, std::max(0, cool));
+  // warm = warm > 0 ? 255 : 0; // Sonoff B1R2
+  // cool = cool > 0 ? 255 : 0; // Sonoff B1R2
 
   Lamp.off();
   Lamp.set(red, green, blue, warm, cool);
   Lamp.update();
 
-  return expiditor.makeBool(false);
+  return expeditor.makeBool(false);
 }
-}  // namespace primitive
-}  // namespace uniot
 
 auto taskPrintHeap = TaskScheduler::make([](short t) {
   Serial.println(ESP.getFreeHeap());
@@ -75,7 +74,7 @@ void inject() {
   Lamp.off();
   auto &MainAppKit = AppKit::getInstance(0, LOW, 2);
 
-  MainAppKit.getLisp().pushPrimitive(globalPrimitive(lamp_update));
+  MainAppKit.getLisp().pushPrimitive(lamp_update);
 
   MainEventBus.registerKit(&MainAppKit);
   MainEventBus.registerEntity(NetworkLedListener.listenToEvent(NetworkDevice::Topic::NETWORK_LED));
