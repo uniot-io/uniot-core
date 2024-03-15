@@ -167,7 +167,7 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
   }
 
   String _getClientId() {
-    return "device:" + mpCredentials->getDeviceId();
+    return "device:" + mpCredentials->getDeviceId(); // TODO: owner
   }
 
   String _getUserLogin() {

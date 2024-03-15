@@ -45,7 +45,7 @@ class Bytes {
 
   template <typename T>
   Bytes(T value) : Bytes(((uint8_t *)&value), sizeof(T)) {
-    static_assert(std::is_fundamental<T>::value, "only fundamental types are allowed");
+    static_assert(std::is_integral<T>::value, "only integral types are allowed");
   }
 
   Bytes(const Bytes &value) {
