@@ -18,95 +18,87 @@
 
 #pragma once
 
-#include <PrimitiveExpeditor.h>
-#include <LispHelper.h>
 #include <Button.h>
+#include <LispHelper.h>
 #include <PinMap.h>
+#include <PrimitiveExpeditor.h>
 
-namespace uniot
-{
-namespace primitive
-{
+namespace uniot {
+namespace primitive {
 using namespace lisp;
 
-Object dwrite(Root root, VarObject env, VarObject list)
-{
-  exportPrimitiveNameTo(name);
-  PrimitiveExpeditor expiditor(name, root, env, list);
-  expiditor.assertArgs(2, Lisp::Int, Lisp::BoolInt);
-  auto pin = expiditor.getArgInt(0);
-  auto state = expiditor.getArgBool(1);
+Object dwrite(Root root, VarObject env, VarObject list) {
+  auto expeditor = PrimitiveExpeditor::describe(getPrimitiveName(), Lisp::Bool, 2, Lisp::Int, Lisp::BoolInt)
+                       .init(root, env, list);
+  // PrimitiveExpeditor expeditor("ignore_name", root, env, list);
+  expeditor.assertDescribedArgs();
+  auto pin = expeditor.getArgInt(0);
+  auto state = expeditor.getArgBool(1);
 
   if (pin >= 0 && pin < UniotPinMap.getDigitalOutputLength())
     digitalWrite(UniotPinMap.getDigitalOutput(pin), state);
   else
-    expiditor.terminate("pin is out of range");
+    expeditor.terminate("pin is out of range");
 
-  return expiditor.makeBool(state);
+  return expeditor.makeBool(state);
 }
 
-Object dread(Root root, VarObject env, VarObject list)
-{
-  exportPrimitiveNameTo(name);
-  PrimitiveExpeditor expiditor(name, root, env, list);
-  expiditor.assertArgs(1, Lisp::Int);
-  auto pin = expiditor.getArgInt(0);
+Object dread(Root root, VarObject env, VarObject list) {
+  auto expeditor = PrimitiveExpeditor::describe(getPrimitiveName(), Lisp::Bool, 1, Lisp::Int)
+                       .init(root, env, list);
+  expeditor.assertDescribedArgs();
+  auto pin = expeditor.getArgInt(0);
   int state = 0;
 
   if (pin >= 0 && pin < UniotPinMap.getDigitalInputLength())
     state = digitalRead(UniotPinMap.getDigitalInput(pin));
   else
-    expiditor.terminate("pin is out of range");
+    expeditor.terminate("pin is out of range");
 
-  return expiditor.makeBool(state);
+  return expeditor.makeBool(state);
 }
 
-Object awrite(Root root, VarObject env, VarObject list)
-{
-  exportPrimitiveNameTo(name);
-  PrimitiveExpeditor expiditor(name, root, env, list);
-  expiditor.assertArgs(2, Lisp::Int, Lisp::Int);
-  auto pin = expiditor.getArgInt(0);
-  auto value = expiditor.getArgInt(1);
+Object awrite(Root root, VarObject env, VarObject list) {
+  auto expeditor = PrimitiveExpeditor::describe(getPrimitiveName(), Lisp::Int, 2, Lisp::Int, Lisp::Int)
+                       .init(root, env, list);
+  expeditor.assertDescribedArgs();
+  auto pin = expeditor.getArgInt(0);
+  auto value = expeditor.getArgInt(1);
 
   if (pin >= 0 && pin < UniotPinMap.getAnalogOutputLength())
     analogWrite(UniotPinMap.getAnalogOutput(pin), value);
   else
-    expiditor.terminate("pin is out of range");
+    expeditor.terminate("pin is out of range");
 
-  return expiditor.makeInt(value);
+  return expeditor.makeInt(value);
 }
 
-Object aread(Root root, VarObject env, VarObject list)
-{
-  exportPrimitiveNameTo(name);
-  PrimitiveExpeditor expiditor(name, root, env, list);
-  expiditor.assertArgs(1, Lisp::Int);
-  auto pin = expiditor.getArgInt(0);
+Object aread(Root root, VarObject env, VarObject list) {
+  auto expeditor = PrimitiveExpeditor::describe(getPrimitiveName(), Lisp::Int, 1, Lisp::Int)
+                       .init(root, env, list);
+  expeditor.assertDescribedArgs();
+  auto pin = expeditor.getArgInt(0);
   int value = 0;
 
   if (pin >= 0 && pin < UniotPinMap.getAnalogInputLength())
     value = analogRead(UniotPinMap.getAnalogInput(pin));
   else
-    expiditor.terminate("pin is out of range");
+    expeditor.terminate("pin is out of range");
 
-  return expiditor.makeInt(value);
+  return expeditor.makeInt(value);
 }
 
-Object bclicked(Root root, VarObject env, VarObject list)
-{
-  exportPrimitiveNameTo(name);
-  PrimitiveExpeditor expiditor(name, root, env, list);
-  expiditor.assertArgs(1, Lisp::Int);
-  auto btnId = expiditor.getArgInt(0);
+Object bclicked(Root root, VarObject env, VarObject list) {
+  auto expeditor = PrimitiveExpeditor::describe(getPrimitiveName(), Lisp::Bool, 1, Lisp::Int)
+                       .init(root, env, list);
+  expeditor.assertDescribedArgs();
+  auto btnId = expeditor.getArgInt(0);
   bool value = false;
 
-  auto btn = expiditor.getCurrentRegister().first<Button>();
-  if (btnId > 0)
-  {
-    for (int i = 1; i <= btnId; i++)
-    {
-      btn = expiditor.getCurrentRegister().next<Button>();
+  auto btn = expeditor.getCurrentRegister().first<Button>();
+  if (btnId > 0) {
+    for (int i = 1; i <= btnId; i++) {
+      btn = expeditor.getCurrentRegister().next<Button>();
       if (!btn)
         break;
     }
@@ -115,10 +107,10 @@ Object bclicked(Root root, VarObject env, VarObject list)
   if (btn)
     value = btn->resetClick();
   else
-    expiditor.terminate("wrong button id");
+    expeditor.terminate("wrong button id");
 
-  return expiditor.makeBool(value);
+  return expeditor.makeBool(value);
 }
 
-} // namespace primitive
-} // namespace uniot
+}  // namespace primitive
+}  // namespace uniot

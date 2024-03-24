@@ -29,28 +29,24 @@
     return expiditor.makeBool(false);                     \
   }
 
+#define getPrimitiveName() (__func__)
+
 #define exportPrimitiveNameTo(name) \
   char name[sizeof(__func__)];      \
   snprintf(name, sizeof(name), __func__)
 
-#define globalPrimitive(name) \
-  #name, uniot::primitive::name
+namespace uniot {
 
-namespace uniot
-{
-
-namespace lisp
-{
+namespace lisp {
 using Object = struct Obj *;
 using VarObject = struct Obj **;
 using Root = void *;
-} // namespace lisp
+}  // namespace lisp
 
-class Lisp
-{
-public:
-  enum Type
-  {
+class Lisp {
+ public:
+  enum Type : uint8_t {
+    Unknown = 0,
     Int,
     Bool,
     BoolInt,
@@ -60,15 +56,13 @@ public:
     Any
   };
 
-  static inline bool correct(Lisp::Type type)
-  {
+  static inline bool correct(Lisp::Type type) {
     return (type >= Type::Int && type <= Lisp::Type::Any);
   }
 
-  static inline const char *str(Lisp::Type type)
-  {
-    static const char *unknown = "unknown";
+  static inline const char *str(Lisp::Type type) {
     static const char *map[] = {
+        "Unknown",
         "Int",
         "Bool",
         "Bool/Int",
@@ -76,8 +70,30 @@ public:
         "Cell",
 
         "Any"};
-    return correct(type) ? map[type] : unknown;
+    return correct(type) ? map[type] : map[Lisp::Type::Unknown];
   }
+
+  static inline Lisp::Type getType(lisp::Object obj) {
+    if (obj == nullptr) {
+        return Lisp::Unknown;
+    }
+
+    switch (obj->type) {
+        case TINT:
+            return Lisp::Int;
+        case TNIL:
+            return Lisp::Bool;
+        case TTRUE:
+            return Lisp::Bool;
+        case TSYMBOL:
+            return Lisp::Symbol;
+        case TCELL:
+            return Lisp::Cell;
+        default:
+            return Lisp::Unknown;
+    }
+}
+
 };
 
-} // namespace uniot
+}  // namespace uniot

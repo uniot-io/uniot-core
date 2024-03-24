@@ -102,8 +102,10 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
   AppKit(uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
       : mMQTT(mCredentials, [this](CBORObject &info) {
           auto arr = info.putArray("primitives");
-          getLisp().serializeNamesOfPrimitives(arr.get());
-          arr->closeArray();
+          getLisp().serializeNamesOfPrimitives(arr);
+
+          auto obj = info.putMap("primitives_2");
+          getLisp().serializePrimitives(obj);
 
           // TODO: add uniot core version
           info.put("timestamp", (long)Date::now());
@@ -137,11 +139,11 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
   }
 
   void _initPrimitives() {
-    getLisp().pushPrimitive(globalPrimitive(dwrite));
-    getLisp().pushPrimitive(globalPrimitive(dread));
-    getLisp().pushPrimitive(globalPrimitive(awrite));
-    getLisp().pushPrimitive(globalPrimitive(aread));
-    getLisp().pushPrimitive(globalPrimitive(bclicked));
+    getLisp().pushPrimitive(uniot::primitive::dwrite);
+    getLisp().pushPrimitive(uniot::primitive::dread);
+    getLisp().pushPrimitive(uniot::primitive::awrite);
+    getLisp().pushPrimitive(uniot::primitive::aread);
+    getLisp().pushPrimitive(uniot::primitive::bclicked);
 
     PrimitiveExpeditor::getGlobalRegister().link("bclicked", &mLispButton);
   }
@@ -181,7 +183,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     }));
 
     mpLispEventListener = std::unique_ptr<CoreEventListener>(new CoreCallbackEventListener([&](int topic, int msg) {
-      if (msg == unLisp::Msg::OUT_NEW_EVENT) {
+      if (topic == unLisp::Topic::OUT_LISP_EVENT && msg == unLisp::Msg::OUT_NEW_EVENT) {
         mpLispEventListener->receiveDataFromChannel(unLisp::Channel::OUT_EVENT, [this](unsigned int id, bool empty, Bytes data) {
           if (!empty) {
             auto event = CBORObject(data);

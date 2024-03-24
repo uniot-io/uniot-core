@@ -102,17 +102,32 @@ class unLisp : public CoreEventListener {
     }
   }
 
-  unLisp *pushPrimitive(const String &name, Primitive *primitive) {
-    mUserPrimitives.push(MakePair(name, primitive));
+  unLisp *pushPrimitive(Primitive *primitive) {
+    auto description = PrimitiveExpeditor::extractDescription(primitive);
+    mUserPrimitives.push(MakePair(description.name, primitive));
+    UNIOT_LOG_DEBUG("primitive added: %s", description.name.c_str());
+    UNIOT_LOG_DEBUG("args count: %d", description.argsCount);
+    UNIOT_LOG_DEBUG("return type: %d", description.returnType);
+    for (auto i = 0; i < description.argsCount; i++) {
+      UNIOT_LOG_DEBUG("arg %d: %d", i, description.argsTypes[i]);
+    }
     return this;
   }
 
-  void serializeNamesOfPrimitives(CBORArray *arr) {
-    if (arr) {
-      mUserPrimitives.forEach([&](Pair<const String &, Primitive *> holder) {
-        arr->put(holder.first.c_str());
-      });
-    }
+  void serializeNamesOfPrimitives(CBORObject::Array &arr) {
+    mUserPrimitives.forEach([&](Pair<const String &, Primitive *> holder) {
+      arr.append(holder.first.c_str());
+      UNIOT_LOG_DEBUG("primitive: %s, err: %d", holder.first.c_str(), arr.getLastError().err);
+    });
+  }
+  void serializePrimitives(CBORObject &obj) {
+    mUserPrimitives.forEach([&](Pair<const String &, Primitive *> holder) {
+      auto description = PrimitiveExpeditor::extractDescription(holder.second);
+      obj.putArray(holder.first.c_str())
+          .append(description.returnType)
+          .appendArray()
+          .append(description.argsCount, reinterpret_cast<const uint8_t *>(description.argsTypes));
+    });
   }
 
   const Bytes &getLastCode() {
@@ -176,6 +191,8 @@ class unLisp : public CoreEventListener {
       if (!t) {
         _destroyMachine();
       }
+
+      UNIOT_LOG_DEBUG("lisp machine running, mem used: %d", lisp_mem_used());
     });
   }
 
@@ -204,6 +221,8 @@ class unLisp : public CoreEventListener {
     mUserPrimitives.forEach([this](Pair<const String &, Primitive *> holder) {
       add_primitive(mLispRoot, mLispEnv, holder.first.c_str(), holder.second);
     });
+
+    UNIOT_LOG_DEBUG("lisp machine created, mem used: %d", lisp_mem_used());
   }
 
   void _destroyMachine() {
@@ -253,8 +272,9 @@ class unLisp : public CoreEventListener {
   }
 
   inline Object _primTask(Root root, VarObject env, VarObject list) {
-    PrimitiveExpeditor expeditor("task", root, env, list);
-    expeditor.assertArgs(3, Lisp::Int, Lisp::Int, Lisp::Cell);
+    auto expeditor = PrimitiveExpeditor::describe("task", Lisp::Bool, 3, Lisp::Int, Lisp::Int, Lisp::Cell)
+                         .init(root, env, list);
+    expeditor.assertDescribedArgs();
 
     auto times = expeditor.getArgInt(0);
     auto ms = expeditor.getArgInt(1);
@@ -270,8 +290,9 @@ class unLisp : public CoreEventListener {
   }
 
   inline Object _primIsEventAvailable(Root root, VarObject env, VarObject list) {
-    PrimitiveExpeditor expeditor("is_event", root, env, list);
-    expeditor.assertArgs(1, Lisp::Symbol);
+    auto expeditor = PrimitiveExpeditor::describe("is_event", Lisp::Bool, 1, Lisp::Symbol)
+                         .init(root, env, list);
+    expeditor.assertDescribedArgs();
 
     auto eventId = expeditor.getArgSymbol(0);
     auto available = _isIncomingEventAvailable(eventId);
@@ -280,8 +301,9 @@ class unLisp : public CoreEventListener {
   }
 
   inline Object _primPopEvent(Root root, VarObject env, VarObject list) {
-    PrimitiveExpeditor expeditor("pop_event", root, env, list);
-    expeditor.assertArgs(1, Lisp::Symbol);
+    auto expeditor = PrimitiveExpeditor::describe("pop_event", Lisp::Bool, 1, Lisp::Symbol)
+                         .init(root, env, list);
+    expeditor.assertDescribedArgs();
 
     auto eventId = expeditor.getArgSymbol(0);
     auto eventData = _popIncomingEvent(eventId);
@@ -297,8 +319,9 @@ class unLisp : public CoreEventListener {
   }
 
   inline Object _primPushEvent(Root root, VarObject env, VarObject list) {
-    PrimitiveExpeditor expeditor("push_event", root, env, list);
-    expeditor.assertArgs(2, Lisp::Symbol, Lisp::BoolInt);
+    auto expeditor = PrimitiveExpeditor::describe("push_event", Lisp::Bool, 2, Lisp::Symbol, Lisp::BoolInt)
+                         .init(root, env, list);
+    expeditor.assertDescribedArgs();
 
     auto eventId = expeditor.getArgSymbol(0);
     auto value = expeditor.getArgInt(1);
@@ -320,7 +343,7 @@ class unLisp : public CoreEventListener {
   void *mLispEnvConstructor[3];
   Root mLispRoot;
   VarObject mLispEnv;
-  Map<String, SharedPointer<LimitedQueue<Bytes>>> mIncomingEvents;
+  Map<String, SharedPointer<LimitedQueue<Bytes>>> mIncomingEvents;  // TODO: TTL
 };
 
 }  // namespace uniot

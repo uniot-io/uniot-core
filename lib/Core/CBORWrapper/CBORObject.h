@@ -25,18 +25,16 @@
 
 #include <memory>
 
-#include "CBORArray.h"
-
 #ifndef UNIOT_DANGEROUS_CBOR_DATA_SIZE
 #define UNIOT_DANGEROUS_CBOR_DATA_SIZE 256
 #endif
 
 namespace uniot {
 class CBORObject {
-  friend class CBORArray;
   friend class COSEMessage;
 
  public:
+  class Array;
   CBORObject(CBORObject const &) = delete;
   void operator=(CBORObject const &) = delete;
 
@@ -67,14 +65,40 @@ class CBORObject {
     return mErr;
   }
 
-  std::unique_ptr<CBORArray> putArray(int key) {
-    _markAsDirty(true);
-    return std::unique_ptr<CBORArray>(new CBORArray(this, mpMapNode, cn_cbor_int_create(key, _errback())));
+  Array putArray(int key) {
+    auto existing = cn_cbor_mapget_int(mpMapNode, key);
+    if (existing && existing->type == CN_CBOR_ARRAY) {
+      return Array(this, existing);
+    } else {
+      auto newArray = cn_cbor_array_create(_errback());
+      if (newArray) {
+        if (cn_cbor_mapput_int(mpMapNode, key, newArray, _errback())) {
+          _markAsDirty(true);
+          return Array(this, newArray);
+        } else {
+          cn_cbor_free(newArray);
+        }
+      }
+    }
+    return Array(this, nullptr);
   }
 
-  std::unique_ptr<CBORArray> putArray(const char *key) {
-    _markAsDirty(true);
-    return std::unique_ptr<CBORArray>(new CBORArray(this, mpMapNode, cn_cbor_string_create(key, _errback())));
+  inline Array putArray(const char *key) {
+    auto existing = cn_cbor_mapget_string(mpMapNode, key);
+    if (existing && existing->type == CN_CBOR_ARRAY) {
+      return Array(this, existing);
+    } else {
+      auto newArray = cn_cbor_array_create(_errback());
+      if (newArray) {
+        if (cn_cbor_mapput_string(mpMapNode, key, newArray, _errback())) {
+          _markAsDirty(true);
+          return Array(this, newArray);
+        } else {
+          cn_cbor_free(newArray);
+        }
+      }
+    }
+    return Array(this, nullptr);
   }
 
   CBORObject &put(int key, int value) {
@@ -249,6 +273,70 @@ class CBORObject {
     _clean();
     _create();
   }
+
+  class Array {
+    friend class CBORObject;
+
+   public:
+    Array(Array const &) = delete;
+    void operator=(Array const &) = delete;
+
+    ~Array() {
+      mpContext = nullptr;
+      mpArrayNode = nullptr;
+    }
+
+    cn_cbor_errback getLastError() {
+      return mpContext->mErr;
+    }
+
+    inline Array &append(int value) {
+      if (mpArrayNode) {
+        auto updated = cn_cbor_array_append(mpArrayNode, cn_cbor_int_create(value, mpContext->_errback()), mpContext->_errback());
+        mpContext->_markAsDirty(updated);
+      }
+      return *this;
+    }
+
+    inline Array &append(const char *value) {
+      if (mpArrayNode) {
+        auto updated = cn_cbor_array_append(mpArrayNode, cn_cbor_string_create(value, mpContext->_errback()), mpContext->_errback());
+        mpContext->_markAsDirty(updated);
+      }
+      return *this;
+    }
+
+    template <typename T>
+    inline Array &append(size_t size, const T *value) {
+      static_assert(std::is_integral<T>::value, "only integral types are allowed");
+
+      for (size_t i = 0; i < size; i++) {
+        append(static_cast<int>(value[i]));
+      }
+      return *this;
+    }
+
+    inline Array appendArray() {
+      auto newArray = cn_cbor_array_create(mpContext->_errback());
+      if (newArray) {
+        auto updated = cn_cbor_array_append(mpArrayNode, newArray, mpContext->_errback());
+        mpContext->_markAsDirty(updated);
+        if (updated) {
+          return Array(mpContext, newArray);
+        } else {
+          cn_cbor_free(newArray);
+        }
+      }
+      return Array(mpContext, nullptr);
+    }
+
+   private:
+    Array(CBORObject *context, cn_cbor *arrayNode)
+        : mpContext(context), mpArrayNode(arrayNode) {}
+
+    CBORObject *mpContext;
+    cn_cbor *mpArrayNode;
+  };
 
  private:
   CBORObject(CBORObject *parent, cn_cbor *child) : mDirty(false) {
