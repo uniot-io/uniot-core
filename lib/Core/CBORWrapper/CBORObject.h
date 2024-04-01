@@ -102,10 +102,14 @@ class CBORObject {
   }
 
   CBORObject &put(int key, int value) {
-    return put(key, (long)value);
+    return put(key, static_cast<int64_t>(value));
   }
 
-  CBORObject &put(int key, long value) {
+  CBORObject &put(int key, uint64_t value) {
+    return put(key, static_cast<int64_t>(value));
+  }
+
+  CBORObject &put(int key, int64_t value) {
     bool updated = false;
     auto existing = cn_cbor_mapget_int(mpMapNode, key);
     if (existing) {
@@ -133,10 +137,14 @@ class CBORObject {
   }
 
   CBORObject &put(const char *key, int value) {
-    return put(key, (long)value);
+    return put(key, static_cast<int64_t>(value));
   }
 
-  CBORObject &put(const char *key, long value) {
+  CBORObject &put(const char *key, uint64_t value) {
+    return put(key, static_cast<int64_t>(value));
+  }
+
+  CBORObject &put(const char *key, int64_t value) {
     bool updated = false;
     auto existing = cn_cbor_mapget_string(mpMapNode, key);
     if (existing) {

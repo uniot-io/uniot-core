@@ -44,7 +44,7 @@ class Date : public IExecutor, public CBORStorage {
   }
 
   bool store() override {
-    CBORStorage::object().put("epoch", (long)this->_now());
+    CBORStorage::object().put("epoch", this->_now());
     return CBORStorage::store();
   }
 

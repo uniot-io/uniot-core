@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <user_interface.h>
 #include <Storage.h>
 
 #include <Arduino.h>

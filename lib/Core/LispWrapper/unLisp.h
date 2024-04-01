@@ -75,7 +75,7 @@ class unLisp : public CoreEventListener {
   }
 
   bool taskIsRunning() {
-    return mTaskLispEval->isAtached();
+    return mTaskLispEval->isAttached();
   }
 
   size_t memoryUsed() {
@@ -97,7 +97,7 @@ class unLisp : public CoreEventListener {
 
     _refreshIncomingEvents();
     lisp_eval(mLispRoot, mLispEnv, code);
-    if (!mTaskLispEval->isAtached()) {
+    if (!mTaskLispEval->isAttached()) {
       _destroyMachine();
     }
   }

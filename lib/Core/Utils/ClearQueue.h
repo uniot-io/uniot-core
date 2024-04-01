@@ -52,7 +52,7 @@ class ClearQueue {
   bool contains(const T value) const;
   bool isEmpty() const;
   void clean();
-  void forEach(VoidCallback callback);
+  void forEach(VoidCallback callback) const;
 
  protected:
   typedef struct node {
@@ -184,7 +184,7 @@ void ClearQueue<T>::clean() {
 }
 
 template <typename T>
-void ClearQueue<T>::forEach(VoidCallback callback) {
+void ClearQueue<T>::forEach(VoidCallback callback) const {
   for (pnode cur = mHead; cur != NULL; cur = cur->next) {
     callback(cur->value);
   }

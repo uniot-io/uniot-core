@@ -74,7 +74,7 @@ public:
     }
   }
 
-  bool isAtached()
+  bool isAttached()
   {
     return mpTimer != nullptr;
   }
