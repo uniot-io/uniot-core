@@ -26,7 +26,7 @@ class ISchedulerConnectionKit
 {
 public:
   virtual ~ISchedulerConnectionKit() {}
-  virtual void pushTo(TaskScheduler *scheduler) = 0;
+  virtual void pushTo(TaskScheduler &scheduler) = 0;
   virtual void attach() = 0;
 };
 } // namespace uniot

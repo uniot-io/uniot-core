@@ -40,7 +40,7 @@ namespace uniot {
   const char text[]                PROGMEM = "text";
 
 //TODO: improve by public methods as needed
-  class NetworkScheduler : public TaskScheduler, public CoreEventEmitter
+  class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
   {
   public:
     enum Topic { CONNECTION = FOURCC(netw) };
@@ -54,7 +54,7 @@ namespace uniot {
           mpPrinter(printer),
           mpApIp(std::make_shared<IPAddress>(1, 1, 1, 1)),
           mpApSubnet(new IPAddress(255, 255, 255, 0)),
-          mpConfigServer(new ConfigCaptivePortal(mpApIp))
+          mpConfigServer(mpApIp)
     {
       mApName = "UNIOT-" + String(mpCredentials->getShortDeviceId(), HEX);
       mApName.toUpperCase();
@@ -69,7 +69,17 @@ namespace uniot {
       _initServerCallbacks();
     }
 
-    void begin() {
+    virtual void pushTo(TaskScheduler &scheduler) override {
+      scheduler.push("server_start", mTaskStart);
+      scheduler.push("server_serve", mTaskServe);
+      scheduler.push("server_stop", mTaskStop);
+      scheduler.push("ap_config", mTaskConfigAp);
+      scheduler.push("sta_connect", mTaskConnectSta);
+      scheduler.push("sta_connecting", mTaskConnecting);
+      scheduler.push("wifi_monitor", mTaskMonitoring);
+    }
+
+    virtual void attach() override {
       mWifiStorage.restore();
       if(mWifiStorage.getWifiArgs()->isValid()) {
         _printp(strStaConnecting);
@@ -109,18 +119,18 @@ namespace uniot {
     }
 
     void _initTasks() {
-      push(mTaskStart = make([this](short t) {
-        if(mpConfigServer->start()) {
+      mTaskStart = TaskScheduler::make([this](short t) {
+        if(mpConfigServer.start()) {
           mTaskServe->attach(10);
         }
-      }));
-      push(mTaskServe = make(mpConfigServer.get()));
-      push(mTaskStop = make([this](short t) {
+      });
+      mTaskServe = TaskScheduler::make(mpConfigServer);
+      mTaskStop = TaskScheduler::make([this](short t) {
         mTaskServe->detach();
-        mpConfigServer->stop();
-      }));
+        mpConfigServer.stop();
+      });
 
-      push(mTaskConfigAp = make([this](short t) {
+      mTaskConfigAp = TaskScheduler::make([this](short t) {
         WiFi.disconnect(true);
         if( WiFi.softAPConfig((*mpApIp), (*mpApIp),  (*mpApSubnet))
           && WiFi.softAP(mApName.c_str()))
@@ -133,8 +143,8 @@ namespace uniot {
           Serial.println("DEBUG: NetworkScheduler, mTaskConfigAp failed");
           mTaskConfigAp->attach(500, 1);
         }
-      }));
-      push(mTaskConnectSta = make([this](short t) {
+      });
+      mTaskConnectSta = TaskScheduler::make([this](short t) {
         WiFi.disconnect(true);
         bool disconect = true; WiFi.softAPdisconnect(true); // !!!!!!!!!!!!
         bool connect = WiFi.begin(mWifiStorage.getWifiArgs()->ssid.c_str(), mWifiStorage.getWifiArgs()->pass.c_str()) != WL_CONNECT_FAILED;
@@ -144,8 +154,8 @@ namespace uniot {
           mTaskConnecting->attach(500, 20);
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::CONNECTING);
         }
-      }));
-      push(mTaskConnecting = make([this](short times) {
+      });
+      mTaskConnecting = TaskScheduler::make([this](short times) {
         auto __processFailure = [this]() {
           const int triesBeforeGivingUp = 3;
           static int tries = 0;
@@ -187,27 +197,27 @@ namespace uniot {
           default:
           break;
         }
-      }));
-      push(mTaskMonitoring = make([this](short times) {
+      });
+      mTaskMonitoring = TaskScheduler::make([this](short times) {
         if(WiFi.status() != WL_CONNECTED) {
           mTaskMonitoring->detach();
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::DISCONNECTED);
         }
-      }));
+      });
     }
 
     void _initServerCallbacks() {
-      mpConfigServer->get()->onNotFound([this] {
-        mpConfigServer->get()->sendHeader("Location", "/", true);
-        mpConfigServer->get()->send_P(307, text, text);
+      mpConfigServer.get()->onNotFound([this] {
+        mpConfigServer.get()->sendHeader("Location", "/", true);
+        mpConfigServer.get()->send_P(307, text, text);
       });
 
-      mpConfigServer->get()->on("/", [this] {
-        mpConfigServer->get()->sendHeader("Content-Encoding", "gzip");
-        mpConfigServer->get()->send_P(200, text_html, CONFIG_MIN_HTML_GZ, CONFIG_MIN_HTML_GZ_LENGTH);
+      mpConfigServer.get()->on("/", [this] {
+        mpConfigServer.get()->sendHeader("Content-Encoding", "gzip");
+        mpConfigServer.get()->send_P(200, text_html, CONFIG_MIN_HTML_GZ, CONFIG_MIN_HTML_GZ_LENGTH);
       });
 
-      mpConfigServer->get()->on("/scan", [this] {
+      mpConfigServer.get()->on("/scan", [this] {
         auto n = WiFi.scanNetworks();
         String networks = "[";
         for (auto i = 0; i < n; ++i) {
@@ -217,20 +227,20 @@ namespace uniot {
         }
         networks += ']';
         Serial.println(networks);
-        mpConfigServer->get()->send(200, text, networks);
+        mpConfigServer.get()->send(200, text, networks);
       });
 
-      mpConfigServer->get()->on("/config", [this] {
-        mWifiStorage.getWifiArgs()->ssid = mpConfigServer->get()->arg("ssid");
-        mWifiStorage.getWifiArgs()->pass = mpConfigServer->get()->arg("pass");
-        mpConfigServer->get()->sendHeader("Location", "/", true);
-        mpConfigServer->get()->send_P(307, text, text);
+      mpConfigServer.get()->on("/config", [this] {
+        mWifiStorage.getWifiArgs()->ssid = mpConfigServer.get()->arg("ssid");
+        mWifiStorage.getWifiArgs()->pass = mpConfigServer.get()->arg("pass");
+        mpConfigServer.get()->sendHeader("Location", "/", true);
+        mpConfigServer.get()->send_P(307, text, text);
         if(mWifiStorage.getWifiArgs()->isValid()) {
           _printp(strStaConnecting);
           _print(mWifiStorage.getWifiArgs()->ssid.c_str());
           mTaskConnectSta->attach(500, 1);
 
-          mpCredentials->setOwnerId(mpConfigServer->get()->arg("acc"));
+          mpCredentials->setOwnerId(mpConfigServer.get()->arg("acc"));
         }
       });
     }
@@ -243,14 +253,14 @@ namespace uniot {
 
     SharedPointer<IPAddress> mpApIp;
     UniquePointer<IPAddress> mpApSubnet;
-    UniquePointer<ConfigCaptivePortal> mpConfigServer;
+    ConfigCaptivePortal mpConfigServer;
 
-    TaskPtr mTaskStart;
-    TaskPtr mTaskServe;
-    TaskPtr mTaskStop;
-    TaskPtr mTaskConfigAp;
-    TaskPtr mTaskConnectSta;
-    TaskPtr mTaskConnecting;
-    TaskPtr mTaskMonitoring;
+    TaskScheduler::TaskPtr mTaskStart;
+    TaskScheduler::TaskPtr mTaskServe;
+    TaskScheduler::TaskPtr mTaskStop;
+    TaskScheduler::TaskPtr mTaskConfigAp;
+    TaskScheduler::TaskPtr mTaskConnectSta;
+    TaskScheduler::TaskPtr mTaskConnecting;
+    TaskScheduler::TaskPtr mTaskMonitoring;
   };
 }

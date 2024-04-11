@@ -18,16 +18,14 @@
 
 #pragma once
 
-#include <TaskScheduler.h>
+#include <IExecutor.h>
 #include <LinkRegisterRecord.h>
+#include <TaskScheduler.h>
 
-namespace uniot
-{
-class Button : public LinkRegisterRecord
-{
-public:
-  enum Event
-  {
+namespace uniot {
+class Button : public IExecutor, public LinkRegisterRecord {
+ public:
+  enum Event {
     CLICK,
     LONG_PRESS
   };
@@ -42,59 +40,50 @@ public:
         OnClick(commonCallback),
         mPrevState(false),
         mLongPressTicker(0),
-        mAutoResetTicker(0),
-        mTaskCallback([this](short t) {
-          bool curState = digitalRead(mPin) == mActiveLevel;
-          if (curState && ++mLongPressTicker == mLongPressTicks)
-          {
-            mWasLongPress = true;
-            if (OnLongPress)
-              OnLongPress(this, LONG_PRESS);
-          }
-          if (mPrevState && !curState)
-          {
-            if (mLongPressTicker < mLongPressTicks)
-            {
-              mWasClick = true;
-              if (OnClick)
-                OnClick(this, CLICK);
-            }
-            mLongPressTicker = 0;
-            mAutoResetTicker = 0;
-          }
-          mPrevState = curState;
-
-          if (++mAutoResetTicker == mAutoResetTicks)
-          {
-            resetClick();
-            resetLongPress();
-            mAutoResetTicker = 0;
-          }
-        })
-  {
+        mAutoResetTicker(0) {
     pinMode(mPin, INPUT);
   }
 
-  uniot::SchedulerTask::SchedulerTaskCallback getTaskCallback()
-  {
-    return mTaskCallback;
-  }
-
-  bool resetClick()
-  {
+  bool resetClick() {
     auto was = mWasClick;
     mWasClick = false;
     return was;
   }
 
-  bool resetLongPress()
-  {
+  bool resetLongPress() {
     auto was = mWasLongPress;
     mWasClick = false;
     return was;
   }
 
-protected:
+  virtual uint8_t execute() override {
+    bool curState = digitalRead(mPin) == mActiveLevel;
+    if (curState && ++mLongPressTicker == mLongPressTicks) {
+      mWasLongPress = true;
+      if (OnLongPress)
+        OnLongPress(this, LONG_PRESS);
+    }
+    if (mPrevState && !curState) {
+      if (mLongPressTicker < mLongPressTicks) {
+        mWasClick = true;
+        if (OnClick)
+          OnClick(this, CLICK);
+      }
+      mLongPressTicker = 0;
+      mAutoResetTicker = 0;
+    }
+    mPrevState = curState;
+
+    if (++mAutoResetTicker == mAutoResetTicks) {
+      resetClick();
+      resetLongPress();
+      mAutoResetTicker = 0;
+    }
+
+    return 0;
+  }
+
+ protected:
   uint8_t mPin;
   uint8_t mActiveLevel;
 
@@ -110,7 +99,5 @@ protected:
   bool mPrevState;
   uint8_t mLongPressTicker;
   uint8_t mAutoResetTicker;
-
-  SchedulerTask::SchedulerTaskCallback mTaskCallback;
 };
-} // namespace uniot
+}  // namespace uniot

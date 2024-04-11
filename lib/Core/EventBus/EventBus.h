@@ -45,8 +45,8 @@ class EventBus : public uniot::IExecutor {
 
   unsigned int getId() { return mId; }
 
-  void registerKit(IEventBusConnectionKit<T_topic, T_msg, T_data> *connection);
-  void unregisterKit(IEventBusConnectionKit<T_topic, T_msg, T_data> *connection);
+  void registerKit(IEventBusConnectionKit<T_topic, T_msg, T_data> &connection);
+  void unregisterKit(IEventBusConnectionKit<T_topic, T_msg, T_data> &connection);
 
   bool registerEntity(EventEntity<T_topic, T_msg, T_data> *entity);
   void unregisterEntity(EventEntity<T_topic, T_msg, T_data> *entity);
@@ -62,7 +62,7 @@ class EventBus : public uniot::IExecutor {
 
  private:
   ClearQueue<EventEntity<T_topic, T_msg, T_data> *> mEntities; // TODO: need real set; std::set is broken into esp xtensa sdk
-  ClearQueue<std::pair<T_topic, T_msg>> mEvents;
+  ClearQueue<Pair<T_topic, T_msg>> mEvents;
 
   DataChannels<T_topic, T_data> mDataChannels;
 

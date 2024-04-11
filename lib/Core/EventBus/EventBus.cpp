@@ -32,13 +32,13 @@ EventBus<T_topic, T_msg, T_data>::~EventBus() {
 }
 
 template <class T_topic, class T_msg, class T_data>
-void EventBus<T_topic, T_msg, T_data>::registerKit(IEventBusConnectionKit<T_topic, T_msg, T_data> *connection) {
-  connection->registerWithBus(this);
+void EventBus<T_topic, T_msg, T_data>::registerKit(IEventBusConnectionKit<T_topic, T_msg, T_data> &connection) {
+  connection.registerWithBus(*this);
 }
 
 template <class T_topic, class T_msg, class T_data>
-void EventBus<T_topic, T_msg, T_data>::unregisterKit(IEventBusConnectionKit<T_topic, T_msg, T_data> *connection) {
-  connection->unregisterFromBus(this);
+void EventBus<T_topic, T_msg, T_data>::unregisterKit(IEventBusConnectionKit<T_topic, T_msg, T_data> &connection) {
+  connection.unregisterFromBus(*this);
 }
 
 template <class T_topic, class T_msg, class T_data>
@@ -85,7 +85,7 @@ bool EventBus<T_topic, T_msg, T_data>::isDataChannelEmpty(T_topic topic) {
 
 template <class T_topic, class T_msg, class T_data>
 void EventBus<T_topic, T_msg, T_data>::emitEvent(T_topic topic, T_msg msg) {
-  mEvents.push(std::make_pair(topic, msg));
+  mEvents.push(MakePair(topic, msg));
 }
 
 template <class T_topic, class T_msg, class T_data>

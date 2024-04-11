@@ -18,95 +18,109 @@
 
 #pragma once
 
-#include <functional>
+#include <ClearQueue.h>
 #include <Common.h>
 #include <IExecutor.h>
 #include <ISchedulerConnectionKit.h>
-#include <ClearQueue.h>
+
+#include <functional>
 #include <memory>
+
 #include "Task.h"
 
-namespace uniot
-{
-class SchedulerTask : public Task, public IExecutor
-{
-public:
+namespace uniot {
+class SchedulerTask : public Task {
+ public:
   // TODO: add ms to callback
   using SchedulerTaskCallback = std::function<void(short)>;
   using spSchedulerTaskCallback = SharedPointer<SchedulerTaskCallback>;
 
-  SchedulerTask(IExecutor *executor)
-      : SchedulerTask([=](short) { executor->execute(); }) {}
+  SchedulerTask(IExecutor &executor)
+      : SchedulerTask([&](short) { executor.execute(); }) {}
 
   SchedulerTask(SchedulerTaskCallback callback)
-      : Task(), mRepeatTimes(0), mCanDoHardWork(false)
-  {
+      : Task(), mTotalElapsedMs(0), mRepeatTimes(0), mCanDoHardWork(false) {
     mspCallback = std::make_shared<SchedulerTaskCallback>(callback);
   }
 
-  //TODO: auto detach, maybe mCanDoHardWork should be countable type, if mCanDoHardWork > x then detach, refresh when executed
-  void attach(uint32_t ms, short times = 0)
-  {
+  // TODO: auto detach, maybe mCanDoHardWork should be countable type, if mCanDoHardWork > x then detach, refresh when executed
+  void attach(uint32_t ms, short times = 0) {
     mRepeatTimes = times > 0 ? times : -1;
     Task::attach<volatile bool *>(ms, mRepeatTimes != 1, [](volatile bool *can) { *can = true; }, &mCanDoHardWork);
   }
 
-  virtual uint8_t execute() override
-  {
-    if (mCanDoHardWork)
-    {
+  inline void loop() {
+    auto startMs = millis();
+    if (mCanDoHardWork) {
       mCanDoHardWork = false;
 
-      if (mRepeatTimes > 0 && !--mRepeatTimes)
-      {
+      if (mRepeatTimes > 0 && !--mRepeatTimes) {
         Task::detach();
       }
       (*mspCallback)(mRepeatTimes);
     }
-    return isAtached();
+    mTotalElapsedMs += millis() - startMs;
   }
 
-private:
+  uint64_t getTotalElapsedMs() const {
+    return mTotalElapsedMs;
+  }
+
+ private:
+  uint64_t mTotalElapsedMs;
   short mRepeatTimes;
   volatile bool mCanDoHardWork;
   spSchedulerTaskCallback mspCallback;
 };
 
-class TaskScheduler : public IExecutor
-{
-public:
+class TaskScheduler {
+ public:
   using TaskPtr = SharedPointer<SchedulerTask>;
+  using TaskInfoCallback = std::function<void(const char *, bool, uint64_t)>;
 
-  static TaskPtr make(SchedulerTask::SchedulerTaskCallback callback)
-  {
+  TaskScheduler() : mTotalElapsedMs(0) {}
+
+  static TaskPtr make(SchedulerTask::SchedulerTaskCallback callback) {
     return std::make_shared<SchedulerTask>(callback);
   }
 
-  static TaskPtr make(IExecutor *executor)
-  {
+  static TaskPtr make(IExecutor &executor) {
     return std::make_shared<SchedulerTask>(executor);
   }
 
-  TaskScheduler *push(TaskPtr task)
-  {
-    mTasks.push(task);
-    return this;
+  TaskScheduler &push(const char *name, TaskPtr task) {
+    mTasks.push(MakePair(name, task));
+    return *this;
   }
 
-  TaskScheduler *push(ISchedulerConnectionKit *connection)
-  {
-    connection->pushTo(this);
-    return this;
+  TaskScheduler &push(ISchedulerConnectionKit &connection) {
+    connection.pushTo(*this);
+    return *this;
   }
 
-  virtual uint8_t execute() override
-  {
-    byte attached = 0;
-    mTasks.forEach([&](TaskPtr task) { attached += task->execute(); yield(); });
-    return attached;
+  inline void loop() {
+    auto startMs = millis();
+    mTasks.forEach([&](Pair<const char *, TaskPtr> task) {
+      task.second->loop();
+      yield();
+    });
+    mTotalElapsedMs += millis() - startMs;
   }
 
-private:
-  ClearQueue<TaskPtr> mTasks;
+  void exportTasksInfo(TaskInfoCallback callback) const {
+    if (callback) {
+      mTasks.forEach([&](Pair<const char *, TaskPtr> task) {
+        callback(task.first, task.second->isAttached(), task.second->getTotalElapsedMs());
+      });
+    }
+  }
+
+  uint64_t getTotalElapsedMs() const {
+    return mTotalElapsedMs;
+  }
+
+ private:
+  uint64_t mTotalElapsedMs;
+  ClearQueue<Pair<const char *, TaskPtr>> mTasks;
 };
-} // namespace uniot
+}  // namespace uniot

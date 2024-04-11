@@ -26,7 +26,7 @@
 namespace uniot {
 MQTTDevice::~MQTTDevice() {
   if (mpKit) {
-    mpKit->removeDevice(this);
+    mpKit->removeDevice(*this);
     mpKit = nullptr;
   }
 }

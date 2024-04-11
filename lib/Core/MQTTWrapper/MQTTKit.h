@@ -72,19 +72,19 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
     mPubSubClient.setServer(domain, port);
   }
 
-  void addDevice(MQTTDevice *device) {
-    if (mDevices.pushUnique(device)) {
-      device->kit(this);
-      device->topics()->forEach([this](String topic) {
+  void addDevice(MQTTDevice &device) {
+    if (mDevices.pushUnique(&device)) {
+      device.kit(this);
+      device.topics()->forEach([this](String topic) {
         mPubSubClient.subscribe(topic.c_str());
       });
     }
   }
 
-  void removeDevice(MQTTDevice *device) {
-    if (mDevices.removeOne(device)) {
-      device->kit(nullptr);
-      device->topics()->forEach([this](String topic) {
+  void removeDevice(MQTTDevice &device) {
+    if (mDevices.removeOne(&device)) {
+      device.kit(nullptr);
+      device.topics()->forEach([this](String topic) {
         mPubSubClient.unsubscribe(topic.c_str());
       });
     }
@@ -180,7 +180,7 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
     protectedData.put("device", mpCredentials->getDeviceId().c_str());
     protectedData.put("owner", mpCredentials->getOwnerId().c_str());
     protectedData.put("creator", mpCredentials->getCreatorId().c_str());
-    protectedData.put("timestamp", (long)Date::now());
+    protectedData.put("timestamp", Date::now());
     auto unprotectedData = password.putMap("unprotected");
     unprotectedData.put("alg", "EdDSA");
 
@@ -196,7 +196,7 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
   CBORExtender mInfoExtender;
   PubSubClient mPubSubClient;
 
-  long mConnectionId;
+  int mConnectionId;
 
   WiFiClient mWiFiClient;
   // WiFiClientSecure mWiFiClient;

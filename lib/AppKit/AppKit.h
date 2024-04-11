@@ -30,6 +30,7 @@
 #include <MQTTKit.h>
 #include <NetworkDevice.h>
 #include <PinMap.h>
+#include <TopDevice.h>
 #include <unLisp.h>
 
 namespace uniot {
@@ -55,47 +56,44 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     return mCredentials;
   }
 
-  void begin() {
-    analogWriteRange(1023);
-    attach();
-    mNetworkDevice.begin();
-    mLispDevice.runStoredCode();
-  }
+  void pushTo(TaskScheduler &scheduler) override {
+    scheduler.push(mNetworkDevice);
+    scheduler.push("mqtt", mTaskMQTT);
+    scheduler.push("lisp_btn", mTaskLispButton);
+    scheduler.push("lisp_task", getLisp().getTask());
 
-  void pushTo(TaskScheduler *scheduler) override {
-    scheduler->push(&mNetworkDevice);
-    scheduler->push(mTaskMQTT);
-    scheduler->push(mTaskLispButton);
-    scheduler->push(getLisp().getTask());
+    mTopDevice.setScheduler(scheduler);
   }
 
   void attach() override {
     mNetworkDevice.attach();
     mTaskLispButton->attach(100);
+    analogWriteRange(1023);
+    mLispDevice.runStoredCode();
   }
 
-  void registerWithBus(CoreEventBus *eventBus) override {
-    eventBus->openDataChannel(unLisp::Channel::OUT_LISP, 10);
-    eventBus->openDataChannel(unLisp::Channel::OUT_LISP_ERR, 1);
-    eventBus->openDataChannel(unLisp::Channel::OUT_EVENT, 10);
-    eventBus->openDataChannel(unLisp::Channel::IN_EVENT, 20);
-    eventBus->registerKit(&mNetworkDevice);
-    eventBus->registerEntity(&getLisp());
-    eventBus->registerEntity(&mLispDevice);
-    eventBus->registerEntity(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
-    eventBus->registerEntity(mpLispEventListener->listenToEvent(unLisp::Topic::OUT_LISP_EVENT));
+  void registerWithBus(CoreEventBus &eventBus) override {
+    eventBus.openDataChannel(unLisp::Channel::OUT_LISP, 10);
+    eventBus.openDataChannel(unLisp::Channel::OUT_LISP_ERR, 1);
+    eventBus.openDataChannel(unLisp::Channel::OUT_EVENT, 10);
+    eventBus.openDataChannel(unLisp::Channel::IN_EVENT, 20);
+    eventBus.registerKit(mNetworkDevice);
+    eventBus.registerEntity(&getLisp());
+    eventBus.registerEntity(&mLispDevice);
+    eventBus.registerEntity(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
+    eventBus.registerEntity(mpLispEventListener->listenToEvent(unLisp::Topic::OUT_LISP_EVENT));
   }
 
-  void unregisterFromBus(CoreEventBus *eventBus) override {
-    eventBus->closeDataChannel(unLisp::Channel::OUT_LISP);
-    eventBus->closeDataChannel(unLisp::Channel::OUT_LISP_ERR);
-    eventBus->closeDataChannel(unLisp::Channel::OUT_EVENT);
-    eventBus->closeDataChannel(unLisp::Channel::IN_EVENT);
-    eventBus->unregisterKit(&mNetworkDevice);
-    eventBus->unregisterEntity(&getLisp());
-    eventBus->unregisterEntity(&mLispDevice);
-    eventBus->unregisterEntity(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
-    eventBus->unregisterEntity(mpLispEventListener->stopListeningToEvent(unLisp::Topic::OUT_LISP_EVENT));
+  void unregisterFromBus(CoreEventBus &eventBus) override {
+    eventBus.closeDataChannel(unLisp::Channel::OUT_LISP);
+    eventBus.closeDataChannel(unLisp::Channel::OUT_LISP_ERR);
+    eventBus.closeDataChannel(unLisp::Channel::OUT_EVENT);
+    eventBus.closeDataChannel(unLisp::Channel::IN_EVENT);
+    eventBus.unregisterKit(mNetworkDevice);
+    eventBus.unregisterEntity(&getLisp());
+    eventBus.unregisterEntity(&mLispDevice);
+    eventBus.unregisterEntity(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
+    eventBus.unregisterEntity(mpLispEventListener->stopListeningToEvent(unLisp::Topic::OUT_LISP_EVENT));
   }
 
  private:
@@ -108,7 +106,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
           getLisp().serializePrimitives(obj);
 
           // TODO: add uniot core version
-          info.put("timestamp", (long)Date::now());
+          info.put("timestamp", Date::now());
           info.put("creator", mCredentials.getCreatorId().c_str());
           info.put("public_key", mCredentials.getPublicKey().c_str());
           info.put("mqtt_size", MQTT_MAX_PACKET_SIZE);
@@ -129,13 +127,15 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
   void _initMqtt() {
     // TODO: should I move configs to the Credentials class?
     mMQTT.setServer("mqtt.uniot.io", 1883);
-    mMQTT.addDevice(&mLispDevice);
+    mMQTT.addDevice(mTopDevice);
+    mMQTT.addDevice(mLispDevice);
+    mTopDevice.syncSubscriptions();
     mLispDevice.syncSubscriptions();
   }
 
   void _initTasks() {
-    mTaskMQTT = TaskScheduler::make(&mMQTT);
-    mTaskLispButton = TaskScheduler::make(mLispButton.getTaskCallback());
+    mTaskMQTT = TaskScheduler::make(mMQTT);
+    mTaskLispButton = TaskScheduler::make(mLispButton);
   }
 
   void _initPrimitives() {
@@ -187,7 +187,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
         mpLispEventListener->receiveDataFromChannel(unLisp::Channel::OUT_EVENT, [this](unsigned int id, bool empty, Bytes data) {
           if (!empty) {
             auto event = CBORObject(data);
-            event.put("timestamp", (long)Date::now())
+            event.put("timestamp", Date::now())
                 .putMap("sender")
                 .put("type", "device")
                 .put("id", mCredentials.getDeviceId().c_str());
@@ -202,6 +202,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
 
   Credentials mCredentials;
   MQTTKit mMQTT;
+  TopDevice mTopDevice;
   LispDevice mLispDevice;
   Button mLispButton;
 

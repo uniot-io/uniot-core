@@ -16,34 +16,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Uniot.h>
-#include <Date.h>
 #include <CrashStorage.h>
+#include <Date.h>
+#include <Uniot.h>
 
 uniot::TaskScheduler MainScheduler;
 uniot::CoreEventBus MainEventBus(FOURCC(main));
 
-void setup()
-{
+void setup() {
   UNIOT_LOG_SET_READY();
 
-  auto taskHandleEventBus = uniot::TaskScheduler::make(&MainEventBus);
-  MainScheduler.push(taskHandleEventBus);
+  auto taskHandleEventBus = uniot::TaskScheduler::make(MainEventBus);
+  MainScheduler.push("event_bus", taskHandleEventBus);
   taskHandleEventBus->attach(100);
 
-  auto taskStoreDate = uniot::TaskScheduler::make(&uniot::Date::getInstance());
-  MainScheduler.push(taskStoreDate);
+  auto taskStoreDate = uniot::TaskScheduler::make(uniot::Date::getInstance());
+  MainScheduler.push("store_date", taskStoreDate);
   taskStoreDate->attach(5 * 60 * 1000UL);  // 5 minutes
 
   inject();
 }
 
-void loop()
-{
-  MainScheduler.execute();
+void loop() {
+  MainScheduler.loop();
 }
 
-extern "C" void custom_crash_callback(struct rst_info *resetInfo, uint32_t stackStart, uint32_t stackEnd)
-{
+extern "C" void custom_crash_callback(struct rst_info *resetInfo, uint32_t stackStart, uint32_t stackEnd) {
   uniot::uniotCrashCallback(resetInfo, stackStart, stackEnd);
 }

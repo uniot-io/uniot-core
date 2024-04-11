@@ -38,7 +38,7 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
     CoreEventListener::listenToEvent(unLisp::Topic::OUT_LISP_REQUEST);
   }
 
-  void syncSubscriptions() override {
+  virtual void syncSubscriptions() override {
     mTopicScript = MQTTDevice::subscribeDevice("script");
     mTopicEvents = MQTTDevice::subscribeGroup("all", "event/+");
   }
@@ -101,7 +101,7 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
     }
   }
 
-  void handle(const String &topic, const Bytes &payload) override {
+  virtual void handle(const String &topic, const Bytes &payload) override {
     if (MQTTDevice::isTopicMatch(mTopicScript, topic)) {
       handleScript(payload);
       return;
