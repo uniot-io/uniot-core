@@ -76,17 +76,18 @@ void inject() {
 
   MainAppKit.getLisp().pushPrimitive(lamp_update);
 
-  MainEventBus.registerKit(&MainAppKit);
+  MainEventBus.registerKit(MainAppKit);
   MainEventBus.registerEntity(NetworkLedListener.listenToEvent(NetworkDevice::Topic::NETWORK_LED));
 
-  MainScheduler.push(&MainAppKit)
-      ->push(taskPrintTime)
-      ->push(taskPrintHeap);
+  MainScheduler
+      .push(MainAppKit)
+      .push("print_time", taskPrintTime)
+      .push("print_heap", taskPrintHeap);
 
   taskPrintHeap->attach(500);
   taskPrintTime->attach(500);
 
-  MainAppKit.begin();
+  MainAppKit.attach();
 
   UNIOT_LOG_INFO("%s: %s", "CHIP_ID", String(ESP.getChipId(), HEX).c_str());
   UNIOT_LOG_INFO("%s: %s", "DEVICE_ID", MainAppKit.getCredentials().getDeviceId().c_str());
