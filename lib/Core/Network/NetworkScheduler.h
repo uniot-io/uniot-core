@@ -119,18 +119,18 @@ namespace uniot {
     }
 
     void _initTasks() {
-      mTaskStart = TaskScheduler::make([this](short t) {
+      mTaskStart = TaskScheduler::make([this](SchedulerTask &self, short t) {
         if(mpConfigServer.start()) {
           mTaskServe->attach(10);
         }
       });
       mTaskServe = TaskScheduler::make(mpConfigServer);
-      mTaskStop = TaskScheduler::make([this](short t) {
+      mTaskStop = TaskScheduler::make([this](SchedulerTask &self, short t) {
         mTaskServe->detach();
         mpConfigServer.stop();
       });
 
-      mTaskConfigAp = TaskScheduler::make([this](short t) {
+      mTaskConfigAp = TaskScheduler::make([this](SchedulerTask &self, short t) {
         WiFi.disconnect(true);
         if( WiFi.softAPConfig((*mpApIp), (*mpApIp),  (*mpApSubnet))
           && WiFi.softAP(mApName.c_str()))
@@ -144,9 +144,10 @@ namespace uniot {
           mTaskConfigAp->attach(500, 1);
         }
       });
-      mTaskConnectSta = TaskScheduler::make([this](short t) {
+      mTaskConnectSta = TaskScheduler::make([this](SchedulerTask &self, short t) {
         WiFi.disconnect(true);
-        bool disconect = true; WiFi.softAPdisconnect(true); // !!!!!!!!!!!!
+        bool disconect = true;
+        WiFi.softAPdisconnect(true); // !!!!!!!!!!!!
         bool connect = WiFi.begin(mWifiStorage.getWifiArgs()->ssid.c_str(), mWifiStorage.getWifiArgs()->pass.c_str()) != WL_CONNECT_FAILED;
         if (disconect && connect)
         {
@@ -155,7 +156,7 @@ namespace uniot {
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::CONNECTING);
         }
       });
-      mTaskConnecting = TaskScheduler::make([this](short times) {
+      mTaskConnecting = TaskScheduler::make([this](SchedulerTask &self, short times) {
         auto __processFailure = [this]() {
           const int triesBeforeGivingUp = 3;
           static int tries = 0;
@@ -198,7 +199,7 @@ namespace uniot {
           break;
         }
       });
-      mTaskMonitoring = TaskScheduler::make([this](short times) {
+      mTaskMonitoring = TaskScheduler::make([this](SchedulerTask &self, short times) {
         if(WiFi.status() != WL_CONNECTED) {
           mTaskMonitoring->detach();
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::DISCONNECTED);

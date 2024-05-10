@@ -7,11 +7,11 @@
 
 using namespace uniot;
 
-auto taskPrintHeap = TaskScheduler::make([](short t) {
+auto taskPrintHeap = TaskScheduler::make([](SchedulerTask& self, short t) {
   Serial.println(ESP.getFreeHeap());
 });
 
-auto taskPrintTime = TaskScheduler::make([](short t) {
+auto taskPrintTime = TaskScheduler::make([](SchedulerTask& self, short t) {
   Serial.println(Date::getFormattedTime());
 });
 

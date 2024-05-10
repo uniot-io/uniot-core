@@ -32,11 +32,11 @@ namespace uniot {
 class SchedulerTask : public Task {
  public:
   // TODO: add ms to callback
-  using SchedulerTaskCallback = std::function<void(short)>;
+  using SchedulerTaskCallback = std::function<void(SchedulerTask &, short)>;
   using spSchedulerTaskCallback = SharedPointer<SchedulerTaskCallback>;
 
   SchedulerTask(IExecutor &executor)
-      : SchedulerTask([&](short) { executor.execute(); }) {}
+      : SchedulerTask([&](SchedulerTask &, short) { executor.execute(); }) {}
 
   SchedulerTask(SchedulerTaskCallback callback)
       : Task(), mTotalElapsedMs(0), mRepeatTimes(0), mCanDoHardWork(false) {
@@ -49,6 +49,10 @@ class SchedulerTask : public Task {
     Task::attach<volatile bool *>(ms, mRepeatTimes != 1, [](volatile bool *can) { *can = true; }, &mCanDoHardWork);
   }
 
+  void once(uint32_t ms) {
+    attach(ms, 1);
+  }
+
   inline void loop() {
     auto startMs = millis();
     if (mCanDoHardWork) {
@@ -57,7 +61,7 @@ class SchedulerTask : public Task {
       if (mRepeatTimes > 0 && !--mRepeatTimes) {
         Task::detach();
       }
-      (*mspCallback)(mRepeatTimes);
+      (*mspCallback)(*this, mRepeatTimes);
     }
     mTotalElapsedMs += millis() - startMs;
   }

@@ -100,13 +100,13 @@ class NetworkDevice : public ICoreEventBusConnectionKit, public ISchedulerConnec
 
  private:
   void _initTasks() {
-    mpTaskSignalLed = TaskScheduler::make([&](short t) {
+    mpTaskSignalLed = TaskScheduler::make([&](SchedulerTask &self, short t) {
       static bool pinLevel = true;
       digitalWrite(mPinLed, pinLevel = (!pinLevel && t));
       mNetwork.emitEvent(Topic::NETWORK_LED, pinLevel);
     });
     mpTaskConfigBtn = TaskScheduler::make(mConfigBtn);
-    mpTaskResetClickCounter = TaskScheduler::make([&](short t) {
+    mpTaskResetClickCounter = TaskScheduler::make([&](SchedulerTask &self, short t) {
       Serial.print("ClickCounter = ");
       Serial.println(mClickCounter);
       mClickCounter = 0;
