@@ -19,6 +19,7 @@
 #pragma once
 
 #include <CBORStorage.h>
+#include <Date.h>
 #include <EventListener.h>
 #include <MQTTDevice.h>
 #include <unLisp.h>
@@ -75,8 +76,26 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
         CoreEventListener::receiveDataFromChannel(unLisp::Channel::OUT_LISP_ERR, [this](unsigned int id, bool empty, Bytes data) {
           if (!empty) {
             mFailedWithError = true;
-            publishDevice("script/error", data);
+
+            CBORObject packet;
+            packet.put("type", "error");
+            packet.put("timestamp", Date::now());
+            packet.put("msg", data.c_str());
+            publishDevice("debug/err", packet.build(), true);
             UNIOT_LOG_ERROR("lisp error: %s", data.c_str());
+          }
+        });
+        return;
+      }
+      if (msg == unLisp::Msg::OUT_MSG_LOG) {
+        CoreEventListener::receiveDataFromChannel(unLisp::Channel::OUT_LISP_LOG, [this](unsigned int id, bool empty, Bytes data) {
+          if (!empty) {
+            CBORObject packet;
+            packet.put("type", "log");
+            packet.put("timestamp", Date::now());
+            packet.put("msg", data.c_str());
+            publishDevice("debug/log", packet.build());
+            UNIOT_LOG_INFO("lisp log: %s", data.c_str());
           }
         });
         return;

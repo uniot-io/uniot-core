@@ -40,6 +40,7 @@ class unLisp : public CoreEventListener {
  public:
   enum Channel {
     OUT_LISP = FOURCC(lout),
+    OUT_LISP_LOG = FOURCC(llog),
     OUT_LISP_ERR = FOURCC(lerr),
     OUT_EVENT = FOURCC(evou),
     IN_EVENT = FOURCC(evin),
@@ -52,6 +53,7 @@ class unLisp : public CoreEventListener {
   };
   enum Msg {
     OUT_MSG_ADDED,
+    OUT_MSG_LOG,
     OUT_MSG_ERROR,
     OUT_REFRESH_EVENTS,
     OUT_NEW_EVENT,
@@ -164,6 +166,15 @@ class unLisp : public CoreEventListener {
       yield();
     };
 
+    auto fnPrintLog = [](const char *msg, int size) {
+      if (size > 0) {
+        auto &instance = unLisp::getInstance();
+        instance.sendDataToChannel(unLisp::Channel::OUT_LISP_LOG, Bytes((uint8_t *)msg, size).terminate());
+        instance.emitEvent(Topic::OUT_LISP_MSG, Msg::OUT_MSG_LOG);
+      }
+      yield();
+    };
+
     auto fnPrintErr = [](const char *msg, int size) {
       auto &instance = unLisp::getInstance();
       instance.sendDataToChannel(unLisp::Channel::OUT_LISP_ERR, Bytes((uint8_t *)msg, size).terminate());
@@ -174,11 +185,11 @@ class unLisp : public CoreEventListener {
     };
 
     lisp_set_cycle_yield(yield);
-    lisp_set_printers(fnPrintOut, fnPrintErr);
+    lisp_set_printers(fnPrintOut, fnPrintLog, fnPrintErr);
 
     _constructLispEnv();
 
-    mTaskLispEval = TaskScheduler::make([this](short t) {
+    mTaskLispEval = TaskScheduler::make([this](SchedulerTask &self, short t) {
       auto root = mLispRoot;
       auto env = mLispEnv;
 

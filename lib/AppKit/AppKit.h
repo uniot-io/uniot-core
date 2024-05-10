@@ -74,6 +74,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
 
   void registerWithBus(CoreEventBus &eventBus) override {
     eventBus.openDataChannel(unLisp::Channel::OUT_LISP, 10);
+    eventBus.openDataChannel(unLisp::Channel::OUT_LISP_LOG, 10);
     eventBus.openDataChannel(unLisp::Channel::OUT_LISP_ERR, 1);
     eventBus.openDataChannel(unLisp::Channel::OUT_EVENT, 10);
     eventBus.openDataChannel(unLisp::Channel::IN_EVENT, 20);
@@ -86,6 +87,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
 
   void unregisterFromBus(CoreEventBus &eventBus) override {
     eventBus.closeDataChannel(unLisp::Channel::OUT_LISP);
+    eventBus.closeDataChannel(unLisp::Channel::OUT_LISP_LOG);
     eventBus.closeDataChannel(unLisp::Channel::OUT_LISP_ERR);
     eventBus.closeDataChannel(unLisp::Channel::OUT_EVENT);
     eventBus.closeDataChannel(unLisp::Channel::IN_EVENT);
