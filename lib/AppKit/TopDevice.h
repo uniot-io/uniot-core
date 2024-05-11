@@ -32,7 +32,8 @@ class TopDevice : public MQTTDevice {
         mpScheduler(nullptr) {}
 
   virtual void syncSubscriptions() override {
-    mTopicTopAsk = MQTTDevice::subscribeDevice("top/ask");
+    mTopicTopAsk = MQTTDevice::subscribeDevice("debug/top/ask");
+    mTopicMemAsk = MQTTDevice::subscribeDevice("debug/mem/ask");
   }
 
   void setScheduler(const TaskScheduler& scheduler) {
@@ -40,7 +41,18 @@ class TopDevice : public MQTTDevice {
   }
 
   virtual void handle(const String& topic, const Bytes& payload) override {
-    if (mpScheduler && MQTTDevice::isTopicMatch(mTopicTopAsk, topic)) {
+    if (MQTTDevice::isTopicMatch(mTopicTopAsk, topic)) {
+      handleTop();
+      return;
+    }
+    if (MQTTDevice::isTopicMatch(mTopicMemAsk, topic)) {
+      handleMem();
+      return;
+    }
+  }
+
+  void handleTop() {
+    if (mpScheduler) {
       CBORObject packet;
       auto tasksObj = packet.putMap("tasks");
       uint64_t tasksElapsedMs = 0;
@@ -53,14 +65,22 @@ class TopDevice : public MQTTDevice {
       auto idleMs = mpScheduler->getTotalElapsedMs() - tasksElapsedMs;
       packet.put("idle", idleMs);
       packet.put("timestamp", Date::now());
+      packet.put("uptime", static_cast<uint64_t>(millis()));
 
-      MQTTDevice::publishDevice("top", packet.build());
+      MQTTDevice::publishDevice("debug/top", packet.build());
     }
+  }
+
+  void handleMem() {
+    CBORObject packet;
+    packet.put("available", static_cast<uint64_t>(ESP.getFreeHeap()));
+    MQTTDevice::publishDevice("debug/mem", packet.build());
   }
 
  private:
   const TaskScheduler* mpScheduler;
   String mTopicTopAsk;
+  String mTopicMemAsk;
 };
 
 }  // namespace uniot
