@@ -20,6 +20,7 @@
 
 #include <Bytes.h>
 #include <CBORObject.h>
+#include <COSEMessage.h>
 #include <ClearQueue.h>
 #include <Common.h>
 #include <Date.h>
@@ -55,7 +56,8 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
     mPubSubClient.setCallback([this](char *topic, uint8_t *payload, unsigned int length) {
       mDevices.forEach([&](MQTTDevice *device) {
         if (device->isSubscribed(String(topic))) {
-          device->handle(topic, Bytes(payload, length));
+          auto payloadCOSE = _readCOSEMessage(Bytes(payload, length));
+          device->handle(topic, payloadCOSE);
         }
       });
     });
@@ -107,7 +109,7 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
       Serial.println(mConnectionId);
       CBORObject offlineCBOR;
       _prepareOfflinePacket(offlineCBOR);
-      auto offlinePacket = offlineCBOR.build();
+      auto offlinePacket = _buildCOSEMessage(offlineCBOR.build());
       auto password = _getUserPassword();
       if (mPubSubClient.connect(
               _getClientId().c_str(),
@@ -122,7 +124,7 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
               true)) {
         CBORObject onlineCBOR;
         _prepareOnlinePacket(onlineCBOR);
-        auto onlinePacket = onlineCBOR.build();
+        auto onlinePacket = _buildCOSEMessage(onlineCBOR.build());
         mPubSubClient.publish(
             mPath.buildDevicePath("status").c_str(),
             onlinePacket.raw(),
@@ -148,6 +150,20 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
   }
 
  private:
+  Bytes _buildCOSEMessage(const Bytes &payload, bool sign = false) {
+    auto obj = COSEMessage();
+    obj.setPayload(payload);
+    if (sign) {
+      obj.sign(*mpCredentials);
+    }
+    return obj.build();
+  }
+
+  Bytes _readCOSEMessage(const Bytes &message) {
+    auto obj = COSEMessage(message);
+    return obj.getPayload();
+  }
+
   void _prepareOnlinePacket(CBORObject &packet) {
     packet
         .put("online", 1)
@@ -167,7 +183,7 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
   }
 
   String _getClientId() {
-    return "device:" + mpCredentials->getDeviceId(); // TODO: owner
+    return "device:" + mpCredentials->getDeviceId();  // TODO: owner
   }
 
   String _getUserLogin() {

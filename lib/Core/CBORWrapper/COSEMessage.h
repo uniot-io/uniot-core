@@ -136,6 +136,14 @@ class COSEMessage {
     return mRoot._getBytes(mpSignature);
   }
 
+  inline bool isSigned() {
+    auto signature = getSignature();
+    auto pHeader = CBORObject(getProtectedHeader());
+    auto alg = pHeader.getInt(COSEHeaderLabel::Algorithm);
+
+    return alg != 0 && signature.size() > 0;
+  }
+
   bool setPayload(const Bytes &payload) {
     mRawPayload = payload;
     return cn_cbor_data_update(mpPayload, mRawPayload.raw(), mRawPayload.size());
