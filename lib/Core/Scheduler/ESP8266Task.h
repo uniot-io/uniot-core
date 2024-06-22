@@ -18,83 +18,73 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <stddef.h>
+#if defined(ESP8266)
 
-extern "C"
-{
+#include <stddef.h>
+#include <stdint.h>
+
+extern "C" {
 #include "c_types.h"
 #include "eagle_soc.h"
 #include "ets_sys.h"
 #include "osapi.h"
 }
 
-namespace uniot
-{
-extern "C"
-{
-  typedef struct _ETSTIMER_ ETSTimer;
+namespace uniot {
+extern "C" {
+typedef struct _ETSTIMER_ ETSTimer;
 }
 
-class Task
-{
-public:
+class Task {
+ public:
   using TaskCallback = void (*)(void);
   using TaskArgCallback = void (*)(void *);
   template <typename T>
-  using TaskTypeCallback = void (*)(T);
+  using TaskTypeCallback = void (*)(volatile T);
 
   Task()
       : mpTimer(nullptr) {}
 
-  virtual ~Task()
-  {
+  virtual ~Task() {
     detach();
   }
 
-  void attach(uint32_t ms, bool repeat, TaskCallback callback)
-  {
+  void attach(uint32_t ms, bool repeat, TaskCallback callback) {
     attach_arg(ms, repeat, reinterpret_cast<TaskArgCallback>(callback), 0);
   }
 
   template <typename T>
-  void attach(uint32_t ms, bool repeat, TaskTypeCallback<T> callback, T arg)
-  {
-    static_assert(sizeof(T) <= sizeof(uint32_t), "sizeof arg must be <= sizeof(uint32_t), i.e 4 bytes");
-    attach_arg(ms, repeat, reinterpret_cast<TaskArgCallback>(callback), (uint32_t)arg);
+  void attach(uint32_t ms, bool repeat, TaskTypeCallback<volatile T> callback, volatile T arg) {
+    static_assert(sizeof(volatile T) <= sizeof(uint32_t), "sizeof arg must be <= sizeof(uint32_t), i.e 4 bytes");
+    attach_arg(ms, repeat, reinterpret_cast<TaskArgCallback>(callback), reinterpret_cast<volatile void *>(arg));
   }
 
-  void detach()
-  {
-    if (mpTimer)
-    {
+  void detach() {
+    if (mpTimer) {
       os_timer_disarm(mpTimer);
       delete mpTimer;
       mpTimer = nullptr;
     }
   }
 
-  bool isAttached()
-  {
+  bool isAttached() {
     return mpTimer != nullptr;
   }
 
-private:
+ private:
   ETSTimer *mpTimer;
 
-  void attach_arg(uint32_t ms, bool repeat, TaskArgCallback callback, uint32_t arg)
-  {
-    if (mpTimer)
-    {
+  void attach_arg(uint32_t ms, bool repeat, TaskArgCallback callback, volatile void *arg) {
+    if (mpTimer) {
       os_timer_disarm(mpTimer);
-    }
-    else
-    {
+    } else {
       mpTimer = new ETSTimer;
     }
 
-    os_timer_setfn(mpTimer, reinterpret_cast<ETSTimerFunc *>(callback), reinterpret_cast<void *>(arg));
+    os_timer_setfn(mpTimer, reinterpret_cast<ETSTimerFunc *>(callback), const_cast<void*>(arg));
     os_timer_arm(mpTimer, ms, repeat);
   }
 };
-} // namespace uniot
+}  // namespace uniot
+
+#endif  // defined(ESP8266)

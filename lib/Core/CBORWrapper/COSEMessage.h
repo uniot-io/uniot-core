@@ -37,7 +37,8 @@ class COSEMessage {
       : mpProtectedHeader(nullptr),
         mpUnprotectedHeader(nullptr),
         mpPayload(nullptr),
-        mpSignature(nullptr) {
+        mpSignature(nullptr),
+        mReadSuccess(false) {
     _create();
   }
 
@@ -46,78 +47,21 @@ class COSEMessage {
         mpUnprotectedHeader(nullptr),
         mpPayload(nullptr),
         mpSignature(nullptr) {
-    read(buf);
+    mReadSuccess = _read(buf);
   }
 
   virtual ~COSEMessage() {
     _clean();
   }
 
-  void read(const Bytes &buf) {
-    mRoot.read(buf);
+  bool read(const Bytes &buf) {
+    _clean();
+    mReadSuccess = _read(buf);
+    return mReadSuccess;
+  }
 
-    if (mRoot.mErr.err != CN_CBOR_NO_ERROR) {
-      UNIOT_LOG_ERROR("read failed: %s", cn_cbor_error_str[mRoot.mErr.err]);
-      return;
-    }
-    if (mRoot.mpMapNode->type != CN_CBOR_TAG) {
-      UNIOT_LOG_ERROR("read failed: there is no tag");
-      return;
-    }
-    if (mRoot.mpMapNode->v.sint != COSETag::Sign1) {
-      UNIOT_LOG_ERROR("read failed: tag is not 18 (COSE_Sign1)");
-      return;
-    }
-    auto rootArray = mRoot.mpMapNode->first_child;
-    if (!rootArray) {
-      UNIOT_LOG_ERROR("read failed: root not found");
-      return;
-    }
-    if (rootArray->type != CN_CBOR_ARRAY) {
-      UNIOT_LOG_ERROR("read failed: root is not an array");
-      return;
-    }
-    auto protectedHeader = cn_cbor_index(rootArray, 0);
-    if (!protectedHeader) {
-      UNIOT_LOG_ERROR("read failed: protectedHeader not found");
-      return;
-    }
-    if (protectedHeader->type != CN_CBOR_BYTES) {
-      UNIOT_LOG_ERROR("read failed: protectedHeader is not bytes");
-      return;
-    }
-    auto unprotectedHeader = cn_cbor_index(rootArray, 1);
-    if (!unprotectedHeader) {
-      UNIOT_LOG_ERROR("read failed: unprotectedHeader not found");
-      return;
-    }
-    if (unprotectedHeader->type != CN_CBOR_MAP) {
-      UNIOT_LOG_ERROR("read failed: unprotectedHeader is not map");
-      return;
-    }
-    auto payload = cn_cbor_index(rootArray, 2);
-    if (!payload) {
-      UNIOT_LOG_ERROR("read failed: payload not found");
-      return;
-    }
-    if (payload->type != CN_CBOR_BYTES) {
-      UNIOT_LOG_ERROR("read failed: payload is not bytes");
-      return;
-    }
-    auto signature = cn_cbor_index(rootArray, 3);
-    if (!signature) {
-      UNIOT_LOG_ERROR("read failed: signature not found");
-      return;
-    }
-    if (signature->type != CN_CBOR_BYTES) {
-      UNIOT_LOG_ERROR("read failed: signature is not bytes");
-      return;
-    }
-
-    mpProtectedHeader = protectedHeader;
-    mpUnprotectedHeader = unprotectedHeader;
-    mpPayload = payload;
-    mpSignature = signature;
+  inline bool wasReadSuccessful() const {
+    return mReadSuccess;
   }
 
   inline Bytes getProtectedHeader() {
@@ -138,7 +82,7 @@ class COSEMessage {
 
   inline bool isSigned() {
     auto signature = getSignature();
-    auto pHeader = CBORObject(getProtectedHeader());
+    CBORObject pHeader(getProtectedHeader());
     auto alg = pHeader.getInt(COSEHeaderLabel::Algorithm);
 
     return alg != 0 && signature.size() > 0;
@@ -156,7 +100,7 @@ class COSEMessage {
       return;
     }
 
-    auto pHeader = CBORObject();
+    CBORObject pHeader;
     pHeader.put(COSEHeaderLabel::Algorithm, alg);
     _setProtectedHeader(pHeader);
 
@@ -166,7 +110,7 @@ class COSEMessage {
   }
 
   bool verify(const Bytes &publicKey) {
-    auto pHeader = CBORObject(getProtectedHeader());
+    CBORObject pHeader(getProtectedHeader());
     auto alg = pHeader.getInt(COSEHeaderLabel::Algorithm);
     if (alg != COSEAlgorithm::EdDSA) {
       UNIOT_LOG_ERROR("verify failed: alg '%d' is not supported", alg);
@@ -202,6 +146,75 @@ class COSEMessage {
     cn_cbor_array_append(root, mpPayload = cn_cbor_data_create(nullptr, 0, mRoot._errback()), mRoot._errback());
     cn_cbor_array_append(root, mpSignature = cn_cbor_data_create(nullptr, 0, mRoot._errback()), mRoot._errback());
     mRoot.mpMapNode = cn_cbor_tag_create(COSETag::Sign1, root, mRoot._errback());
+  }
+
+  bool _read(const Bytes &buf) {
+    mRoot.read(buf);
+
+    if (mRoot.mErr.err != CN_CBOR_NO_ERROR) {
+      UNIOT_LOG_ERROR("read failed: %s", cn_cbor_error_str[mRoot.mErr.err]);
+      return false;
+    }
+    if (mRoot.mpMapNode->type != CN_CBOR_TAG) {
+      UNIOT_LOG_ERROR("read failed: there is no tag");
+      return false;
+    }
+    if (mRoot.mpMapNode->v.sint != COSETag::Sign1) {
+      UNIOT_LOG_ERROR("read failed: tag is not 18 (COSE_Sign1)");
+      return false;
+    }
+    auto rootArray = mRoot.mpMapNode->first_child;
+    if (!rootArray) {
+      UNIOT_LOG_ERROR("read failed: root not found");
+      return false;
+    }
+    if (rootArray->type != CN_CBOR_ARRAY) {
+      UNIOT_LOG_ERROR("read failed: root is not an array");
+      return false;
+    }
+    auto protectedHeader = cn_cbor_index(rootArray, 0);
+    if (!protectedHeader) {
+      UNIOT_LOG_ERROR("read failed: protectedHeader not found");
+      return false;
+    }
+    if (protectedHeader->type != CN_CBOR_BYTES) {
+      UNIOT_LOG_ERROR("read failed: protectedHeader is not bytes");
+      return false;
+    }
+    auto unprotectedHeader = cn_cbor_index(rootArray, 1);
+    if (!unprotectedHeader) {
+      UNIOT_LOG_ERROR("read failed: unprotectedHeader not found");
+      return false;
+    }
+    if (unprotectedHeader->type != CN_CBOR_MAP) {
+      UNIOT_LOG_ERROR("read failed: unprotectedHeader is not map");
+      return false;
+    }
+    auto payload = cn_cbor_index(rootArray, 2);
+    if (!payload) {
+      UNIOT_LOG_ERROR("read failed: payload not found");
+      return false;
+    }
+    if (payload->type != CN_CBOR_BYTES) {
+      UNIOT_LOG_ERROR("read failed: payload is not bytes");
+      return false;
+    }
+    auto signature = cn_cbor_index(rootArray, 3);
+    if (!signature) {
+      UNIOT_LOG_ERROR("read failed: signature not found");
+      return false;
+    }
+    if (signature->type != CN_CBOR_BYTES) {
+      UNIOT_LOG_ERROR("read failed: signature is not bytes");
+      return false;
+    }
+
+    mpProtectedHeader = protectedHeader;
+    mpUnprotectedHeader = unprotectedHeader;
+    mpPayload = payload;
+    mpSignature = signature;
+
+    return true;
   }
 
   void _clean() {
@@ -250,5 +263,6 @@ class COSEMessage {
   Bytes mRawProtectedHeader;
   Bytes mRawPayload;
   Bytes mRawSignature;
+  bool mReadSuccess;
 };
 }  // namespace uniot

@@ -64,7 +64,7 @@ class TopDevice : public MQTTDevice {
       });
       auto idleMs = mpScheduler->getTotalElapsedMs() - tasksElapsedMs;
       packet.put("idle", idleMs);
-      packet.put("timestamp", Date::now());
+      packet.put("timestamp", static_cast<int64_t>(Date::now()));
       packet.put("uptime", static_cast<uint64_t>(millis()));
 
       MQTTDevice::publishDevice("debug/top", packet.build());

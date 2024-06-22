@@ -24,7 +24,13 @@
 #include <Ed25519.h>
 #include <ICOSESigner.h>
 #include <RNG.h>
-#include <user_interface.h>
+
+#if defined(ESP8266)
+  #include <user_interface.h>
+#elif defined(ESP32)
+  #include <esp_wifi.h>
+  #include <esp_system.h>
+#endif
 
 namespace uniot {
 class Credentials : public CBORStorage, public ICOSESigner {
@@ -78,7 +84,12 @@ class Credentials : public CBORStorage, public ICOSESigner {
   }
 
   uint32_t getShortDeviceId() const {
+#if defined(ESP8266)
     return ESP.getChipId();
+#elif defined(ESP32)
+    uint64_t mac = ESP.getEfuseMac();
+    return (uint32_t)(mac >> 32); // Use the higher 32 bits of the MAC as the Chip ID
+#endif
   }
 
   virtual Bytes sign(const Bytes &data) const override {
@@ -97,8 +108,11 @@ class Credentials : public CBORStorage, public ICOSESigner {
   String _calcDeviceId() {
     uint8_t mac[6];
     char macStr[13] = {0};
+#if defined(ESP8266)
     wifi_get_macaddr(STATION_IF, mac);
-
+#elif defined(ESP32)
+    esp_read_mac(mac, ESP_MAC_WIFI_STA);
+#endif
     for (uint8_t i = 0; i < 6; i++)
       sprintf(macStr + i * 2, "%02x", mac[i]);
 

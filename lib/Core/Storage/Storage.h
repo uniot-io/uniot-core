@@ -23,6 +23,7 @@
 #include <LittleFS.h>
 #define FileFS LittleFS
 #else
+#include <SPIFFS.h>
 #include <FS.h>
 #define FileFS SPIFFS
 #endif
@@ -34,12 +35,16 @@ namespace uniot {
 class Storage {
  public:
   Storage(const String &path) {
-    setPath(path);
+    setPath("/" + path);
 
     sInstancesCount++;
 
     if (!sMounted) {
+#if defined(ESP8266)
       sMounted = FileFS.begin();
+#elif defined(ESP32)
+      sMounted = FileFS.begin(true);
+#endif
       // By default, FileFS will automatically format the filesystem if one is not detected.
       // This means that you will lose all filesystem data even if other filesystem exists.
       UNIOT_LOG_WARN_IF(!sMounted, "Failed to mount the file system");
@@ -70,10 +75,12 @@ class Storage {
     file.write(mData.raw(), mData.size());
     file.close();
 
+#if defined(ESP8266)
 #if UNIOT_USE_LITTLEFS != 1
     // using SPIFFS.gc() can avoid or reduce issues where SPIFFS reports
     // free space but is unable to write additional data to a file
     UNIOT_LOG_DEBUG_IF(!FileFS.gc(), "SPIFFS gc failed. That's all right. Caller: %s", mPath.c_str());
+#endif
 #endif
 
     return true;

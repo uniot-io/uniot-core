@@ -96,6 +96,12 @@ void MQTTDevice::publishGroup(const String &groupId, const String &subTopic, con
   }
 }
 
+void MQTTDevice::publishEmptyDevice(const String &subTopic) {
+  if (mpKit) {
+    mpKit->client()->publish(mpKit->getPath().buildDevicePath(subTopic).c_str(), nullptr, 0, true);
+  }
+}
+
 bool MQTTDevice::isSubscribed(const String &topic) {
   mTopics.begin();
   while (!mTopics.isEnd()) {

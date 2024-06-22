@@ -77,7 +77,7 @@ private:
     if (!links->isEnd())
     {
       auto link = links->current();
-      UNIOT_LOG_DEBUG("record.access [%lu]", link);
+      // UNIOT_LOG_DEBUG("record.access [%lu]", link);
       if (LinkRegisterRecord::exists(link))
       {
         return static_cast<T *>(link);

@@ -68,7 +68,11 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
   void attach() override {
     mNetworkDevice.attach();
     mTaskLispButton->attach(100);
+#if defined(ESP8266)
     analogWriteRange(1023);
+#elif defined(ESP32)
+    analogWriteResolution(10);
+#endif
     mLispDevice.runStoredCode();
   }
 
@@ -108,7 +112,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
           getLisp().serializePrimitives(obj);
 
           // TODO: add uniot core version
-          info.put("timestamp", Date::now());
+          info.put("timestamp", static_cast<int64_t>(Date::now()));
           info.put("creator", mCredentials.getCreatorId().c_str());
           info.put("public_key", mCredentials.getPublicKey().c_str());
           info.put("mqtt_size", MQTT_MAX_PACKET_SIZE);
@@ -155,29 +159,28 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
       if (NetworkScheduler::CONNECTION == topic) {
         switch (msg) {
           case NetworkScheduler::SUCCESS:
-            Serial.print("AppKit Subscriber, ip: ");
-            Serial.println(WiFi.localIP());
+            UNIOT_LOG_DEBUG("AppKit Subscriber, SUCCESS, ip: %s", WiFi.localIP().toString().c_str());
             mTaskMQTT->attach(10);
             mMQTT.renewSubscriptions();
             break;
           case NetworkScheduler::ACCESS_POINT:
-            Serial.println("AppKit Subscriber, ACCESS_POINT ");
+            UNIOT_LOG_DEBUG("AppKit Subscriber, ACCESS_POINT");
             mTaskMQTT->detach();
             break;
 
           case NetworkScheduler::CONNECTING:
-            Serial.println("AppKit Subscriber, CONNECTING ");
+            UNIOT_LOG_DEBUG("AppKit Subscriber, CONNECTING");
             mTaskMQTT->detach();
             break;
 
           case NetworkScheduler::DISCONNECTED:
-            Serial.println("AppKit Subscriber, DISCONNECTED ");
+            UNIOT_LOG_DEBUG("AppKit Subscriber, DISCONNECTED");
             mTaskMQTT->detach();
             break;
 
           case NetworkScheduler::FAILED:
           default:
-            Serial.println("AppKit Subscriber, FAILED ");
+            UNIOT_LOG_DEBUG("AppKit Subscriber, FAILED");
             mTaskMQTT->detach();
             break;
         }
@@ -189,7 +192,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
         mpLispEventListener->receiveDataFromChannel(unLisp::Channel::OUT_EVENT, [this](unsigned int id, bool empty, Bytes data) {
           if (!empty) {
             auto event = CBORObject(data);
-            event.put("timestamp", Date::now())
+            event.put("timestamp", static_cast<int64_t>(Date::now()))
                 .putMap("sender")
                 .put("type", "device")
                 .put("id", mCredentials.getDeviceId().c_str());

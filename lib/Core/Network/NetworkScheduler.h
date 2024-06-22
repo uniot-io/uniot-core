@@ -18,7 +18,11 @@
 
 #pragma once
 
-#include <ESP8266WiFi.h>
+#if defined(ESP8266)
+    #include "ESP8266WiFi.h"
+#elif defined(ESP32)
+    #include "WiFi.h"
+#endif
 
 #include <Common.h>
 #include <Credentials.h>
@@ -140,7 +144,7 @@ namespace uniot {
           mTaskStart->attach(500, 1);
           emitEvent(Topic::CONNECTION, Msg::ACCESS_POINT);
         } else {
-          Serial.println("DEBUG: NetworkScheduler, mTaskConfigAp failed");
+          UNIOT_LOG_WARN("NetworkScheduler, mTaskConfigAp failed");
           mTaskConfigAp->attach(500, 1);
         }
       });
@@ -152,7 +156,7 @@ namespace uniot {
         if (disconect && connect)
         {
           mTaskServe->detach();
-          mTaskConnecting->attach(500, 20);
+          mTaskConnecting->attach(100, 100);
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::CONNECTING);
         }
       });
@@ -227,7 +231,7 @@ namespace uniot {
             networks += ',';
         }
         networks += ']';
-        Serial.println(networks);
+        UNIOT_LOG_DEBUG("Networks: %s", networks.c_str());
         mpConfigServer.get()->send(200, text, networks);
       });
 
