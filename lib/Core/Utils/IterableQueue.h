@@ -20,37 +20,36 @@
 
 #include "ClearQueue.h"
 
-template<typename T>
-class IterableQueue: public ClearQueue<T>
-{
-public:
-  void begin();
-  bool isEnd();
-  T next();
-  T current();
+template <typename T>
+class IterableQueue : public ClearQueue<T> {
+ public:
+  void begin() const;
+  bool isEnd() const;
+  const T& next() const;
+  const T& current() const;
 
-protected:
-  typename ClearQueue<T>::pnode mCurrent;
+ protected:
+  mutable typename ClearQueue<T>::pnode mCurrent;
 };
 
-template<typename T>
-void IterableQueue<T>::begin() {
+template <typename T>
+void IterableQueue<T>::begin() const {
   mCurrent = ClearQueue<T>::mHead;
 }
 
-template<typename T>
-bool IterableQueue<T>::isEnd() {
+template <typename T>
+bool IterableQueue<T>::isEnd() const {
   return !mCurrent;
 }
 
-template<typename T>
-T IterableQueue<T>::next() {
+template <typename T>
+const T& IterableQueue<T>::next() const {
   auto prevCurrent = mCurrent;
   mCurrent = mCurrent->next;
   return prevCurrent->value;
 }
 
-template<typename T>
-T IterableQueue<T>::current() {
+template <typename T>
+const T& IterableQueue<T>::current() const {
   return mCurrent->value;
 }

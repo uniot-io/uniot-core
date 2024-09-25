@@ -33,6 +33,7 @@
       "-I lib/Core/CBORWrapper",
       "-I lib/Core/LispWrapper",
       "-I lib/Core/MQTTWrapper",
+      "-I lib/Core/Register",
       "-I lib/Core/Hardware",
       "-I lib/Core/Date"
     ],
@@ -52,6 +53,7 @@
       "+<lib/Core/CBORWrapper/*>",
       "+<lib/Core/LispWrapper/*>",
       "+<lib/Core/MQTTWrapper/*>",
+      "+<lib/Core/Register/*>",
       "+<lib/Core/Hardware/*>",
       "+<lib/Core/Date/*>"
     ]

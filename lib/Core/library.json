@@ -9,6 +9,7 @@
             "-I CBORWrapper",
             "-I LispWrapper",
             "-I MQTTWrapper",
+            "-I Register",
             "-I Hardware",
             "-I Date"
         ],
@@ -22,6 +23,7 @@
             "+<CBORWrapper/*>",
             "+<LispWrapper/*>",
             "+<MQTTWrapper/*>",
+            "+<Register/*>",
             "+<Hardware/*>",
             "+<Date/*>"
         ]
