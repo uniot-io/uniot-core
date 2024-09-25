@@ -111,6 +111,9 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
           auto obj = info.putMap("primitives_2");
           getLisp().serializePrimitives(obj);
 
+          auto registers = info.putMap("misc").putMap("registers");
+          PrimitiveExpeditor::getRegisterManager().serializeRegisters(registers);
+
           // TODO: add uniot core version
           info.put("timestamp", static_cast<int64_t>(Date::now()));
           info.put("creator", mCredentials.getCreatorId().c_str());
@@ -145,13 +148,13 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
   }
 
   void _initPrimitives() {
-    getLisp().pushPrimitive(uniot::primitive::dwrite);
-    getLisp().pushPrimitive(uniot::primitive::dread);
-    getLisp().pushPrimitive(uniot::primitive::awrite);
-    getLisp().pushPrimitive(uniot::primitive::aread);
-    getLisp().pushPrimitive(uniot::primitive::bclicked);
+    getLisp().pushPrimitive(primitive::dwrite);
+    getLisp().pushPrimitive(primitive::dread);
+    getLisp().pushPrimitive(primitive::awrite);
+    getLisp().pushPrimitive(primitive::aread);
+    getLisp().pushPrimitive(primitive::bclicked);
 
-    PrimitiveExpeditor::getGlobalRegister().link("bclicked", &mLispButton);
+    PrimitiveExpeditor::getRegisterManager().link(primitive::name::bclicked, &mLispButton, FOURCC(lisp));
   }
 
   void _initSubscribers() {

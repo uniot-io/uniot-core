@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2024 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,33 +20,43 @@
 
 #include <ClearQueue.h>
 #include <Logger.h>
+#include <TypeId.h>
 
-namespace uniot
-{
+namespace uniot {
 
-class LinkRegisterRecord
-{
-public:
-  LinkRegisterRecord()
-  {
+class ObjectRegisterRecord {
+ public:
+  ObjectRegisterRecord(const ObjectRegisterRecord &) = delete;
+  void operator=(const ObjectRegisterRecord &) = delete;
+
+  ObjectRegisterRecord() {
     auto success = sRegisteredLinks.pushUnique(this);
     UNIOT_LOG_DEBUG("record.push [%lu][%d]", this, success);
   }
 
-  virtual ~LinkRegisterRecord()
-  {
+  virtual ~ObjectRegisterRecord() {
     auto success = sRegisteredLinks.removeOne(this);
     UNIOT_LOG_DEBUG("record.remove [%lu][%d]", this, success);
   }
 
-  static bool exists(LinkRegisterRecord * record)
-  {
+  static bool exists(ObjectRegisterRecord *record) {
     return sRegisteredLinks.contains(record);
   }
 
-private:
-  static ClearQueue<LinkRegisterRecord *> sRegisteredLinks;
+  virtual TypeId getTypeId() const = 0;
+
+  template <typename T>
+  T *safeCast() {
+    if (this->getTypeId() == GetTypeId<T>()) {
+      return static_cast<T *>(this);
+    }
+    UNIOT_LOG_DEBUG("cast failed [%lu]", this);
+    return nullptr;
+  }
+
+ private:
+  static ClearQueue<ObjectRegisterRecord *> sRegisteredLinks;
 };
 
-ClearQueue<LinkRegisterRecord *> LinkRegisterRecord::sRegisteredLinks;
-} // namespace uniot
+ClearQueue<ObjectRegisterRecord *> ObjectRegisterRecord::sRegisteredLinks;
+}  // namespace uniot

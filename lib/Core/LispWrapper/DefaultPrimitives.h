@@ -18,38 +18,12 @@
 
 #pragma once
 
-#include "ClearQueue.h"
+namespace uniot::primitive::name {
 
-template <typename T>
-class IterableQueue : public ClearQueue<T> {
- public:
-  void begin() const;
-  bool isEnd() const;
-  const T& next() const;
-  const T& current() const;
+constexpr const char* dwrite = "dwrite";
+constexpr const char* dread = "dread";
+constexpr const char* awrite = "awrite";
+constexpr const char* aread = "aread";
+constexpr const char* bclicked = "bclicked";
 
- protected:
-  mutable typename ClearQueue<T>::pnode mCurrent;
-};
-
-template <typename T>
-void IterableQueue<T>::begin() const {
-  mCurrent = ClearQueue<T>::mHead;
-}
-
-template <typename T>
-bool IterableQueue<T>::isEnd() const {
-  return !mCurrent;
-}
-
-template <typename T>
-const T& IterableQueue<T>::next() const {
-  auto prevCurrent = mCurrent;
-  mCurrent = mCurrent->next;
-  return prevCurrent->value;
-}
-
-template <typename T>
-const T& IterableQueue<T>::current() const {
-  return mCurrent->value;
-}
+}  // namespace uniot::primitive::name

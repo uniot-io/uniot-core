@@ -19,11 +19,11 @@
 #pragma once
 
 #include <IExecutor.h>
-#include <LinkRegisterRecord.h>
+#include <ObjectRegisterRecord.h>
 #include <TaskScheduler.h>
 
 namespace uniot {
-class Button : public IExecutor, public LinkRegisterRecord {
+class Button : public IExecutor, public ObjectRegisterRecord {
  public:
   enum Event {
     CLICK,
@@ -31,7 +31,7 @@ class Button : public IExecutor, public LinkRegisterRecord {
   };
   using ButtonCallback = std::function<void(Button *, Event)>;
   Button(uint8_t pin, uint8_t activeLevel, uint8_t longPressTicks, ButtonCallback commonCallback = nullptr, uint8_t autoResetTicks = 100)
-      : LinkRegisterRecord(),
+      : ObjectRegisterRecord(),
         mPin(pin),
         mActiveLevel(activeLevel),
         mLongPressTicks(longPressTicks),
@@ -81,6 +81,10 @@ class Button : public IExecutor, public LinkRegisterRecord {
     }
 
     return 0;
+  }
+
+  virtual TypeId getTypeId() const override {
+    return GetTypeId<Button>();
   }
 
  protected:

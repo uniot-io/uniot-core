@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2024 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,39 +18,31 @@
 
 #pragma once
 
-#include <LinksRegister.h>
+#include "RegisterManager.h"
 
-namespace uniot
-{
+namespace uniot {
 
-class LinksRegisterProxy
-{
-public:
-  LinksRegisterProxy(const String &name, LinksRegister *reg)
-      : mName(name), mpRegister(reg)
-  {
+class RegisterManagerProxy {
+ public:
+  RegisterManagerProxy(const RegisterManagerProxy &) = delete;
+  void operator=(const RegisterManagerProxy &) = delete;
+
+  RegisterManagerProxy(const String &name, RegisterManager *reg)
+      : mName(name), mpRegister(reg) {
   }
 
-  bool link(LinksRegister::RecordPtr link)
-  {
-    return mpRegister->link(mName, link);
-  }
-
-  template <typename T>
-  T *first()
-  {
-    return mpRegister->first<T>(mName);
+  bool getGpio(size_t index, uint8_t &outValue) const {
+    return mpRegister->getGpio(mName, index, outValue);
   }
 
   template <typename T>
-  T *next()
-  {
-    return mpRegister->next<T>(mName);
+  T *getObject(size_t index) {
+    return mpRegister->getObject<T>(mName, index);
   }
 
-private:
+ private:
   String mName;
-  LinksRegister *mpRegister;
+  RegisterManager *mpRegister;
 };
 
-} // namespace uniot
+}  // namespace uniot

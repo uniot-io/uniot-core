@@ -20,15 +20,6 @@
 
 #include <libminilisp.h>
 
-#define inlinePrimitive(name, expiditor, body)            \
-  #name, [](Root root, VarObject env, VarObject list) {   \
-    PrimitiveExpeditor expiditor(#name, root, env, list); \
-    {                                                     \
-      body                                                \
-    }                                                     \
-    return expiditor.makeBool(false);                     \
-  }
-
 #define getPrimitiveName() (__func__)
 
 #define exportPrimitiveNameTo(name) \
@@ -75,25 +66,24 @@ class Lisp {
 
   static inline Lisp::Type getType(lisp::Object obj) {
     if (obj == nullptr) {
-        return Lisp::Unknown;
+      return Lisp::Unknown;
     }
 
     switch (obj->type) {
-        case TINT:
-            return Lisp::Int;
-        case TNIL:
-            return Lisp::Bool;
-        case TTRUE:
-            return Lisp::Bool;
-        case TSYMBOL:
-            return Lisp::Symbol;
-        case TCELL:
-            return Lisp::Cell;
-        default:
-            return Lisp::Unknown;
+      case TINT:
+        return Lisp::Int;
+      case TNIL:
+        return Lisp::Bool;
+      case TTRUE:
+        return Lisp::Bool;
+      case TSYMBOL:
+        return Lisp::Symbol;
+      case TCELL:
+        return Lisp::Cell;
+      default:
+        return Lisp::Unknown;
     }
-}
-
+  }
 };
 
 }  // namespace uniot
