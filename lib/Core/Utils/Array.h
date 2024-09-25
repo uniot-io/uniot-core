@@ -62,7 +62,7 @@ class Array {
       }
 
       if constexpr (std::is_trivially_copyable<T>::value) {
-        std::memcpy(reinterpret_cast<void*>(mData), values, sizeof(T) * size);
+        memcpy(reinterpret_cast<void*>(mData), values, sizeof(T) * size);
       } else {
         for (size_t i = 0; i < size; ++i) {
           mData[i] = values[i];
