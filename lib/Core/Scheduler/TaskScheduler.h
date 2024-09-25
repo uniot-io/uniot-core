@@ -19,9 +19,9 @@
 #pragma once
 
 #if defined(ESP8266)
-    #include "ESP8266Task.h"
+#include "ESP8266Task.h"
 #elif defined(ESP32)
-    #include "ESP32Task.h"
+#include "ESP32Task.h"
 #endif
 
 #include <ClearQueue.h>
