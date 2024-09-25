@@ -22,7 +22,6 @@
 #include <TaskScheduler.h>
 #include <EventBus.h>
 #include <Credentials.h>
-#include <PinMap.h>
 #include <Logger.h>
 
 extern "C" {

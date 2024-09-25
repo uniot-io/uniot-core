@@ -29,7 +29,6 @@
 #include <Logger.h>
 #include <MQTTKit.h>
 #include <NetworkDevice.h>
-#include <PinMap.h>
 #include <TopDevice.h>
 #include <unLisp.h>
 
@@ -120,10 +119,6 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
           info.put("public_key", mCredentials.getPublicKey().c_str());
           info.put("mqtt_size", MQTT_MAX_PACKET_SIZE);
           info.put("debug", UNIOT_LOG_ENABLED);
-          info.put("d_in", UniotPinMap.getDigitalInputLength());
-          info.put("d_out", UniotPinMap.getDigitalOutputLength());
-          info.put("a_in", UniotPinMap.getAnalogInputLength());
-          info.put("a_out", UniotPinMap.getAnalogOutputLength());
         }),
         mLispButton(pinBtn, activeLevelBtn, 30),
         mNetworkDevice(mCredentials, pinBtn, activeLevelBtn, pinLed) {

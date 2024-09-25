@@ -61,8 +61,17 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
     mPubSubClient.setCallback([this](char *topic, uint8_t *payload, unsigned int length) {
       mDevices.forEach([&](MQTTDevice *device) {
         if (device->isSubscribed(String(topic))) {
-          auto decoded = _readCOSEMessage(Bytes(payload, length));
-          device->handle(topic, decoded);
+          if (!length) {
+            device->handle(topic, Bytes());
+            return;
+          }
+
+          Bytes decoded;
+          if (_readCOSEMessage(Bytes(payload, length), decoded)) {
+            device->handle(topic, decoded);
+          } else {
+            UNIOT_LOG_ERROR("Failed to decode message on topic: %s", topic);
+          }
         }
       });
     });
@@ -163,13 +172,13 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
     return obj.build();
   }
 
-  Bytes _readCOSEMessage(const Bytes &message) {
+  bool _readCOSEMessage(const Bytes &message, Bytes &outPayload) {
     COSEMessage obj(message);
     if (obj.wasReadSuccessful()) {
-      return obj.getPayload();
-    } else {
-      return message;
+      outPayload = obj.getPayload();
+      return true;
     }
+    return false;
   }
 
   void _prepareOnlinePacket(CBORObject &packet) {
