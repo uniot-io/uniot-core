@@ -25,18 +25,22 @@
 
 #include <memory>
 
-#ifndef UNIOT_DANGEROUS_CBOR_DATA_SIZE
-#define UNIOT_DANGEROUS_CBOR_DATA_SIZE 256
-#endif
-
 namespace uniot {
 class CBORObject {
   friend class COSEMessage;
 
  public:
   class Array;
-  CBORObject(CBORObject const &) = delete;
-  void operator=(CBORObject const &) = delete;
+
+  CBORObject(const CBORObject &) : mDirty(false) {
+    _create();
+    UNIOT_LOG_WARN("Copy constructor is not implemented!");
+  }
+
+  CBORObject &operator=(const CBORObject &) {
+    UNIOT_LOG_WARN("Copy assignment operator is not implemented!");
+    return *this;
+  }
 
   CBORObject(Bytes buf)
       : mpParentObject(nullptr),
@@ -286,8 +290,18 @@ class CBORObject {
     friend class CBORObject;
 
    public:
-    Array(Array const &) = delete;
-    void operator=(Array const &) = delete;
+    Array(const Array &other)
+        : mpContext(other.mpContext),
+          mpArrayNode(other.mpArrayNode) {
+    }
+
+    Array &operator=(const Array &other) {
+      if (this != &other) {
+        mpContext = other.mpContext;
+        mpArrayNode = other.mpArrayNode;
+      }
+      return *this;
+    }
 
     ~Array() {
       mpContext = nullptr;
@@ -378,8 +392,6 @@ class CBORObject {
 
   Bytes _build(cn_cbor *cb, bool visitSiblings = true) const {
     auto calculated = cn_cbor_encoder_write(NULL, 0, 0, cb, visitSiblings);
-    UNIOT_LOG_WARN_IF(calculated > UNIOT_DANGEROUS_CBOR_DATA_SIZE, "dangerous data size: %d", calculated);
-
     Bytes bytes(nullptr, calculated);
     auto written = bytes.fill([&](uint8_t *buf, size_t size) {
       auto actual = cn_cbor_encoder_write(buf, 0, size, cb, visitSiblings);
@@ -495,10 +507,10 @@ class CBORObject {
     return &mErr;
   }
 
+  Bytes mBuf;
   CBORObject *mpParentObject;
   cn_cbor *mpMapNode;
   cn_cbor_errback mErr;
   bool mDirty;
-  Bytes mBuf;
 };
 }  // namespace uniot

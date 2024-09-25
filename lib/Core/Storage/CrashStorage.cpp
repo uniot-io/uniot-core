@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if defined(ESP8266)
 #include <user_interface.h>
 #include <Logger.h>
 #include "CrashStorage.h"
@@ -100,3 +101,5 @@ Bytes CrashStorage::buildDumpData() const
   return dumpData;
 }
 } // namespace uniot
+
+#endif // defined(ESP8266)

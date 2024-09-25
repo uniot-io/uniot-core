@@ -15,13 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #pragma once
 
-#include <CBORStorage.h>
-#include <ESP8266WiFi.h>
-#include <TaskScheduler.h>
+#if defined(ESP8266)
 #include <coredecls.h>
+
+#include "ESP8266WiFi.h"
+#elif defined(ESP32)
+#include "WiFi.h"
+#endif
+
+#include <CBORStorage.h>
+#include <TaskScheduler.h>
 #include <time.h>
 
 namespace uniot {
@@ -44,14 +49,19 @@ class Date : public IExecutor, public CBORStorage {
   }
 
   bool store() override {
-    CBORStorage::object().put("epoch", this->_now());
+    CBORStorage::object().put("epoch", static_cast<int64_t>(this->_now()));
     return CBORStorage::store();
   }
 
   bool restore() override {
     if (CBORStorage::restore()) {
       auto currentEpoc = CBORStorage::object().getInt("epoch");
+#if defined(ESP8266)
       tune_timeshift64(currentEpoc * 1000000ULL);
+#elif defined(ESP32)
+      timeval tv = {currentEpoc, 0};
+      settimeofday(&tv, nullptr);
+#endif
       return true;
     }
     UNIOT_LOG_ERROR("%s", "epoch not restored");
@@ -67,9 +77,11 @@ class Date : public IExecutor, public CBORStorage {
 
  private:
   Date() : CBORStorage("date.cbor") {
+#if defined(ESP8266)
     settimeofday_cb([this](bool from_sntp) {
       UNIOT_LOG_INFO("Time is set from %s", from_sntp ? "SNTP" : "RTC");
     });
+#endif
     configTime(0, 0, "pool.ntp.org", "time.google.com", "time.nist.gov");
 
     this->restore();

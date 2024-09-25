@@ -18,6 +18,8 @@
 
 #pragma once
 
+
+#if defined (ESP8266)
 #include <user_interface.h>
 #include <Storage.h>
 
@@ -60,3 +62,5 @@ private:
   }
 };
 } // namespace uniot
+
+#endif // defined(ESP8266)

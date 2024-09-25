@@ -79,7 +79,7 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
 
             CBORObject packet;
             packet.put("type", "error");
-            packet.put("timestamp", Date::now());
+            packet.put("timestamp", static_cast<int64_t>(Date::now()));
             packet.put("msg", data.c_str());
             publishDevice("debug/err", packet.build(), true);
             UNIOT_LOG_ERROR("lisp error: %s", data.c_str());
@@ -92,7 +92,7 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
           if (!empty) {
             CBORObject packet;
             packet.put("type", "log");
-            packet.put("timestamp", Date::now());
+            packet.put("timestamp", static_cast<int64_t>(Date::now()));
             packet.put("msg", data.c_str());
             publishDevice("debug/log", packet.build());
             UNIOT_LOG_INFO("lisp log: %s", data.c_str());
@@ -122,6 +122,7 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
 
   virtual void handle(const String &topic, const Bytes &payload) override {
     if (MQTTDevice::isTopicMatch(mTopicScript, topic)) {
+      MQTTDevice::publishEmptyDevice("debug/err"); // clear previous errors
       handleScript(payload);
       return;
     }
@@ -133,7 +134,7 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
 
   void handleScript(const Bytes &payload) {
     static bool firstPacketReceived = false;
-    auto packet = CBORObject(payload);
+    CBORObject packet(payload);
     auto script = Bytes(packet.getString("code"));
     auto newPersist = packet.getBool("persist");
     auto newChecksum = script.terminate().checksum();

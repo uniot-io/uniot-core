@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2024 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,12 @@
 
 #pragma once
 
-#include <Arduino.h>
-#include <TaskScheduler.h>
-#include <EventBus.h>
-#include <Credentials.h>
-#include <Logger.h>
+namespace uniot::primitive::name {
 
-extern "C" {
-  void inject(void);
-}
+constexpr const char* dwrite = "dwrite";
+constexpr const char* dread = "dread";
+constexpr const char* awrite = "awrite";
+constexpr const char* aread = "aread";
+constexpr const char* bclicked = "bclicked";
 
-extern uniot::TaskScheduler MainScheduler;
-extern uniot::CoreEventBus MainEventBus;
+}  // namespace uniot::primitive::name

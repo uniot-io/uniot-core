@@ -203,7 +203,7 @@ class unLisp : public CoreEventListener {
         _destroyMachine();
       }
 
-      UNIOT_LOG_DEBUG("lisp machine running, mem used: %d", lisp_mem_used());
+      // UNIOT_LOG_DEBUG("lisp machine running, mem used: %d", lisp_mem_used());
     });
   }
 
@@ -248,7 +248,7 @@ class unLisp : public CoreEventListener {
   void _pushIncomingEvent(const Bytes &eventData) {
     constexpr size_t EVENTS_LIMIT = 5;
 
-    auto event = CBORObject(eventData);
+    CBORObject event(eventData);
     auto eventID = event.getString("eventID");
     auto value = event.getValueAsString("value");  // NOTE: this is only used here to verify the correctness of the event
 
@@ -273,7 +273,7 @@ class unLisp : public CoreEventListener {
   }
 
   bool _pushOutgoingEvent(String eventID, int value) {
-    auto event = CBORObject();
+    CBORObject event;
     event.put("eventID", eventID.c_str());
     event.put("value", value);
 
@@ -318,7 +318,7 @@ class unLisp : public CoreEventListener {
 
     auto eventId = expeditor.getArgSymbol(0);
     auto eventData = _popIncomingEvent(eventId);
-    auto event = CBORObject(eventData);
+    CBORObject event(eventData);
     auto value = event.getValueAsString("value");
 
     auto number = value.toInt();

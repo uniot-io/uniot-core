@@ -46,14 +46,14 @@ public:
     return &mWifiArgs;
   }
 
-  bool store() override
+  virtual bool store() override
   {
     object().put("ssid", mWifiArgs.ssid.c_str());
     object().put("pass", mWifiArgs.pass.c_str());
     return CBORStorage::store();
   }
 
-  bool restore() override
+  virtual bool restore() override
   {
     if (CBORStorage::restore())
     {
@@ -64,7 +64,7 @@ public:
     return false;
   }
 
-  bool clean() override
+  virtual bool clean() override
   {
     mWifiArgs.ssid = "";
     mWifiArgs.pass = "";

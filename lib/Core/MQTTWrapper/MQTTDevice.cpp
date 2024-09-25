@@ -77,21 +77,28 @@ String MQTTDevice::subscribeGroup(const String &groupId, const String &subTopic)
   return {};
 }
 
-void MQTTDevice::publish(const String &topic, const Bytes &payload, bool retained) {
+void MQTTDevice::publish(const String &topic, const Bytes &payload, bool retained, bool sign) {
   if (mpKit) {
-    mpKit->client()->publish(topic.c_str(), payload.raw(), payload.size(), retained);
+    auto msg = mpKit->_buildCOSEMessage(payload, sign);
+    mpKit->client()->publish(topic.c_str(), msg.raw(), msg.size(), retained);
   }
 }
 
-void MQTTDevice::publishDevice(const String &subTopic, const Bytes &payload, bool retained) {
+void MQTTDevice::publishDevice(const String &subTopic, const Bytes &payload, bool retained, bool sign) {
   if (mpKit) {
-    publish(mpKit->getPath().buildDevicePath(subTopic), payload, retained);
+    publish(mpKit->getPath().buildDevicePath(subTopic), payload, retained, sign);
   }
 }
 
-void MQTTDevice::publishGroup(const String &groupId, const String &subTopic, const Bytes &payload, bool retained) {
+void MQTTDevice::publishGroup(const String &groupId, const String &subTopic, const Bytes &payload, bool retained, bool sign) {
   if (mpKit) {
-    publish(mpKit->getPath().buildGroupPath(groupId, subTopic), payload, retained);
+    publish(mpKit->getPath().buildGroupPath(groupId, subTopic), payload, retained, sign);
+  }
+}
+
+void MQTTDevice::publishEmptyDevice(const String &subTopic) {
+  if (mpKit) {
+    mpKit->client()->publish(mpKit->getPath().buildDevicePath(subTopic).c_str(), nullptr, 0, true);
   }
 }
 

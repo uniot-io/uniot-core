@@ -18,12 +18,18 @@
 
 #pragma once
 
+#if defined(ESP8266)
+#include "ESP8266WiFi.h"
+#elif defined(ESP32)
+#include "WiFi.h"
+#endif
+
 #include <Bytes.h>
 #include <CBORObject.h>
+#include <COSEMessage.h>
 #include <ClearQueue.h>
 #include <Common.h>
 #include <Date.h>
-#include <ESP8266WiFi.h>
 #include <EventEmitter.h>
 #include <IExecutor.h>
 #include <PubSubClient.h>
@@ -55,7 +61,17 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
     mPubSubClient.setCallback([this](char *topic, uint8_t *payload, unsigned int length) {
       mDevices.forEach([&](MQTTDevice *device) {
         if (device->isSubscribed(String(topic))) {
-          device->handle(topic, Bytes(payload, length));
+          if (!length) {
+            device->handle(topic, Bytes());
+            return;
+          }
+
+          Bytes decoded;
+          if (_readCOSEMessage(Bytes(payload, length), decoded)) {
+            device->handle(topic, decoded);
+          } else {
+            UNIOT_LOG_ERROR("Failed to decode message on topic: %s", topic);
+          }
         }
       });
     });
@@ -103,11 +119,10 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
 
   virtual uint8_t execute() override {
     if (!mPubSubClient.connected()) {
-      Serial.print("Attempting MQTT connection...    ");
-      Serial.println(mConnectionId);
+      UNIOT_LOG_DEBUG("Attempting MQTT connection #%d...", mConnectionId);
       CBORObject offlineCBOR;
       _prepareOfflinePacket(offlineCBOR);
-      auto offlinePacket = offlineCBOR.build();
+      auto offlinePacket = _buildCOSEMessage(offlineCBOR.build());
       auto password = _getUserPassword();
       if (mPubSubClient.connect(
               _getClientId().c_str(),
@@ -122,7 +137,7 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
               true)) {
         CBORObject onlineCBOR;
         _prepareOnlinePacket(onlineCBOR);
-        auto onlinePacket = onlineCBOR.build();
+        auto onlinePacket = _buildCOSEMessage(onlineCBOR.build());
         mPubSubClient.publish(
             mPath.buildDevicePath("status").c_str(),
             onlinePacket.raw(),
@@ -148,6 +163,24 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
   }
 
  private:
+  Bytes _buildCOSEMessage(const Bytes &payload, bool sign = false) {
+    COSEMessage obj;
+    obj.setPayload(payload);
+    if (sign) {
+      obj.sign(*mpCredentials);
+    }
+    return obj.build();
+  }
+
+  bool _readCOSEMessage(const Bytes &message, Bytes &outPayload) {
+    COSEMessage obj(message);
+    if (obj.wasReadSuccessful()) {
+      outPayload = obj.getPayload();
+      return true;
+    }
+    return false;
+  }
+
   void _prepareOnlinePacket(CBORObject &packet) {
     packet
         .put("online", 1)
@@ -167,7 +200,7 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
   }
 
   String _getClientId() {
-    return "device:" + mpCredentials->getDeviceId(); // TODO: owner
+    return "device:" + mpCredentials->getDeviceId();  // TODO: owner
   }
 
   String _getUserLogin() {
@@ -180,7 +213,7 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
     protectedData.put("device", mpCredentials->getDeviceId().c_str());
     protectedData.put("owner", mpCredentials->getOwnerId().c_str());
     protectedData.put("creator", mpCredentials->getCreatorId().c_str());
-    protectedData.put("timestamp", Date::now());
+    protectedData.put("timestamp", static_cast<int64_t>(Date::now()));
     auto unprotectedData = password.putMap("unprotected");
     unprotectedData.put("alg", "EdDSA");
 

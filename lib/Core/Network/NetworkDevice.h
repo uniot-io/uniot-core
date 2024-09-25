@@ -107,8 +107,7 @@ class NetworkDevice : public ICoreEventBusConnectionKit, public ISchedulerConnec
     });
     mpTaskConfigBtn = TaskScheduler::make(mConfigBtn);
     mpTaskResetClickCounter = TaskScheduler::make([&](SchedulerTask &self, short t) {
-      Serial.print("ClickCounter = ");
-      Serial.println(mClickCounter);
+      UNIOT_LOG_DEBUG("ClickCounter = %d", mClickCounter);
       mClickCounter = 0;
     });
   }
@@ -125,29 +124,28 @@ class NetworkDevice : public ICoreEventBusConnectionKit, public ISchedulerConnec
         int lastState = _resetNetworkLastState(msg);
         switch (msg) {
           case NetworkScheduler::ACCESS_POINT:
-            Serial.println("NetworkDevice Subscriber, ACCESS_POINT ");
+            UNIOT_LOG_DEBUG("NetworkDevice Subscriber, ACCESS_POINT");
             if (lastState != NetworkScheduler::FAILED)
               statusWaiting();
             break;
 
           case NetworkScheduler::SUCCESS:
-            Serial.print("NetworkDevice Subscriber, ip: ");
-            Serial.println(WiFi.localIP());
+            UNIOT_LOG_DEBUG("NetworkDevice Subscriber, SUCCESS, ip: %s", WiFi.localIP().toString().c_str());
             statusIdle();
             break;
 
           case NetworkScheduler::CONNECTING:
-            Serial.println("NetworkDevice Subscriber, CONNECTING ");
+            UNIOT_LOG_DEBUG("NetworkDevice Subscriber, CONNECTING");
             statusBusy();
             break;
 
           case NetworkScheduler::DISCONNECTED:
-            Serial.println("NetworkDevice Subscriber, DISCONNECTED ");
+            UNIOT_LOG_DEBUG("NetworkDevice Subscriber, DISCONNECTED");
             mNetwork.reconnect();
             break;
 
           case NetworkScheduler::FAILED:
-            Serial.println("NetworkDevice Subscriber, FAILED ");
+            UNIOT_LOG_DEBUG("NetworkDevice Subscriber, FAILED");
           default:
             statusAlarm();
             break;

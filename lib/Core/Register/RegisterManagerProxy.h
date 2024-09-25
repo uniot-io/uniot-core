@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2024 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,31 @@
 
 #pragma once
 
-#include <Arduino.h>
-#include <TaskScheduler.h>
-#include <EventBus.h>
-#include <Credentials.h>
-#include <Logger.h>
+#include "RegisterManager.h"
 
-extern "C" {
-  void inject(void);
-}
+namespace uniot {
 
-extern uniot::TaskScheduler MainScheduler;
-extern uniot::CoreEventBus MainEventBus;
+class RegisterManagerProxy {
+ public:
+  RegisterManagerProxy(const RegisterManagerProxy &) = delete;
+  void operator=(const RegisterManagerProxy &) = delete;
+
+  RegisterManagerProxy(const String &name, RegisterManager *reg)
+      : mName(name), mpRegister(reg) {
+  }
+
+  bool getGpio(size_t index, uint8_t &outValue) const {
+    return mpRegister->getGpio(mName, index, outValue);
+  }
+
+  template <typename T>
+  T *getObject(size_t index) {
+    return mpRegister->getObject<T>(mName, index);
+  }
+
+ private:
+  String mName;
+  RegisterManager *mpRegister;
+};
+
+}  // namespace uniot

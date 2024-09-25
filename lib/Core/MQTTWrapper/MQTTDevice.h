@@ -42,9 +42,11 @@ class MQTTDevice {
   bool isSubscribed(const String &topic);
   bool isTopicMatch(const String &storedTopic, const String &incomingTopic) const;
 
-  void publish(const String &topic, const Bytes &payload, bool retained = false);
-  void publishDevice(const String &subTopic, const Bytes &payload, bool retained = false);
-  void publishGroup(const String &groupId, const String &subTopic, const Bytes &payload, bool retained = false);
+  void publish(const String &topic, const Bytes &payload, bool retained = false, bool sign = false);
+  void publishDevice(const String &subTopic, const Bytes &payload, bool retained = false, bool sign = false);
+  void publishGroup(const String &groupId, const String &subTopic, const Bytes &payload, bool retained = false, bool sign = false);
+
+  void publishEmptyDevice(const String &subTopic);
 
  protected:
   virtual void handle(const String &topic, const Bytes &payload) = 0;

@@ -19,8 +19,8 @@
 #pragma once
 
 #include <Arduino.h>
-#include <LinksRegisterProxy.h>
 #include <LispHelper.h>
+#include <RegisterManagerProxy.h>
 #include <setjmp.h>
 
 namespace uniot {
@@ -36,7 +36,7 @@ class PrimitiveExpeditor {
   };
 
  public:
-  static LinksRegister &getGlobalRegister() {
+  static RegisterManager &getRegisterManager() {
     return sRegister;
   }
 
@@ -64,7 +64,7 @@ class PrimitiveExpeditor {
   }
 
   static PrimitiveDescription extractDescription(Primitive *primitive) {
-    volatile auto guard = DescriptionModeGuard();
+    volatile auto guard = DescriptionModeGuard(); // volatile to prevent compiler from optimization
     if (primitive) {
       if (setjmp(sDescriptionJumper) == 0) {
         primitive(nullptr, nullptr, nullptr);
@@ -75,7 +75,7 @@ class PrimitiveExpeditor {
     return {};
   }
 
-  LinksRegisterProxy &getCurrentRegister() {
+  RegisterManagerProxy &getAssignedRegister() {
     return mRegisterProxy;
   }
 
@@ -286,8 +286,8 @@ class PrimitiveExpeditor {
   VarObject mList;
   Object mEvalList;
 
-  LinksRegisterProxy mRegisterProxy;
-  static LinksRegister sRegister;
+  RegisterManagerProxy mRegisterProxy;
+  static RegisterManager sRegister;
 
   static jmp_buf sDescriptionJumper;
   static PrimitiveDescription sLastDescription;
@@ -310,7 +310,7 @@ class PrimitiveExpeditor {
   };
 };
 
-LinksRegister PrimitiveExpeditor::sRegister;
+RegisterManager PrimitiveExpeditor::sRegister;
 
 jmp_buf PrimitiveExpeditor::sDescriptionJumper;
 PrimitiveExpeditor::PrimitiveDescription PrimitiveExpeditor::sLastDescription;

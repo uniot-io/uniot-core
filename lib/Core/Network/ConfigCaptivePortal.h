@@ -18,7 +18,12 @@
 
 #pragma once
 
-#include <ESP8266WebServer.h>
+#if defined(ESP8266)
+    #include "ESP8266WebServer.h"
+    typedef ESP8266WebServer WebServer;
+#elif defined(ESP32)
+    #include <WebServer.h>
+#endif
 #include <DNSServer.h>
 #include <Common.h>
 #include <IExecutor.h>
@@ -35,7 +40,7 @@ namespace uniot {
     : mIsStarted(false),
     mpApIp(std::move(apIp)),
     mpDnsServer(new DNSServer()),
-    mpWebServer(new ESP8266WebServer(HTTP_PORT)) {}
+    mpWebServer(new WebServer(HTTP_PORT)) {}
 
     bool start() {
       if(!mIsStarted) {
@@ -62,11 +67,11 @@ namespace uniot {
 
     void reset() {
       mpDnsServer.reset(new DNSServer());
-      mpWebServer.reset(new ESP8266WebServer(HTTP_PORT));
+      mpWebServer.reset(new WebServer(HTTP_PORT));
       mIsStarted = false;
     }
 
-    ESP8266WebServer* get() {
+    WebServer* get() {
       return mpWebServer.get();
     }
 
@@ -83,6 +88,6 @@ namespace uniot {
 
     SharedPointer<IPAddress> mpApIp;
     UniquePointer<DNSServer> mpDnsServer;
-    UniquePointer<ESP8266WebServer> mpWebServer;
+    UniquePointer<WebServer> mpWebServer;
   };
 }

@@ -1,7 +1,6 @@
 #include <AppKit.h>
 #include <Board-WittyCloud.h>
 #include <Date.h>
-#include <LispPrimitives.h>
 #include <Logger.h>
 #include <Uniot.h>
 
@@ -17,10 +16,10 @@ auto taskPrintTime = TaskScheduler::make([](SchedulerTask& self, short t) {
 
 void inject() {
   auto& MainAppKit = AppKit::getInstance(PIN_BUTTON, BTN_PIN_LEVEL, RED);
-  UniotPinMap.setDigitalOutput(3, RED, GREEN, BLUE);
-  UniotPinMap.setDigitalInput(3, RED, GREEN, BLUE);
-  UniotPinMap.setAnalogOutput(3, RED, GREEN, BLUE);
-  UniotPinMap.setAnalogInput(1, LDR);
+  PrimitiveExpeditor::getRegisterManager().setDigitalOutput(RED, GREEN, BLUE);
+  PrimitiveExpeditor::getRegisterManager().setDigitalInput(RED, GREEN, BLUE);
+  PrimitiveExpeditor::getRegisterManager().setAnalogOutput(RED, GREEN, BLUE);
+  PrimitiveExpeditor::getRegisterManager().setAnalogInput(LDR);
 
   MainEventBus.registerKit(MainAppKit);
 
