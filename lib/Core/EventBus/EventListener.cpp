@@ -19,7 +19,6 @@
 #include "EventListener.h"
 
 #include <Arduino.h>
-#include <Logger.h>
 
 #include "EventBus.h"
 

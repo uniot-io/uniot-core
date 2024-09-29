@@ -24,11 +24,11 @@
 #include <EventBus.h>
 #include <IEventBusConnectionKit.h>
 #include <ISchedulerConnectionKit.h>
+#include <MQTTKit.h>
+#include <NetworkController.h>
 #include <LispDevice.h>
 #include <LispPrimitives.h>
 #include <Logger.h>
-#include <MQTTKit.h>
-#include <NetworkDevice.h>
 #include <TopDevice.h>
 #include <unLisp.h>
 
@@ -38,8 +38,8 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
   AppKit(AppKit const &) = delete;
   void operator=(AppKit const &) = delete;
 
-  static AppKit &getInstance(uint8_t pinBtn = 0, uint8_t activeLevelBtn = LOW, uint8_t pinLed = 2) {
-    static AppKit instance(pinBtn, activeLevelBtn, pinLed);
+  static AppKit &getInstance() {
+    static AppKit instance;
     return instance;
   }
 
@@ -55,18 +55,28 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     return mCredentials;
   }
 
-  void pushTo(TaskScheduler &scheduler) override {
-    scheduler.push(mNetworkDevice);
-    scheduler.push("mqtt", mTaskMQTT);
-    scheduler.push("lisp_btn", mTaskLispButton);
+  virtual void pushTo(TaskScheduler &scheduler) override {
+    scheduler.push(mNetwork);
+    scheduler.push(mMQTT);
     scheduler.push("lisp_task", getLisp().getTask());
 
     mTopDevice.setScheduler(scheduler);
+
+    if (mpNetworkDevice) {
+      scheduler.push(*mpNetworkDevice);
+    } else {
+      UNIOT_LOG_WARN("Configure Network Controller before pushing to the scheduler");
+    }
   }
 
-  void attach() override {
-    mNetworkDevice.attach();
-    mTaskLispButton->attach(100);
+  virtual void attach() override {
+    mNetwork.attach();
+    mMQTT.attach();
+
+    if (mpNetworkDevice) {
+      mpNetworkDevice->attach();
+    }
+
 #if defined(ESP8266)
     analogWriteRange(1023);
 #elif defined(ESP32)
@@ -75,39 +85,63 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     mLispDevice.runStoredCode();
   }
 
-  void registerWithBus(CoreEventBus &eventBus) override {
+  virtual void registerWithBus(CoreEventBus &eventBus) override {
+    eventBus.openDataChannel(NetworkScheduler::Channel::OUT_SSID, 1);
     eventBus.openDataChannel(unLisp::Channel::OUT_LISP, 10);
     eventBus.openDataChannel(unLisp::Channel::OUT_LISP_LOG, 10);
     eventBus.openDataChannel(unLisp::Channel::OUT_LISP_ERR, 1);
     eventBus.openDataChannel(unLisp::Channel::OUT_EVENT, 10);
     eventBus.openDataChannel(unLisp::Channel::IN_EVENT, 20);
-    eventBus.registerKit(mNetworkDevice);
+    eventBus.registerEntity(&mNetwork);
+    eventBus.registerEntity(&mMQTT);
     eventBus.registerEntity(&getLisp());
     eventBus.registerEntity(&mLispDevice);
-    eventBus.registerEntity(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
-    eventBus.registerEntity(mpLispEventListener->listenToEvent(unLisp::Topic::OUT_LISP_EVENT));
+    eventBus.registerEntity(mpNetworkEventListener
+                                ->listenToEvent(NetworkScheduler::Topic::CONNECTION)
+                                ->listenToEvent(MQTTKit::Topic::CONNECTION));
+
+    if (mpNetworkDevice) {
+      eventBus.registerEntity(mpNetworkDevice.get());
+    } else {
+      UNIOT_LOG_WARN("Configure Network Controller before registering to the event bus");
+    }
   }
 
-  void unregisterFromBus(CoreEventBus &eventBus) override {
+  virtual void unregisterFromBus(CoreEventBus &eventBus) override {
+    eventBus.closeDataChannel(NetworkScheduler::Channel::OUT_SSID);
     eventBus.closeDataChannel(unLisp::Channel::OUT_LISP);
     eventBus.closeDataChannel(unLisp::Channel::OUT_LISP_LOG);
     eventBus.closeDataChannel(unLisp::Channel::OUT_LISP_ERR);
     eventBus.closeDataChannel(unLisp::Channel::OUT_EVENT);
     eventBus.closeDataChannel(unLisp::Channel::IN_EVENT);
-    eventBus.unregisterKit(mNetworkDevice);
+    eventBus.unregisterEntity(&mNetwork);
+    eventBus.unregisterEntity(&mMQTT);
     eventBus.unregisterEntity(&getLisp());
     eventBus.unregisterEntity(&mLispDevice);
-    eventBus.unregisterEntity(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
-    eventBus.unregisterEntity(mpLispEventListener->stopListeningToEvent(unLisp::Topic::OUT_LISP_EVENT));
+    eventBus.unregisterEntity(mpNetworkEventListener
+                                  ->stopListeningToEvent(NetworkScheduler::Topic::CONNECTION)
+                                  ->stopListeningToEvent(MQTTKit::Topic::CONNECTION));
+
+    if (mpNetworkDevice) {
+      eventBus.unregisterEntity(mpNetworkDevice.get());
+    }
+  }
+
+  void configureNetworkController(uint8_t pinBtn = 0, uint8_t activeLevelBtn = LOW, uint8_t pinLed = 2) {
+    if (mpNetworkDevice) {
+      UNIOT_LOG_WARN("Network Controller already configured");
+      return;
+    }
+
+    mpNetworkDevice = MakeUnique<NetworkController>(mNetwork, pinBtn, activeLevelBtn, pinLed);
+    PrimitiveExpeditor::getRegisterManager().link(primitive::name::bclicked, &mpNetworkDevice->getButton(), FOURCC(lisp));
   }
 
  private:
-  AppKit(uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
-      : mMQTT(mCredentials, [this](CBORObject &info) {
-          auto arr = info.putArray("primitives");
-          getLisp().serializeNamesOfPrimitives(arr);
-
-          auto obj = info.putMap("primitives_2");
+  AppKit()
+      : mNetwork(mCredentials),
+        mMQTT(mCredentials, [this](CBORObject &info) {
+          auto obj = info.putMap("primitives");
           getLisp().serializePrimitives(obj);
 
           auto registers = info.putMap("misc").putMap("registers");
@@ -120,15 +154,14 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
           info.put("mqtt_size", MQTT_MAX_PACKET_SIZE);
           info.put("debug", UNIOT_LOG_ENABLED);
         }),
-        mLispButton(pinBtn, activeLevelBtn, 30),
-        mNetworkDevice(mCredentials, pinBtn, activeLevelBtn, pinLed) {
+        mpNetworkDevice(nullptr) {
     _initMqtt();
     _initTasks();
-    _initSubscribers();
+    _initListeners();
     _initPrimitives();
   }
 
-  void _initMqtt() {
+  inline void _initMqtt() {
     // TODO: should I move configs to the Credentials class?
     mMQTT.setServer("mqtt.uniot.io", 1883);
     mMQTT.addDevice(mTopDevice);
@@ -137,84 +170,77 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     mLispDevice.syncSubscriptions();
   }
 
-  void _initTasks() {
-    mTaskMQTT = TaskScheduler::make(mMQTT);
-    mTaskLispButton = TaskScheduler::make(mLispButton);
+  inline void _initTasks() {
+    // TODO: init new tasks here
   }
 
-  void _initPrimitives() {
+  inline void _initPrimitives() {
     getLisp().pushPrimitive(primitive::dwrite);
     getLisp().pushPrimitive(primitive::dread);
     getLisp().pushPrimitive(primitive::awrite);
     getLisp().pushPrimitive(primitive::aread);
     getLisp().pushPrimitive(primitive::bclicked);
-
-    PrimitiveExpeditor::getRegisterManager().link(primitive::name::bclicked, &mLispButton, FOURCC(lisp));
   }
 
-  void _initSubscribers() {
-    mpNetworkEventListener = std::unique_ptr<CoreEventListener>(new CoreCallbackEventListener([&](int topic, int msg) {
+  inline void _initListeners() {
+    mpNetworkEventListener = MakeUnique<CoreCallbackEventListener>([&](int topic, int msg) {
       if (NetworkScheduler::CONNECTION == topic) {
         switch (msg) {
           case NetworkScheduler::SUCCESS:
             UNIOT_LOG_DEBUG("AppKit Subscriber, SUCCESS, ip: %s", WiFi.localIP().toString().c_str());
-            mTaskMQTT->attach(10);
-            mMQTT.renewSubscriptions();
             break;
           case NetworkScheduler::ACCESS_POINT:
             UNIOT_LOG_DEBUG("AppKit Subscriber, ACCESS_POINT");
-            mTaskMQTT->detach();
+            mpNetworkEventListener->receiveDataFromChannel(NetworkScheduler::Channel::OUT_SSID, [this](unsigned int id, bool empty, Bytes data) {
+              if (!empty) {
+                UNIOT_LOG_DEBUG("SSID: %s", data.terminate().c_str());
+              }
+            });
             break;
 
           case NetworkScheduler::CONNECTING:
             UNIOT_LOG_DEBUG("AppKit Subscriber, CONNECTING");
-            mTaskMQTT->detach();
+            mpNetworkEventListener->receiveDataFromChannel(NetworkScheduler::Channel::OUT_SSID, [this](unsigned int id, bool empty, Bytes data) {
+              if (!empty) {
+                UNIOT_LOG_DEBUG("SSID: %s", data.terminate().c_str());
+              }
+            });
             break;
 
           case NetworkScheduler::DISCONNECTED:
             UNIOT_LOG_DEBUG("AppKit Subscriber, DISCONNECTED");
-            mTaskMQTT->detach();
             break;
 
           case NetworkScheduler::FAILED:
           default:
             UNIOT_LOG_DEBUG("AppKit Subscriber, FAILED");
-            mTaskMQTT->detach();
             break;
         }
+        return;
       }
-    }));
-
-    mpLispEventListener = std::unique_ptr<CoreEventListener>(new CoreCallbackEventListener([&](int topic, int msg) {
-      if (topic == unLisp::Topic::OUT_LISP_EVENT && msg == unLisp::Msg::OUT_NEW_EVENT) {
-        mpLispEventListener->receiveDataFromChannel(unLisp::Channel::OUT_EVENT, [this](unsigned int id, bool empty, Bytes data) {
-          if (!empty) {
-            auto event = CBORObject(data);
-            event.put("timestamp", static_cast<int64_t>(Date::now()))
-                .putMap("sender")
-                .put("type", "device")
-                .put("id", mCredentials.getDeviceId().c_str());
-            auto eventData = event.build();
-            auto eventID = event.getString("eventID");
-            mLispDevice.publishGroup("all", "event/" + eventID, eventData);
-          }
-        });
+      if (MQTTKit::CONNECTION == topic) {
+        switch (msg) {
+          case MQTTKit::SUCCESS:
+            UNIOT_LOG_DEBUG("AppKit Subscriber, MQTT SUCCESS");
+            mMQTT.renewSubscriptions();
+            break;
+          case MQTTKit::FAILED:
+          default:
+            UNIOT_LOG_DEBUG("AppKit Subscriber, MQTT FAILED");
+            break;
+        }
+        return;
       }
-    }));
+    });
   }
 
   Credentials mCredentials;
+  NetworkScheduler mNetwork;
   MQTTKit mMQTT;
   TopDevice mTopDevice;
   LispDevice mLispDevice;
-  Button mLispButton;
 
-  NetworkDevice mNetworkDevice;
-
-  TaskScheduler::TaskPtr mTaskMQTT;
-  TaskScheduler::TaskPtr mTaskLispButton;
-
-  UniquePointer<CoreEventListener> mpNetworkEventListener;
-  UniquePointer<CoreEventListener> mpLispEventListener;
+  UniquePointer<NetworkController> mpNetworkDevice;
+  UniquePointer<CoreCallbackEventListener> mpNetworkEventListener;
 };
 }  // namespace uniot

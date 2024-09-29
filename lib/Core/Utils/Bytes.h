@@ -98,7 +98,7 @@ class Bytes {
     bytes._reserve(len / 2);
     for (size_t i = 0; i < len; i += 2) {
       char buf[3] = {hexStr.charAt(i), hexStr.charAt(i + 1), '\0'};
-      byte b = strtol(buf, nullptr, 16);
+      uint8_t b = strtol(buf, nullptr, 16);
       bytes.mBuffer[i / 2] = b;
     }
     return bytes;
@@ -123,6 +123,11 @@ class Bytes {
   }
 
   Bytes &terminate() {
+    if (!mSize) {
+      _reserve(1);
+      return *this;
+    }
+
     if (mBuffer[mSize - 1] != '\0') {
       _reserve(mSize + 1);
       mBuffer[mSize - 1] = '\0';

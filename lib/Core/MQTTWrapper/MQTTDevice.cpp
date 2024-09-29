@@ -31,6 +31,24 @@ MQTTDevice::~MQTTDevice() {
   }
 }
 
+String MQTTDevice::getDeviceId() const {
+  if (mpKit) {
+    return mpKit->getPath().getDeviceId();
+  } else {
+    UNIOT_LOG_WARN("getting device id before adding device to kit");
+  }
+  return {};
+}
+
+String MQTTDevice::getOwnerId() const {
+  if (mpKit) {
+    return mpKit->getPath().getOwnerId();
+  } else {
+    UNIOT_LOG_WARN("getting owner id before adding device to kit");
+  }
+  return {};
+}
+
 void MQTTDevice::unsubscribeFromAll() {
   while (!mTopics.isEmpty()) {
     auto topic = mTopics.hardPop();
@@ -44,7 +62,7 @@ bool MQTTDevice::unsubscribe(const String &topic) {
   mTopics.removeOne(topic);
   if (mpKit) {
     auto unsubscribed = mpKit->client()->unsubscribe(topic.c_str());
-    UNIOT_LOG_WARN_IF(!unsubscribed, "failed to unsubscribe from topic: %s", topic.c_str());
+    UNIOT_LOG_TRACE_IF(!unsubscribed, "failed to unsubscribe from topic: %s", topic.c_str());
     return unsubscribed;
   }
   return true;
@@ -54,7 +72,7 @@ const String &MQTTDevice::subscribe(const String &topic) {
   mTopics.pushUnique(topic);
   if (mpKit) {
     auto subscribed = mpKit->client()->subscribe(topic.c_str());
-    UNIOT_LOG_WARN_IF(!subscribed, "failed to subscribe to topic: %s", topic.c_str());
+    UNIOT_LOG_TRACE_IF(!subscribed, "failed to subscribe to topic: %s", topic.c_str());
   }
   return topic;
 }

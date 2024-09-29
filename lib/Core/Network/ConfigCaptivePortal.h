@@ -36,9 +36,9 @@ namespace uniot {
   class ConfigCaptivePortal : public IExecutor
   {
   public:
-    ConfigCaptivePortal(SharedPointer<IPAddress> apIp)
+    ConfigCaptivePortal(const IPAddress &apIp)
     : mIsStarted(false),
-    mpApIp(std::move(apIp)),
+    mApIp(apIp),
     mpDnsServer(new DNSServer()),
     mpWebServer(new WebServer(HTTP_PORT)) {}
 
@@ -46,7 +46,7 @@ namespace uniot {
       if(!mIsStarted) {
         mpDnsServer->setTTL(300);
         mpDnsServer->setErrorReplyCode(DNSReplyCode::ServerFailure);
-        if(mpDnsServer->start(DNS_PORT, DOMAIN_NAME, (*mpApIp))) { 
+        if(mpDnsServer->start(DNS_PORT, DOMAIN_NAME, mApIp)) {
           mpWebServer->begin();
           return mIsStarted = true;
         }
@@ -75,9 +75,13 @@ namespace uniot {
       return mpWebServer.get();
     }
 
+    inline const IPAddress& ip() const {
+      return mApIp;
+    }
+
     virtual uint8_t execute() {
       if(mIsStarted) {
-        mpDnsServer->processNextRequest(); 
+        mpDnsServer->processNextRequest();
         mpWebServer->handleClient();
       }
       return 0;
@@ -86,7 +90,7 @@ namespace uniot {
   private:
     bool mIsStarted;
 
-    SharedPointer<IPAddress> mpApIp;
+    IPAddress mApIp;
     UniquePointer<DNSServer> mpDnsServer;
     UniquePointer<WebServer> mpWebServer;
   };

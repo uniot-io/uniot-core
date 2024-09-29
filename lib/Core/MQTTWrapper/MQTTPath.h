@@ -29,6 +29,16 @@ public:
   {
   }
 
+  inline const String& getDeviceId() const
+  {
+    return mpCredentials->getDeviceId();
+  }
+
+  inline const String& getOwnerId() const
+  {
+    return mpCredentials->getOwnerId();
+  }
+
   String buildDevicePath(const String &topic) const
   {
     return mPrefix + "/"

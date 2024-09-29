@@ -47,13 +47,13 @@ class Credentials : public CBORStorage, public ICOSESigner {
     _derivePublicKey();
   }
 
-  bool store() override {
+  virtual bool store() override {
     object().put("account", mOwnerId.c_str());
     object().put("private_key", mPrivateKey.raw(), mPrivateKey.size());
     return CBORStorage::store();
   }
 
-  bool restore() override {
+  virtual bool restore() override {
     if (CBORStorage::restore()) {
       mOwnerId = object().getString("account");
       mPrivateKey = object().getBytes("private_key");

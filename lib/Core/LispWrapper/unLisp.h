@@ -107,21 +107,15 @@ class unLisp : public CoreEventListener {
   unLisp *pushPrimitive(Primitive *primitive) {
     auto description = PrimitiveExpeditor::extractDescription(primitive);
     mUserPrimitives.push(MakePair(description.name, primitive));
-    UNIOT_LOG_DEBUG("primitive added: %s", description.name.c_str());
-    UNIOT_LOG_DEBUG("args count: %d", description.argsCount);
-    UNIOT_LOG_DEBUG("return type: %d", description.returnType);
+    UNIOT_LOG_TRACE("primitive added: %s", description.name.c_str());
+    UNIOT_LOG_TRACE("args count: %d", description.argsCount);
+    UNIOT_LOG_TRACE("return type: %d", description.returnType);
     for (auto i = 0; i < description.argsCount; i++) {
-      UNIOT_LOG_DEBUG("arg %d: %d", i, description.argsTypes[i]);
+      UNIOT_LOG_TRACE("arg %d: %d", i, description.argsTypes[i]);
     }
     return this;
   }
 
-  void serializeNamesOfPrimitives(CBORObject::Array &arr) {
-    mUserPrimitives.forEach([&](Pair<const String &, Primitive *> holder) {
-      arr.append(holder.first.c_str());
-      UNIOT_LOG_DEBUG("primitive: %s, err: %d", holder.first.c_str(), arr.getLastError().err);
-    });
-  }
   void serializePrimitives(CBORObject &obj) {
     mUserPrimitives.forEach([&](Pair<const String &, Primitive *> holder) {
       auto description = PrimitiveExpeditor::extractDescription(holder.second);
@@ -259,6 +253,8 @@ class unLisp : public CoreEventListener {
       }
       mIncomingEvents.get(eventID)->pushLimited(eventData);
     }
+
+    // TODO: Find a way to remove events that are not consumed
   }
 
   bool _isIncomingEventAvailable(const String &eventID) {

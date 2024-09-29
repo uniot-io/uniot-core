@@ -31,6 +31,9 @@ class MQTTDevice {
   MQTTDevice() : mpKit(nullptr) {}
   virtual ~MQTTDevice();
 
+  String getDeviceId() const;
+  String getOwnerId() const;
+
   const String &subscribe(const String &topic);
   String subscribeDevice(const String &subTopic);
   String subscribeGroup(const String &groupId, const String &subTopic);

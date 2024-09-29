@@ -27,19 +27,12 @@
 #include <Common.h>
 #include <Credentials.h>
 #include <TaskScheduler.h>
-#include <EventEmitter.h>
+#include <EventBus.h>
 #include <ConfigCaptivePortal.h>
 #include <WifiStorage.h>
-#include <ILightPrint.h>
 #include <config.min.html.gz.h>
 
 namespace uniot {
-//---------------------------------------------"________________"
-  const char strApCreated[]        PROGMEM = "Access Point:";
-  const char strStaConnecting[]    PROGMEM = "Connecting to:";
-  const char strFailed[]           PROGMEM = "> Failed";
-  const char strSuccess[]          PROGMEM = "> Success";
-
   const char text_html[]           PROGMEM = "text/html";
   const char text[]                PROGMEM = "text";
 
@@ -47,18 +40,14 @@ namespace uniot {
   class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
   {
   public:
+    enum Channel { OUT_SSID = FOURCC(ssid) };
     enum Topic { CONNECTION = FOURCC(netw) };
     enum Msg { FAILED = 0, SUCCESS, CONNECTING, DISCONNECTED, ACCESS_POINT };
 
     NetworkScheduler(Credentials &credentials)
-        : NetworkScheduler(credentials, nullptr) {}
-
-    NetworkScheduler(Credentials &credentials, ILightPrint *printer)
         : mpCredentials(&credentials),
-          mpPrinter(printer),
-          mpApIp(std::make_shared<IPAddress>(1, 1, 1, 1)),
-          mpApSubnet(new IPAddress(255, 255, 255, 0)),
-          mpConfigServer(mpApIp)
+          mApSubnet(255, 255, 255, 0),
+          mConfigServer(IPAddress(1, 1, 1, 1))
     {
       mApName = "UNIOT-" + String(mpCredentials->getShortDeviceId(), HEX);
       mApName.toUpperCase();
@@ -86,8 +75,6 @@ namespace uniot {
     virtual void attach() override {
       mWifiStorage.restore();
       if(mWifiStorage.getWifiArgs()->isValid()) {
-        _printp(strStaConnecting);
-        _print(mWifiStorage.getWifiArgs()->ssid.c_str());
         mTaskConnectSta->attach(500, 1);
       } else {
         mTaskConfigAp->attach(500, 1);
@@ -101,8 +88,6 @@ namespace uniot {
 
     bool reconnect() {
       if(mWifiStorage.getWifiArgs()->isValid()) {
-        _printp(strStaConnecting);
-        _print(mWifiStorage.getWifiArgs()->ssid.c_str());
         mTaskConfigAp->detach();
         mTaskConnectSta->attach(500, 1);
         return true;
@@ -111,38 +96,26 @@ namespace uniot {
     }
 
   private:
-    inline void _printp(const char* PSTR_str) {
-      if(mpPrinter) {
-        mpPrinter->printlnPGM(PSTR_str);
-      }
-    }
-    inline void _print(const char* str){
-      if(mpPrinter) {
-        mpPrinter->println(str);
-      }
-    }
-
     void _initTasks() {
       mTaskStart = TaskScheduler::make([this](SchedulerTask &self, short t) {
-        if(mpConfigServer.start()) {
+        if(mConfigServer.start()) {
           mTaskServe->attach(10);
         }
       });
-      mTaskServe = TaskScheduler::make(mpConfigServer);
+      mTaskServe = TaskScheduler::make(mConfigServer);
       mTaskStop = TaskScheduler::make([this](SchedulerTask &self, short t) {
         mTaskServe->detach();
-        mpConfigServer.stop();
+        mConfigServer.stop();
       });
 
       mTaskConfigAp = TaskScheduler::make([this](SchedulerTask &self, short t) {
         WiFi.disconnect(true);
-        if( WiFi.softAPConfig((*mpApIp), (*mpApIp),  (*mpApSubnet))
+        if( WiFi.softAPConfig(mConfigServer.ip(), mConfigServer.ip(),  mApSubnet)
           && WiFi.softAP(mApName.c_str()))
         {
-          _printp(strApCreated);
-          _print(mApName.c_str());
           mTaskStart->attach(500, 1);
-          emitEvent(Topic::CONNECTION, Msg::ACCESS_POINT);
+          CoreEventEmitter::sendDataToChannel(Channel::OUT_SSID, Bytes(mApName));
+          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::ACCESS_POINT);
         } else {
           UNIOT_LOG_WARN("NetworkScheduler, mTaskConfigAp failed");
           mTaskConfigAp->attach(500, 1);
@@ -157,6 +130,7 @@ namespace uniot {
         {
           mTaskServe->detach();
           mTaskConnecting->attach(100, 100);
+          CoreEventEmitter::sendDataToChannel(Channel::OUT_SSID, Bytes(mWifiStorage.getWifiArgs()->ssid));
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::CONNECTING);
         }
       });
@@ -171,7 +145,6 @@ namespace uniot {
             tries = 0;
             mTaskConfigAp->attach(500, 1);
             CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
-            _printp(strFailed);
           }
         };
 
@@ -182,7 +155,6 @@ namespace uniot {
           mTaskMonitoring->attach(2000);
           mWifiStorage.store();
           mpCredentials->store(); // NOTE: it is stored each time it is connected to the network
-          _printp(strSuccess);
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::SUCCESS);
           break;
 
@@ -212,17 +184,17 @@ namespace uniot {
     }
 
     void _initServerCallbacks() {
-      mpConfigServer.get()->onNotFound([this] {
-        mpConfigServer.get()->sendHeader("Location", "/", true);
-        mpConfigServer.get()->send_P(307, text, text);
+      mConfigServer.get()->onNotFound([this] {
+        mConfigServer.get()->sendHeader("Location", "/", true);
+        mConfigServer.get()->send_P(307, text, text);
       });
 
-      mpConfigServer.get()->on("/", [this] {
-        mpConfigServer.get()->sendHeader("Content-Encoding", "gzip");
-        mpConfigServer.get()->send_P(200, text_html, CONFIG_MIN_HTML_GZ, CONFIG_MIN_HTML_GZ_LENGTH);
+      mConfigServer.get()->on("/", [this] {
+        mConfigServer.get()->sendHeader("Content-Encoding", "gzip");
+        mConfigServer.get()->send_P(200, text_html, CONFIG_MIN_HTML_GZ, CONFIG_MIN_HTML_GZ_LENGTH);
       });
 
-      mpConfigServer.get()->on("/scan", [this] {
+      mConfigServer.get()->on("/scan", [this] {
         auto n = WiFi.scanNetworks();
         String networks = "[";
         for (auto i = 0; i < n; ++i) {
@@ -232,33 +204,27 @@ namespace uniot {
         }
         networks += ']';
         UNIOT_LOG_DEBUG("Networks: %s", networks.c_str());
-        mpConfigServer.get()->send(200, text, networks);
+        mConfigServer.get()->send(200, text, networks);
       });
 
-      mpConfigServer.get()->on("/config", [this] {
-        mWifiStorage.getWifiArgs()->ssid = mpConfigServer.get()->arg("ssid");
-        mWifiStorage.getWifiArgs()->pass = mpConfigServer.get()->arg("pass");
-        mpConfigServer.get()->sendHeader("Location", "/", true);
-        mpConfigServer.get()->send_P(307, text, text);
+      mConfigServer.get()->on("/config", [this] {
+        mWifiStorage.getWifiArgs()->ssid = mConfigServer.get()->arg("ssid");
+        mWifiStorage.getWifiArgs()->pass = mConfigServer.get()->arg("pass");
+        mConfigServer.get()->sendHeader("Location", "/", true);
+        mConfigServer.get()->send_P(307, text, text);
         if(mWifiStorage.getWifiArgs()->isValid()) {
-          _printp(strStaConnecting);
-          _print(mWifiStorage.getWifiArgs()->ssid.c_str());
           mTaskConnectSta->attach(500, 1);
-
-          mpCredentials->setOwnerId(mpConfigServer.get()->arg("acc"));
+          mpCredentials->setOwnerId(mConfigServer.get()->arg("acc"));
         }
       });
     }
 
     Credentials *mpCredentials;
     WifiStorage mWifiStorage;
+
     String mApName;
-
-    ILightPrint* mpPrinter;
-
-    SharedPointer<IPAddress> mpApIp;
-    UniquePointer<IPAddress> mpApSubnet;
-    ConfigCaptivePortal mpConfigServer;
+    IPAddress mApSubnet;
+    ConfigCaptivePortal mConfigServer;
 
     TaskScheduler::TaskPtr mTaskStart;
     TaskScheduler::TaskPtr mTaskServe;

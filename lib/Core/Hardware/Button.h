@@ -52,7 +52,7 @@ class Button : public IExecutor, public ObjectRegisterRecord {
 
   bool resetLongPress() {
     auto was = mWasLongPress;
-    mWasClick = false;
+    mWasLongPress = false;
     return was;
   }
 

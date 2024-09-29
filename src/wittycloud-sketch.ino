@@ -15,7 +15,8 @@ auto taskPrintTime = TaskScheduler::make([](SchedulerTask& self, short t) {
 });
 
 void inject() {
-  auto& MainAppKit = AppKit::getInstance(PIN_BUTTON, BTN_PIN_LEVEL, RED);
+  auto& MainAppKit = AppKit::getInstance();
+  MainAppKit.configureNetworkController(PIN_BUTTON, BTN_PIN_LEVEL, RED);
   PrimitiveExpeditor::getRegisterManager().setDigitalOutput(RED, GREEN, BLUE);
   PrimitiveExpeditor::getRegisterManager().setDigitalInput(RED, GREEN, BLUE);
   PrimitiveExpeditor::getRegisterManager().setAnalogOutput(RED, GREEN, BLUE);

@@ -37,6 +37,7 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
         mFailedWithError(false) {
     CoreEventListener::listenToEvent(unLisp::Topic::OUT_LISP_MSG);
     CoreEventListener::listenToEvent(unLisp::Topic::OUT_LISP_REQUEST);
+    CoreEventListener::listenToEvent(unLisp::Topic::OUT_LISP_EVENT);
   }
 
   virtual void syncSubscriptions() override {
@@ -118,6 +119,23 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
       }
       return;
     }
+    if (topic == unLisp::Topic::OUT_LISP_EVENT) {
+      if(msg == unLisp::Msg::OUT_NEW_EVENT) {
+        CoreEventListener::receiveDataFromChannel(unLisp::Channel::OUT_EVENT, [this](unsigned int id, bool empty, Bytes data) {
+          if (!empty) {
+            auto event = CBORObject(data);
+            event.put("timestamp", static_cast<int64_t>(Date::now()))
+                .putMap("sender")
+                .put("type", "device")
+                .put("id", MQTTDevice::getDeviceId().c_str());
+            auto eventData = event.build();
+            auto eventID = event.getString("eventID");
+            MQTTDevice::publishGroup("all", "event/" + eventID, eventData);
+          }
+        });
+      }
+      return;
+    }
   }
 
   virtual void handle(const String &topic, const Bytes &payload) override {
@@ -162,7 +180,7 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
     // let's free some memory
     object().clean();
     // NOTE: you may need getLasCode() somewhere else, but it has already cleaned here
-    getLisp().cleanLastCode();
+    getLisp().cleanLastCode(); // Is it safe?
   }
 
   void handleEvent(const Bytes &payload) {

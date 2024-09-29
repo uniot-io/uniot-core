@@ -30,9 +30,10 @@
 #include <ClearQueue.h>
 #include <Common.h>
 #include <Date.h>
-#include <EventEmitter.h>
-#include <IExecutor.h>
+#include <EventListener.h>
+#include <NetworkScheduler.h>
 #include <PubSubClient.h>
+#include <TaskScheduler.h>
 
 #include <functional>
 
@@ -41,7 +42,7 @@
 #include "MQTTPath.h"
 
 namespace uniot {
-class MQTTKit : public IExecutor, public CoreEventEmitter {
+class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
   typedef std::function<void(CBORObject &)> CBORExtender;
   friend class MQTTDevice;
 
@@ -75,12 +76,15 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
         }
       });
     });
+    _initTasks();
+    CoreEventListener::listenToEvent(NetworkScheduler::Topic::CONNECTION);
 
     // mWiFiClient.allowSelfSignedCerts();
     // mWiFiClient.setInsecure();
   }
 
   ~MQTTKit() {
+    CoreEventListener::stopListeningToEvent(NetworkScheduler::Topic::CONNECTION);
     // TODO: implement, remove all devices
   }
 
@@ -117,44 +121,27 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
     });
   }
 
-  virtual uint8_t execute() override {
-    if (!mPubSubClient.connected()) {
-      UNIOT_LOG_DEBUG("Attempting MQTT connection #%d...", mConnectionId);
-      CBORObject offlineCBOR;
-      _prepareOfflinePacket(offlineCBOR);
-      auto offlinePacket = _buildCOSEMessage(offlineCBOR.build());
-      auto password = _getUserPassword();
-      if (mPubSubClient.connect(
-              _getClientId().c_str(),
-              _getUserLogin().c_str(),
-              (const char *)password.raw(),
-              password.size(),
-              mPath.buildDevicePath("status").c_str(),
-              0,
-              true,
-              (const char *)offlinePacket.raw(),
-              offlinePacket.size(),
-              true)) {
-        CBORObject onlineCBOR;
-        _prepareOnlinePacket(onlineCBOR);
-        auto onlinePacket = _buildCOSEMessage(onlineCBOR.build());
-        mPubSubClient.publish(
-            mPath.buildDevicePath("status").c_str(),
-            onlinePacket.raw(),
-            onlinePacket.size(),
-            true);  // publish an announcement
-        mDevices.forEach([this](MQTTDevice *device) {
-          device->topics()->forEach([this](String topic) {
-            mPubSubClient.subscribe(topic.c_str());
-          });
-        });
-        CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::SUCCESS);
-      } else {
-        CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
+  virtual void pushTo(TaskScheduler &scheduler) override {
+    scheduler.push("mqtt", mTaskMQTT);
+  }
+
+  virtual void attach() override {}
+
+  virtual void onEventReceived(unsigned int topic, int msg) override {
+    if (NetworkScheduler::CONNECTION == topic) {
+      switch (msg) {
+        case NetworkScheduler::SUCCESS:
+          mTaskMQTT->attach(10);
+          break;
+        case NetworkScheduler::ACCESS_POINT:
+        case NetworkScheduler::CONNECTING:
+        case NetworkScheduler::DISCONNECTED:
+        case NetworkScheduler::FAILED:
+        default:
+          mTaskMQTT->detach();
+          break;
       }
     }
-    mPubSubClient.loop();
-    return 0;
   }
 
  protected:
@@ -163,6 +150,54 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
   }
 
  private:
+  inline void _initTasks() {
+    mTaskMQTT = TaskScheduler::make([this](SchedulerTask &self, short t) {
+      if (!mPubSubClient.connected()) {
+        UNIOT_LOG_DEBUG("Attempting MQTT connection #%d...", mConnectionId);
+        Bytes packetExtention;
+        if (mInfoExtender) {
+          CBORObject packet;
+          mInfoExtender(packet);
+          packetExtention = packet.build();
+        }
+
+        CBORObject offlineCBOR(packetExtention);
+        _prepareOfflinePacket(offlineCBOR);
+        auto offlinePacket = _buildCOSEMessage(offlineCBOR.build());
+        auto password = _getUserPassword();
+        if (mPubSubClient.connect(
+                _getClientId().c_str(),
+                _getUserLogin().c_str(),
+                (const char *)password.raw(),
+                password.size(),
+                mPath.buildDevicePath("status").c_str(),
+                0,
+                true,
+                (const char *)offlinePacket.raw(),
+                offlinePacket.size(),
+                true)) {
+          CBORObject onlineCBOR(packetExtention);
+          _prepareOnlinePacket(onlineCBOR);
+          auto onlinePacket = _buildCOSEMessage(onlineCBOR.build());
+          mPubSubClient.publish(
+              mPath.buildDevicePath("status").c_str(),
+              onlinePacket.raw(),
+              onlinePacket.size(),
+              true);  // publish an announcement
+          mDevices.forEach([this](MQTTDevice *device) {
+            device->topics()->forEach([this](String topic) {
+              mPubSubClient.subscribe(topic.c_str());
+            });
+          });
+          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::SUCCESS);
+        } else {
+          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
+        }
+      }
+      mPubSubClient.loop();
+    });
+  }
+
   Bytes _buildCOSEMessage(const Bytes &payload, bool sign = false) {
     COSEMessage obj;
     obj.setPayload(payload);
@@ -185,18 +220,12 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
     packet
         .put("online", 1)
         .put("connection_id", mConnectionId++);
-
-    if (mInfoExtender)
-      mInfoExtender(packet);
   }
 
   void _prepareOfflinePacket(CBORObject &packet) {
     packet
         .put("online", 0)
         .put("connection_id", mConnectionId);
-
-    if (mInfoExtender)
-      mInfoExtender(packet);
   }
 
   String _getClientId() {
@@ -234,5 +263,6 @@ class MQTTKit : public IExecutor, public CoreEventEmitter {
   WiFiClient mWiFiClient;
   // WiFiClientSecure mWiFiClient;
   ClearQueue<MQTTDevice *> mDevices;
+  TaskScheduler::TaskPtr mTaskMQTT;
 };
 }  // namespace uniot

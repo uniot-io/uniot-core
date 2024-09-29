@@ -19,19 +19,17 @@
 #pragma once
 
 #include <Button.h>
-#include <CallbackEventListener.h>
-#include <EventBus.h>
-#include <IEventBusConnectionKit.h>
+#include <EventListener.h>
 #include <ISchedulerConnectionKit.h>
 #include <NetworkScheduler.h>
 
 namespace uniot {
-class NetworkDevice : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit {
+class NetworkController : public ISchedulerConnectionKit, public CoreEventListener {
  public:
   enum Topic { NETWORK_LED = FOURCC(nled) };
 
-  NetworkDevice(Credentials &credentials, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
-      : mNetwork(credentials, new SerialLightPrinter()),
+  NetworkController(NetworkScheduler &network, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
+      : mpNetwork(&network),
         mNetworkLastState(NetworkScheduler::SUCCESS),
         mClickCounter(0),
         mPinLed(pinLed),
@@ -39,9 +37,9 @@ class NetworkDevice : public ICoreEventBusConnectionKit, public ISchedulerConnec
           switch (event) {
             case Button::LONG_PRESS:
               if (mClickCounter > 3)
-                mNetwork.forget();
+                mpNetwork->forget();
               else
-                mNetwork.reconnect();
+                mpNetwork->reconnect();
               break;
             case Button::CLICK:
               if (!mClickCounter)
@@ -51,26 +49,46 @@ class NetworkDevice : public ICoreEventBusConnectionKit, public ISchedulerConnec
               break;
           }
         }) {
-    _initSubscribers();
+    pinMode(mPinLed, OUTPUT);
     _initTasks();
+    CoreEventListener::listenToEvent(NetworkScheduler::Topic::CONNECTION);
   }
 
-  NetworkScheduler &getNetworkScheduler() {
-    return mNetwork;
+  virtual ~NetworkController() {
+    CoreEventListener::stopListeningToEvent(NetworkScheduler::Topic::CONNECTION);
+    mpNetwork = nullptr;
   }
 
-  void registerWithBus(CoreEventBus &eventBus) {
-    eventBus.registerEntity(&mNetwork);
-    eventBus.registerEntity(mpNetworkEventListener->listenToEvent(NetworkScheduler::CONNECTION));
-  }
-
-  void unregisterFromBus(CoreEventBus &eventBus) {
-    eventBus.unregisterEntity(&mNetwork);
-    eventBus.unregisterEntity(mpNetworkEventListener->stopListeningToEvent(NetworkScheduler::CONNECTION));
+  virtual void onEventReceived(unsigned int topic, int msg) override {
+    if (NetworkScheduler::CONNECTION == topic) {
+      int lastState = _resetNetworkLastState(msg);
+      switch (msg) {
+        case NetworkScheduler::ACCESS_POINT:
+          if (lastState != NetworkScheduler::FAILED) {
+            statusWaiting();
+          }
+          break;
+        case NetworkScheduler::SUCCESS:
+          statusIdle();
+          break;
+        case NetworkScheduler::CONNECTING:
+          statusBusy();
+          break;
+        case NetworkScheduler::DISCONNECTED:
+          if (lastState != NetworkScheduler::CONNECTING) {
+            // If previous state was CONNECTING, most likely there was a manual reconnect request
+            mpNetwork->reconnect();
+          }
+          break;
+        case NetworkScheduler::FAILED:
+        default:
+          statusAlarm();
+          break;
+      }
+    }
   }
 
   virtual void pushTo(TaskScheduler &scheduler) override {
-    scheduler.push(mNetwork);
     scheduler.push("signal_led", mpTaskSignalLed);
     scheduler.push("btn_config", mpTaskConfigBtn);
     scheduler.push("rst_click_count", mpTaskResetClickCounter);
@@ -78,7 +96,6 @@ class NetworkDevice : public ICoreEventBusConnectionKit, public ISchedulerConnec
 
   virtual void attach() override {
     mpTaskConfigBtn->attach(100);
-    mNetwork.attach();
     statusBusy();
   }
 
@@ -98,12 +115,16 @@ class NetworkDevice : public ICoreEventBusConnectionKit, public ISchedulerConnec
     mpTaskSignalLed->attach(200, 1);
   }
 
+  Button &getButton() {
+    return mConfigBtn;
+  }
+
  private:
   void _initTasks() {
     mpTaskSignalLed = TaskScheduler::make([&](SchedulerTask &self, short t) {
       static bool pinLevel = true;
       digitalWrite(mPinLed, pinLevel = (!pinLevel && t));
-      mNetwork.emitEvent(Topic::NETWORK_LED, pinLevel);
+      CoreEventListener::emitEvent(Topic::NETWORK_LED, pinLevel);
     });
     mpTaskConfigBtn = TaskScheduler::make(mConfigBtn);
     mpTaskResetClickCounter = TaskScheduler::make([&](SchedulerTask &self, short t) {
@@ -118,43 +139,7 @@ class NetworkDevice : public ICoreEventBusConnectionKit, public ISchedulerConnec
     return oldState;
   }
 
-  void _initSubscribers() {
-    mpNetworkEventListener = std::unique_ptr<CoreEventListener>(new CoreCallbackEventListener([&](int topic, int msg) {
-      if (NetworkScheduler::CONNECTION == topic) {
-        int lastState = _resetNetworkLastState(msg);
-        switch (msg) {
-          case NetworkScheduler::ACCESS_POINT:
-            UNIOT_LOG_DEBUG("NetworkDevice Subscriber, ACCESS_POINT");
-            if (lastState != NetworkScheduler::FAILED)
-              statusWaiting();
-            break;
-
-          case NetworkScheduler::SUCCESS:
-            UNIOT_LOG_DEBUG("NetworkDevice Subscriber, SUCCESS, ip: %s", WiFi.localIP().toString().c_str());
-            statusIdle();
-            break;
-
-          case NetworkScheduler::CONNECTING:
-            UNIOT_LOG_DEBUG("NetworkDevice Subscriber, CONNECTING");
-            statusBusy();
-            break;
-
-          case NetworkScheduler::DISCONNECTED:
-            UNIOT_LOG_DEBUG("NetworkDevice Subscriber, DISCONNECTED");
-            mNetwork.reconnect();
-            break;
-
-          case NetworkScheduler::FAILED:
-            UNIOT_LOG_DEBUG("NetworkDevice Subscriber, FAILED");
-          default:
-            statusAlarm();
-            break;
-        }
-      }
-    }));
-  }
-
-  NetworkScheduler mNetwork;
+  NetworkScheduler *mpNetwork;
   int mNetworkLastState;
 
   uint8_t mClickCounter;
@@ -164,7 +149,5 @@ class NetworkDevice : public ICoreEventBusConnectionKit, public ISchedulerConnec
   TaskScheduler::TaskPtr mpTaskSignalLed;
   TaskScheduler::TaskPtr mpTaskConfigBtn;
   TaskScheduler::TaskPtr mpTaskResetClickCounter;
-
-  UniquePointer<CoreEventListener> mpNetworkEventListener;
 };
 }  // namespace uniot

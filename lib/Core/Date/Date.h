@@ -26,7 +26,7 @@
 #endif
 
 #include <CBORStorage.h>
-#include <TaskScheduler.h>
+#include <IExecutor.h>
 #include <time.h>
 
 namespace uniot {
