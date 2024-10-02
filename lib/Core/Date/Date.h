@@ -27,19 +27,14 @@
 
 #include <CBORStorage.h>
 #include <IExecutor.h>
+#include <Singleton.h>
 #include <time.h>
 
 namespace uniot {
-class Date : public IExecutor, public CBORStorage {
+class Date : public IExecutor, public CBORStorage, public Singleton<Date> {
+  friend class Singleton<Date>;
+
  public:
-  Date(Date const &) = delete;
-  void operator=(Date const &) = delete;
-
-  static Date &getInstance() {
-    static Date instance;
-    return instance;
-  }
-
   static time_t now() {
     return getInstance()._now();
   }

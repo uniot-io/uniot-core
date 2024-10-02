@@ -24,10 +24,12 @@
     #include "WiFi.h"
 #endif
 
+#include <Patches.h>
 #include <Common.h>
 #include <Credentials.h>
 #include <TaskScheduler.h>
 #include <EventBus.h>
+#include <EventEmitter.h>
 #include <ConfigCaptivePortal.h>
 #include <WifiStorage.h>
 #include <config.min.html.gz.h>
@@ -110,9 +112,13 @@ namespace uniot {
 
       mTaskConfigAp = TaskScheduler::make([this](SchedulerTask &self, short t) {
         WiFi.disconnect(true);
+        WiFi.softAPdisconnect(true);
         if( WiFi.softAPConfig(mConfigServer.ip(), mConfigServer.ip(),  mApSubnet)
           && WiFi.softAP(mApName.c_str()))
         {
+#if defined(ENABLE_LOWER_WIFI_TX_POWER)
+          WiFi.setTxPower(WIFI_TX_POWER_LEVEL);
+#endif
           mTaskStart->attach(500, 1);
           CoreEventEmitter::sendDataToChannel(Channel::OUT_SSID, Bytes(mApName));
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::ACCESS_POINT);
@@ -128,6 +134,9 @@ namespace uniot {
         bool connect = WiFi.begin(mWifiStorage.getWifiArgs()->ssid.c_str(), mWifiStorage.getWifiArgs()->pass.c_str()) != WL_CONNECT_FAILED;
         if (disconect && connect)
         {
+#if defined(ENABLE_LOWER_WIFI_TX_POWER)
+          WiFi.setTxPower(WIFI_TX_POWER_LEVEL);
+#endif
           mTaskServe->detach();
           mTaskConnecting->attach(100, 100);
           CoreEventEmitter::sendDataToChannel(Channel::OUT_SSID, Bytes(mWifiStorage.getWifiArgs()->ssid));

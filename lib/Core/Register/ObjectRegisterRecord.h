@@ -24,7 +24,7 @@
 
 namespace uniot {
 
-class ObjectRegisterRecord {
+class ObjectRegisterRecord : public IWithType {
  public:
   ObjectRegisterRecord(const ObjectRegisterRecord &) = delete;
   void operator=(const ObjectRegisterRecord &) = delete;
@@ -41,17 +41,6 @@ class ObjectRegisterRecord {
 
   static bool exists(ObjectRegisterRecord *record) {
     return sRegisteredLinks.contains(record);
-  }
-
-  virtual TypeId getTypeId() const = 0;
-
-  template <typename T>
-  T *safeCast() {
-    if (this->getTypeId() == GetTypeId<T>()) {
-      return static_cast<T *>(this);
-    }
-    UNIOT_LOG_DEBUG("cast failed [%lu]", this);
-    return nullptr;
   }
 
  private:

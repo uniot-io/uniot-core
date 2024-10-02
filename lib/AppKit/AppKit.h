@@ -24,25 +24,20 @@
 #include <EventBus.h>
 #include <IEventBusConnectionKit.h>
 #include <ISchedulerConnectionKit.h>
-#include <MQTTKit.h>
-#include <NetworkController.h>
 #include <LispDevice.h>
 #include <LispPrimitives.h>
 #include <Logger.h>
+#include <MQTTKit.h>
+#include <NetworkController.h>
+#include <Singleton.h>
 #include <TopDevice.h>
 #include <unLisp.h>
 
 namespace uniot {
-class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit {
+class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit, public Singleton<AppKit> {
+  friend class Singleton<AppKit>;
+
  public:
-  AppKit(AppKit const &) = delete;
-  void operator=(AppKit const &) = delete;
-
-  static AppKit &getInstance() {
-    static AppKit instance;
-    return instance;
-  }
-
   unLisp &getLisp() {
     return unLisp::getInstance();
   }
@@ -87,7 +82,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
 
   virtual void registerWithBus(CoreEventBus &eventBus) override {
     eventBus.openDataChannel(NetworkScheduler::Channel::OUT_SSID, 1);
-    eventBus.openDataChannel(unLisp::Channel::OUT_LISP, 10);
+    eventBus.openDataChannel(unLisp::Channel::OUT_LISP, 5);
     eventBus.openDataChannel(unLisp::Channel::OUT_LISP_LOG, 10);
     eventBus.openDataChannel(unLisp::Channel::OUT_LISP_ERR, 1);
     eventBus.openDataChannel(unLisp::Channel::OUT_EVENT, 10);
@@ -134,7 +129,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     }
 
     mpNetworkDevice = MakeUnique<NetworkController>(mNetwork, pinBtn, activeLevelBtn, pinLed);
-    PrimitiveExpeditor::getRegisterManager().link(primitive::name::bclicked, &mpNetworkDevice->getButton(), FOURCC(lisp));
+    PrimitiveExpeditor::getRegisterManager().link(primitive::name::bclicked, &mpNetworkDevice->getButton(), FOURCC(ctrl));
   }
 
  private:

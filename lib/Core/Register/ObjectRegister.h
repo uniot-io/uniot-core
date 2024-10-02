@@ -47,7 +47,7 @@ class ObjectRegister : public Register<Pair<uint32_t, RecordPtr>> {
         return nullptr;
       }
       if (ObjectRegisterRecord::exists(record.second)) {
-        return record.second->safeCast<T>();
+        return Type::safeStaticCast<T>(record.second);
       }
       setRegisterValue(name, index, MakePair(FOURCC(dead), nullptr));
       UNIOT_LOG_DEBUG("record is dead [%s][%d]", name.c_str(), index);

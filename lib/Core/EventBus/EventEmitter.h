@@ -22,7 +22,6 @@
 #include <IterableQueue.h>
 
 #include "EventEntity.h"
-#include "EventEntityType.h"
 
 namespace uniot {
 template <class T_topic, class T_msg, class T_data>
@@ -30,8 +29,8 @@ class EventEmitter : public EventEntity<T_topic, T_msg, T_data> {
  public:
   virtual ~EventEmitter() = default;
 
-  virtual EventEntityType getType() const override {
-    return EventEntityType::EventEmitter;
+  virtual type_id getTypeId() const override {
+    return Type::getTypeId<EventEmitter<T_topic, T_msg, T_data>>();
   }
 
   void emitEvent(T_topic topic, T_msg msg);

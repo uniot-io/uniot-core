@@ -21,14 +21,14 @@
 #include <IterableQueue.h>
 #include <Logger.h>
 
-#include "EventEntityType.h"
+#include "TypeId.h"
 
 namespace uniot {
 template <class T_topic, class T_msg, class T_data>
 class EventBus;
 
 template <class T_topic, class T_msg, class T_data>
-class EventEntity {
+class EventEntity : public IWithType {
   friend class EventBus<T_topic, T_msg, T_data>;
 
  public:
@@ -36,8 +36,8 @@ class EventEntity {
 
   virtual ~EventEntity();
 
-  virtual EventEntityType getType() const {
-    return EventEntityType::EventEntity;
+  virtual type_id getTypeId() const override {
+    return Type::getTypeId<EventEntity<T_topic, T_msg, T_data>>();
   }
 
   bool sendDataToChannel(T_topic channel, T_data data) {

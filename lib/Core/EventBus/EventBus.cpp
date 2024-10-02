@@ -22,7 +22,6 @@
 
 #include "EventEmitter.h"
 #include "EventEntity.h"
-#include "EventEntityType.h"
 #include "EventListener.h"
 
 namespace uniot {
@@ -95,12 +94,12 @@ uint8_t EventBus<T_topic, T_msg, T_data>::execute() {
     // NOTE: Is it worth making a separate list for listeners to reduce the number of iterations?
     // Which is better - saving RAM or CPU time?
     mEntities.forEach([&](EventEntity<T_topic, T_msg, T_data> *entity) {
-      if (entity->getType() == EventEntityType::EventListener) {
+      if (entity->getTypeId() == Type::getTypeId<EventListener<T_topic, T_msg, T_data>>()) {
         // NOTE: This is a hack to avoid `dynamic_cast`.
         // The `dynamic_cast` operation requires RTTI to determine the dynamic type of an object at runtime,
         // but in many embedded systems, RTTI is disabled by default to save memory and reduce code size.
-        auto *listener = static_cast<EventListener<T_topic, T_msg, T_data> *>(entity);
-        if (listener->isListeningToEvent(event.first)) {
+        auto *listener = Type::safeStaticCast<EventListener<T_topic, T_msg, T_data>>(entity);
+        if (listener && listener->isListeningToEvent(event.first)) {
           listener->onEventReceived(event.first, event.second);
         }
       }

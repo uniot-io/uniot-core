@@ -26,6 +26,7 @@
 #include <LispHelper.h>
 #include <Logger.h>
 #include <PrimitiveExpeditor.h>
+#include <Singleton.h>
 #include <TaskScheduler.h>
 #include <libminilisp.h>
 
@@ -36,7 +37,9 @@
 namespace uniot {
 using namespace lisp;
 
-class unLisp : public CoreEventListener {
+class unLisp : public CoreEventListener, public Singleton<unLisp> {
+  friend class Singleton<unLisp>;
+
  public:
   enum Channel {
     OUT_LISP = FOURCC(lout),
@@ -59,14 +62,6 @@ class unLisp : public CoreEventListener {
     OUT_NEW_EVENT,
     IN_NEW_EVENT
   };
-
-  unLisp(unLisp const &) = delete;
-  void operator=(unLisp const &) = delete;
-
-  static unLisp &getInstance() {
-    static unLisp instance;
-    return instance;
-  }
 
   TaskScheduler::TaskPtr getTask() {
     return mTaskLispEval;

@@ -104,7 +104,7 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
       if (msg == unLisp::Msg::OUT_MSG_ADDED) {
         CoreEventListener::receiveDataFromChannel(unLisp::Channel::OUT_LISP, [](unsigned int id, bool empty, Bytes data) {
           // NOTE: it is currently only used for debugging purposes
-          // UNIOT_LOG_INFO_IF(!empty, "lisp: %s", data.toString().c_str());
+          UNIOT_LOG_TRACE_IF(!empty, "lisp: %s", data.toString().c_str());
         });
         return;
       }
@@ -123,7 +123,7 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
       if(msg == unLisp::Msg::OUT_NEW_EVENT) {
         CoreEventListener::receiveDataFromChannel(unLisp::Channel::OUT_EVENT, [this](unsigned int id, bool empty, Bytes data) {
           if (!empty) {
-            auto event = CBORObject(data);
+            CBORObject event(data);
             event.put("timestamp", static_cast<int64_t>(Date::now()))
                 .putMap("sender")
                 .put("type", "device")

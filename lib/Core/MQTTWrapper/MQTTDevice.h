@@ -31,12 +31,12 @@ class MQTTDevice {
   MQTTDevice() : mpKit(nullptr) {}
   virtual ~MQTTDevice();
 
-  String getDeviceId() const;
-  String getOwnerId() const;
+  const String &getDeviceId() const;
+  const String &getOwnerId() const;
 
   const String &subscribe(const String &topic);
-  String subscribeDevice(const String &subTopic);
-  String subscribeGroup(const String &groupId, const String &subTopic);
+  const String &subscribeDevice(const String &subTopic);
+  const String &subscribeGroup(const String &groupId, const String &subTopic);
   bool unsubscribe(const String &topic);
 
   virtual void syncSubscriptions() = 0;  // NOTE: subscriptions that depend on credentials should be reconstructed here
@@ -65,5 +65,7 @@ class MQTTDevice {
 
   IterableQueue<String> mTopics;
   MQTTKit *mpKit;
+
+  static const String sEmptyString;
 };
 }  // namespace uniot

@@ -83,8 +83,8 @@ class Button : public IExecutor, public ObjectRegisterRecord {
     return 0;
   }
 
-  virtual TypeId getTypeId() const override {
-    return GetTypeId<Button>();
+  virtual type_id getTypeId() const override {
+    return Type::getTypeId<Button>();
   }
 
  protected:

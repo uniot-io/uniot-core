@@ -24,6 +24,9 @@
 #include "MQTTKit.h"
 
 namespace uniot {
+
+const String MQTTDevice::sEmptyString;
+
 MQTTDevice::~MQTTDevice() {
   if (mpKit) {
     mpKit->removeDevice(*this);
@@ -31,22 +34,22 @@ MQTTDevice::~MQTTDevice() {
   }
 }
 
-String MQTTDevice::getDeviceId() const {
+const String &MQTTDevice::getDeviceId() const {
   if (mpKit) {
     return mpKit->getPath().getDeviceId();
   } else {
     UNIOT_LOG_WARN("getting device id before adding device to kit");
   }
-  return {};
+  return sEmptyString;
 }
 
-String MQTTDevice::getOwnerId() const {
+const String &MQTTDevice::getOwnerId() const {
   if (mpKit) {
     return mpKit->getPath().getOwnerId();
   } else {
     UNIOT_LOG_WARN("getting owner id before adding device to kit");
   }
-  return {};
+  return sEmptyString;
 }
 
 void MQTTDevice::unsubscribeFromAll() {
@@ -77,22 +80,22 @@ const String &MQTTDevice::subscribe(const String &topic) {
   return topic;
 }
 
-String MQTTDevice::subscribeDevice(const String &subTopic) {
+const String &MQTTDevice::subscribeDevice(const String &subTopic) {
   if (mpKit) {
     return subscribe(mpKit->getPath().buildDevicePath(subTopic));
   } else {
     UNIOT_LOG_WARN("use detailed subscription after adding device to kit");
   }
-  return {};
+  return sEmptyString;
 }
 
-String MQTTDevice::subscribeGroup(const String &groupId, const String &subTopic) {
+const String &MQTTDevice::subscribeGroup(const String &groupId, const String &subTopic) {
   if (mpKit) {
     return subscribe(mpKit->getPath().buildGroupPath(groupId, subTopic));
   } else {
     UNIOT_LOG_WARN("use detailed subscription after adding device to kit");
   }
-  return {};
+  return sEmptyString;
 }
 
 void MQTTDevice::publish(const String &topic, const Bytes &payload, bool retained, bool sign) {

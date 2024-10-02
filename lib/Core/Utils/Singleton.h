@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2024 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,21 @@
 #pragma once
 
 namespace uniot {
-enum class EventEntityType {
-  EventEntity,
-  EventEmitter,
-  EventListener
+
+template <typename Derived>
+class Singleton {
+ public:
+  Singleton(const Singleton&) = delete;
+  Singleton& operator=(const Singleton&) = delete;
+
+  static inline Derived& getInstance() {
+    static Derived instance;
+    return instance;
+  }
+
+ protected:
+  Singleton() = default;
+  ~Singleton() = default;
 };
+
 }  // namespace uniot
