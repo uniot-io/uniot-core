@@ -20,9 +20,7 @@
 
 #include <Arduino.h>
 
-#ifdef __cplusplus
 #include <functional>
-#endif
 
 /**
  * std::queue requires much more resources
@@ -30,35 +28,32 @@
 template <typename T>
 class ClearQueue {
  public:
-#ifdef __cplusplus
-  typedef std::function<void(const T&)> VoidCallback;
-#else
-  typedef void (*VoidCallback)(T);
-#endif
+  typedef std::function<void(const T &)> VoidCallback;
 
-  ClearQueue(ClearQueue const&) = delete;
-  void operator=(ClearQueue const&) = delete;
+  ClearQueue(ClearQueue const &) = delete;
+  void operator=(ClearQueue const &) = delete;
 
   ClearQueue();
   virtual ~ClearQueue();
 
-  void push(const T value);
-  bool pushUnique(const T value);
+  void push(const T &value);
+  bool pushUnique(const T &value);
   T hardPop();
-  T hardPeek() const;
-  T pop(const T errorCode);
-  T peek(const T errorCode) const;
-  bool removeOne(const T value);
-  bool contains(const T value) const;
-  bool isEmpty() const;
+  const T &hardPeek() const;
+  T pop(const T &errorCode);
+  const T &peek(const T &errorCode) const;
+  bool removeOne(const T &value);
+  bool contains(const T &value) const;
+  T *find(const T &value) const;
+  inline bool isEmpty() const;
   void clean();
   void forEach(VoidCallback callback) const;
 
  protected:
   typedef struct node {
     T value;
-    node* next;
-  }* pnode;
+    node *next;
+  } *pnode;
 
   pnode mHead;
   pnode mTail;
@@ -66,8 +61,8 @@ class ClearQueue {
 
 template <typename T>
 ClearQueue<T>::ClearQueue() {
-  mHead = NULL;
-  mTail = NULL;
+  mHead = nullptr;
+  mTail = nullptr;
 }
 
 template <typename T>
@@ -76,7 +71,7 @@ ClearQueue<T>::~ClearQueue() {
 }
 
 template <typename T>
-bool ClearQueue<T>::pushUnique(const T value) {
+bool ClearQueue<T>::pushUnique(const T &value) {
   if (!contains(value)) {
     push(value);
     return true;
@@ -85,11 +80,11 @@ bool ClearQueue<T>::pushUnique(const T value) {
 }
 
 template <typename T>
-void ClearQueue<T>::push(const T value) {
+void ClearQueue<T>::push(const T &value) {
   pnode cur = mTail;
   mTail = (pnode) new node;
 
-  mTail->next = NULL;
+  mTail->next = nullptr;
   mTail->value = value;
   if (isEmpty()) {
     mHead = mTail;
@@ -105,20 +100,20 @@ T ClearQueue<T>::hardPop() {
   delete mHead;
   mHead = cur;
 
-  if (mHead == NULL) {
-    mTail = NULL;
+  if (mHead == nullptr) {
+    mTail = nullptr;
   }
 
   return value;
 }
 
 template <typename T>
-T ClearQueue<T>::hardPeek() const {
+const T &ClearQueue<T>::hardPeek() const {
   return mHead->value;
 }
 
 template <typename T>
-T ClearQueue<T>::pop(const T errorCode) {
+T ClearQueue<T>::pop(const T &errorCode) {
   if (!isEmpty()) {
     return hardPop();
   }
@@ -126,7 +121,7 @@ T ClearQueue<T>::pop(const T errorCode) {
 }
 
 template <typename T>
-T ClearQueue<T>::peek(const T errorCode) const {
+const T &ClearQueue<T>::peek(const T &errorCode) const {
   if (!isEmpty()) {
     return hardPeek();
   }
@@ -134,19 +129,19 @@ T ClearQueue<T>::peek(const T errorCode) const {
 }
 
 template <typename T>
-bool ClearQueue<T>::removeOne(const T value) {
+bool ClearQueue<T>::removeOne(const T &value) {
   if (!isEmpty()) {
     if (mHead->value == value) {
       hardPop();
       return true;
     }
-    for (pnode cur = mHead; cur->next != NULL; cur = cur->next) {
+    for (pnode cur = mHead; cur->next != nullptr; cur = cur->next) {
       if (cur->next->value == value) {
         pnode newNext = cur->next->next;
         delete cur->next;
         cur->next = newNext;
 
-        if (newNext == NULL) {
+        if (newNext == nullptr) {
           mTail = cur;
         }
 
@@ -158,8 +153,8 @@ bool ClearQueue<T>::removeOne(const T value) {
 }
 
 template <typename T>
-bool ClearQueue<T>::contains(const T value) const {
-  for (pnode cur = mHead; cur != NULL; cur = cur->next) {
+bool ClearQueue<T>::contains(const T &value) const {
+  for (pnode cur = mHead; cur != nullptr; cur = cur->next) {
     if (cur->value == value) {
       return true;
     }
@@ -168,24 +163,34 @@ bool ClearQueue<T>::contains(const T value) const {
 }
 
 template <typename T>
-bool ClearQueue<T>::isEmpty() const {
-  return mHead == NULL;
+T *ClearQueue<T>::find(const T &value) const {
+  for (pnode cur = mHead; cur != nullptr; cur = cur->next) {
+    if (cur->value == value) {
+      return &(cur->value);
+    }
+  }
+  return nullptr;
+}
+
+template <typename T>
+inline bool ClearQueue<T>::isEmpty() const {
+  return mHead == nullptr;
 }
 
 template <typename T>
 void ClearQueue<T>::clean() {
-  for (pnode cur = mHead; cur != NULL; mHead = cur) {
+  for (pnode cur = mHead; cur != nullptr; mHead = cur) {
     cur = mHead->next;
     delete mHead;
   }
 
-  mHead = NULL;
-  mTail = NULL;
+  mHead = nullptr;
+  mTail = nullptr;
 }
 
 template <typename T>
 void ClearQueue<T>::forEach(VoidCallback callback) const {
-  for (pnode cur = mHead; cur != NULL; cur = cur->next) {
+  for (pnode cur = mHead; cur != nullptr; cur = cur->next) {
     callback(cur->value);
   }
 }

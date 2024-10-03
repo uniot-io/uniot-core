@@ -20,18 +20,17 @@
 
 #include "ClearQueue.h"
 
-template<typename T>
-class LimitedQueue: public ClearQueue<T>
-{
-public:
+template <typename T>
+class LimitedQueue : public ClearQueue<T> {
+ public:
   LimitedQueue()
-  : ClearQueue<T>(), mLimit(0), mSize(0) { }
+      : ClearQueue<T>(), mLimit(0), mSize(0) {}
 
-  size_t limit() {
+  inline size_t limit() const {
     return mLimit;
   }
 
-  size_t size() {
+  inline size_t size() const {
     return mSize;
   }
 
@@ -41,24 +40,24 @@ public:
     applyLimit();
   }
 
-  bool isFull() {
+  inline bool isFull() const {
     return mSize >= mLimit;
   }
 
   void applyLimit() {
-    for( ; mSize > mLimit; --mSize) {
+    for (; mSize > mLimit; --mSize) {
       ClearQueue<T>::hardPop();
     }
   }
 
-  void pushLimited(const T value) {
+  void pushLimited(const T &value) {
     ClearQueue<T>::push(value);
     mSize++;
     applyLimit();
   }
 
-  T popLimited(const T errorCode) {
-    if(mSize) {
+  T popLimited(const T &errorCode) {
+    if (mSize) {
       mSize--;
     }
     return ClearQueue<T>::pop(errorCode);
@@ -67,14 +66,14 @@ public:
   size_t calcSize() {
     mSize = 0;
     typename ClearQueue<T>::pnode cur = ClearQueue<T>::mHead;
-    while(cur != NULL) {
+    while (cur != nullptr) {
       cur = cur->next;
       mSize++;
     }
     return mSize;
   }
 
-private:
+ private:
   size_t mLimit;
   size_t mSize;
 };

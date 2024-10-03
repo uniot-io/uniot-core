@@ -77,7 +77,7 @@ const String &MQTTDevice::subscribe(const String &topic) {
     auto subscribed = mpKit->client()->subscribe(topic.c_str());
     UNIOT_LOG_TRACE_IF(!subscribed, "failed to subscribe to topic: %s", topic.c_str());
   }
-  return topic;
+  return *mTopics.find(topic);
 }
 
 const String &MQTTDevice::subscribeDevice(const String &subTopic) {

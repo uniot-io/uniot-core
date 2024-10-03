@@ -57,10 +57,10 @@ class Map : public IterableQueue<Pair<T_Key, T_Value>> {
    * @param defaultValue The default value to return if the key is not found.
    * @return The associated value if found, otherwise defaultValue.
    */
-  T_Value get(const T_Key& key, const T_Value& defaultValue = {}) const {
+  const T_Value& get(const T_Key& key, const T_Value& defaultValue = {}) const {
     IterableQueue<MapItem>::begin();
     while (!IterableQueue<MapItem>::isEnd()) {
-      auto item = IterableQueue<MapItem>::current();
+      auto &item = IterableQueue<MapItem>::current();
       if (item.first == key) {
         return item.second;
       }

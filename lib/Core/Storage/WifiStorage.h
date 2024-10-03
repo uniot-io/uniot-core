@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2024 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,60 +18,55 @@
 
 #pragma once
 
-#include <EEPROM.h>
 #include <CBORStorage.h>
+#include <EEPROM.h>
 
-struct WifiArgs
-{
-  String ssid;
-  String pass;
-
-  bool isValid()
-  {
-    return ssid.length() + pass.length();
-  }
-};
-
-namespace uniot
-{
-class WifiStorage : public CBORStorage
-{
-public:
-  WifiStorage() : CBORStorage("wifi.cbor")
-  {
+namespace uniot {
+class WifiStorage : public CBORStorage {
+ public:
+  WifiStorage() : CBORStorage("wifi.cbor") {
   }
 
-  WifiArgs *getWifiArgs()
-  {
-    return &mWifiArgs;
+  const String& getSsid() const {
+    return mSsid;
   }
 
-  virtual bool store() override
-  {
-    object().put("ssid", mWifiArgs.ssid.c_str());
-    object().put("pass", mWifiArgs.pass.c_str());
+  const String& getPassword() const {
+    return mPassword;
+  }
+
+  void setCredentials(const String& ssid, const String& password) {
+    mSsid = ssid;
+    mPassword = password;
+  }
+
+  bool isCredentialsValid() {
+    return mSsid.length() && mPassword.length();
+  }
+
+  virtual bool store() override {
+    object().put("ssid", mSsid.c_str());
+    object().put("pass", mPassword.c_str());
     return CBORStorage::store();
   }
 
-  virtual bool restore() override
-  {
-    if (CBORStorage::restore())
-    {
-      mWifiArgs.ssid = object().getString("ssid");
-      mWifiArgs.pass = object().getString("pass");
+  virtual bool restore() override {
+    if (CBORStorage::restore()) {
+      mSsid = object().getString("ssid");
+      mPassword = object().getString("pass");
       return true;
     }
     return false;
   }
 
-  virtual bool clean() override
-  {
-    mWifiArgs.ssid = "";
-    mWifiArgs.pass = "";
+  virtual bool clean() override {
+    mSsid = "";
+    mPassword = "";
     return CBORStorage::clean();
   }
 
-private:
-  WifiArgs mWifiArgs;
+ private:
+  String mSsid;
+  String mPassword;
 };
-} // namespace uniot
+}  // namespace uniot

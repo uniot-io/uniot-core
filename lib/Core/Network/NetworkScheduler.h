@@ -76,7 +76,7 @@ namespace uniot {
 
     virtual void attach() override {
       mWifiStorage.restore();
-      if(mWifiStorage.getWifiArgs()->isValid()) {
+      if(mWifiStorage.isCredentialsValid()) {
         mTaskConnectSta->attach(500, 1);
       } else {
         mTaskConfigAp->attach(500, 1);
@@ -89,7 +89,7 @@ namespace uniot {
     }
 
     bool reconnect() {
-      if(mWifiStorage.getWifiArgs()->isValid()) {
+      if(mWifiStorage.isCredentialsValid()) {
         mTaskConfigAp->detach();
         mTaskConnectSta->attach(500, 1);
         return true;
@@ -116,7 +116,7 @@ namespace uniot {
         if( WiFi.softAPConfig(mConfigServer.ip(), mConfigServer.ip(),  mApSubnet)
           && WiFi.softAP(mApName.c_str()))
         {
-#if defined(ENABLE_LOWER_WIFI_TX_POWER)
+#if defined(ESP32) && defined(ENABLE_LOWER_WIFI_TX_POWER)
           WiFi.setTxPower(WIFI_TX_POWER_LEVEL);
 #endif
           mTaskStart->attach(500, 1);
@@ -131,15 +131,16 @@ namespace uniot {
         WiFi.disconnect(true);
         bool disconect = true;
         WiFi.softAPdisconnect(true); // !!!!!!!!!!!!
-        bool connect = WiFi.begin(mWifiStorage.getWifiArgs()->ssid.c_str(), mWifiStorage.getWifiArgs()->pass.c_str()) != WL_CONNECT_FAILED;
+        WiFi.setHostname(mApName.c_str());
+        bool connect = WiFi.begin(mWifiStorage.getSsid().c_str(), mWifiStorage.getPassword().c_str()) != WL_CONNECT_FAILED;
         if (disconect && connect)
         {
-#if defined(ENABLE_LOWER_WIFI_TX_POWER)
+#if defined(ESP32) && defined(ENABLE_LOWER_WIFI_TX_POWER)
           WiFi.setTxPower(WIFI_TX_POWER_LEVEL);
 #endif
           mTaskServe->detach();
           mTaskConnecting->attach(100, 100);
-          CoreEventEmitter::sendDataToChannel(Channel::OUT_SSID, Bytes(mWifiStorage.getWifiArgs()->ssid));
+          CoreEventEmitter::sendDataToChannel(Channel::OUT_SSID, Bytes(mWifiStorage.getSsid()));
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::CONNECTING);
         }
       });
@@ -204,6 +205,7 @@ namespace uniot {
       });
 
       mConfigServer.get()->on("/scan", [this] {
+        // TODO: implement async scan
         auto n = WiFi.scanNetworks();
         String networks = "[";
         for (auto i = 0; i < n; ++i) {
@@ -217,11 +219,10 @@ namespace uniot {
       });
 
       mConfigServer.get()->on("/config", [this] {
-        mWifiStorage.getWifiArgs()->ssid = mConfigServer.get()->arg("ssid");
-        mWifiStorage.getWifiArgs()->pass = mConfigServer.get()->arg("pass");
+        mWifiStorage.setCredentials(mConfigServer.get()->arg("ssid"), mConfigServer.get()->arg("pass"));
         mConfigServer.get()->sendHeader("Location", "/", true);
         mConfigServer.get()->send_P(307, text, text);
-        if(mWifiStorage.getWifiArgs()->isValid()) {
+        if(mWifiStorage.isCredentialsValid()) {
           mTaskConnectSta->attach(500, 1);
           mpCredentials->setOwnerId(mConfigServer.get()->arg("acc"));
         }
