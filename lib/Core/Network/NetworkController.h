@@ -19,44 +19,75 @@
 #pragma once
 
 #include <Button.h>
+#include <CBORStorage.h>
 #include <EventListener.h>
 #include <ISchedulerConnectionKit.h>
 #include <NetworkScheduler.h>
 
 namespace uniot {
-class NetworkController : public ISchedulerConnectionKit, public CoreEventListener {
+class NetworkController : public ISchedulerConnectionKit, public CoreEventListener, public CBORStorage {
  public:
   enum Topic { NETWORK_LED = FOURCC(nled) };
 
-  NetworkController(NetworkScheduler &network, uint8_t pinBtn, uint8_t activeLevelBtn, uint8_t pinLed)
-      : mpNetwork(&network),
+  NetworkController(NetworkScheduler &network,
+                    uint8_t pinBtn = UINT8_MAX,
+                    uint8_t activeLevelBtn = LOW,
+                    uint8_t pinLed = UINT8_MAX,
+                    uint8_t activeLevelLed = HIGH,
+                    uint8_t maxRebootCount = 3,
+                    uint32_t rebootWindowMs = 10000)
+      : CBORStorage("ctrl.cbor"),
+        mpNetwork(&network),
         mNetworkLastState(NetworkScheduler::SUCCESS),
         mClickCounter(0),
         mPinLed(pinLed),
-        mConfigBtn(pinBtn, activeLevelBtn, 30, [&](Button *btn, Button::Event event) {
-          switch (event) {
-            case Button::LONG_PRESS:
-              if (mClickCounter > 3)
-                mpNetwork->forget();
-              else
-                mpNetwork->reconnect();
-              break;
-            case Button::CLICK:
-              if (!mClickCounter)
-                mpTaskResetClickCounter->attach(5000, 1);
-              mClickCounter++;
-            default:
-              break;
-          }
-        }) {
-    pinMode(mPinLed, OUTPUT);
+        mActiveLevelLed(activeLevelLed),
+        mMaxRebootCount(maxRebootCount),
+        mRebootWindowMs(rebootWindowMs),
+        mRebootCount(0) {
+    if (pinLed != UINT8_MAX) {
+      pinMode(mPinLed, OUTPUT);
+    }
+    if (pinBtn != UINT8_MAX) {
+      mpConfigBtn = MakeUnique<Button>(pinBtn, activeLevelBtn, 30, [&](Button *btn, Button::Event event) {
+        switch (event) {
+          case Button::LONG_PRESS:
+            if (mClickCounter > 3)
+              mpNetwork->forget();
+            else
+              mpNetwork->reconnect();
+            break;
+          case Button::CLICK:
+            if (!mClickCounter) {
+              mpTaskResetClickCounter->attach(5000, 1);
+            }
+            mClickCounter++;
+          default:
+            break;
+        }
+      });
+    }
     _initTasks();
+    _checkAndHandleReboot();
     CoreEventListener::listenToEvent(NetworkScheduler::Topic::CONNECTION);
   }
 
   virtual ~NetworkController() {
     CoreEventListener::stopListeningToEvent(NetworkScheduler::Topic::CONNECTION);
     mpNetwork = nullptr;
+  }
+
+  virtual bool store() override {
+    object().put("reset", mRebootCount);
+    return CBORStorage::store();
+  }
+
+  virtual bool restore() override {
+    if (CBORStorage::restore()) {
+      mRebootCount = object().getInt("reset");
+      return true;
+    }
+    return false;
   }
 
   virtual void onEventReceived(unsigned int topic, int msg) override {
@@ -90,12 +121,18 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
 
   virtual void pushTo(TaskScheduler &scheduler) override {
     scheduler.push("signal_led", mpTaskSignalLed);
-    scheduler.push("btn_config", mpTaskConfigBtn);
-    scheduler.push("rst_click_count", mpTaskResetClickCounter);
+    scheduler.push("rst_reboot_count", mpTaskResetRebootCounter);
+    if (_hasButton()) {
+      scheduler.push("btn_config", mpTaskConfigBtn);
+      scheduler.push("rst_click_count", mpTaskResetClickCounter);
+    }
   }
 
   virtual void attach() override {
-    mpTaskConfigBtn->attach(100);
+    mpTaskResetRebootCounter->once(mRebootWindowMs);
+    if (_hasButton()) {
+      mpTaskConfigBtn->attach(100);
+    }
     statusBusy();
   }
 
@@ -115,22 +152,45 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
     mpTaskSignalLed->attach(200, 1);
   }
 
-  Button &getButton() {
-    return mConfigBtn;
+  Button *getButton() {
+    return _hasButton() ? mpConfigBtn.get() : nullptr;
   }
 
  private:
   void _initTasks() {
     mpTaskSignalLed = TaskScheduler::make([&](SchedulerTask &self, short t) {
-      static bool pinLevel = true;
-      digitalWrite(mPinLed, pinLevel = (!pinLevel && t));
-      CoreEventListener::emitEvent(Topic::NETWORK_LED, pinLevel);
+      static bool signalLevel = true;
+      signalLevel = (!signalLevel && t);
+      CoreEventListener::emitEvent(Topic::NETWORK_LED, signalLevel);
+
+      if (_hasLed()) {
+        digitalWrite(mPinLed, signalLevel ? mActiveLevelLed : !mActiveLevelLed);
+      }
     });
-    mpTaskConfigBtn = TaskScheduler::make(mConfigBtn);
-    mpTaskResetClickCounter = TaskScheduler::make([&](SchedulerTask &self, short t) {
-      UNIOT_LOG_DEBUG("ClickCounter = %d", mClickCounter);
-      mClickCounter = 0;
+
+    if (_hasButton()) {
+      mpTaskConfigBtn = TaskScheduler::make(*mpConfigBtn);
+      mpTaskResetClickCounter = TaskScheduler::make([&](SchedulerTask &self, short t) {
+        UNIOT_LOG_DEBUG("ClickCounter = %d", mClickCounter);
+        mClickCounter = 0;
+      });
+    }
+
+    mpTaskResetRebootCounter = TaskScheduler::make([&](SchedulerTask &self, short t) {
+      mRebootCount = 0;
+      NetworkController::store();
     });
+  }
+
+  void _checkAndHandleReboot() {
+    NetworkController::restore();
+    mRebootCount++;
+    if (mRebootCount >= mMaxRebootCount) {
+      mpTaskResetRebootCounter->detach();
+      mpNetwork->forget();
+      mRebootCount = 0;
+    }
+    NetworkController::store();
   }
 
   int _resetNetworkLastState(int newState) {
@@ -139,15 +199,29 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
     return oldState;
   }
 
+  inline bool _hasButton() {
+    return mpConfigBtn.get() != nullptr;
+  }
+
+  inline bool _hasLed() {
+    return mPinLed != UINT8_MAX;
+  }
+
   NetworkScheduler *mpNetwork;
   int mNetworkLastState;
 
   uint8_t mClickCounter;
   uint8_t mPinLed;
-  Button mConfigBtn;
+  uint8_t mActiveLevelLed;
+  uint8_t mMaxRebootCount;
+  uint32_t mRebootWindowMs;
+  uint8_t mRebootCount;
+
+  UniquePointer<Button> mpConfigBtn;
 
   TaskScheduler::TaskPtr mpTaskSignalLed;
   TaskScheduler::TaskPtr mpTaskConfigBtn;
   TaskScheduler::TaskPtr mpTaskResetClickCounter;
+  TaskScheduler::TaskPtr mpTaskResetRebootCounter;
 };
 }  // namespace uniot

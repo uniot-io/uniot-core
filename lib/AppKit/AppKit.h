@@ -38,6 +38,15 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
   friend class Singleton<AppKit>;
 
  public:
+  struct NetworkControllerConfig {
+    uint8_t pinBtn = UINT8_MAX;
+    uint8_t activeLevelBtn = LOW;
+    uint8_t pinLed = UINT8_MAX;
+    uint8_t activeLevelLed = HIGH;
+    uint8_t maxRebootCount = 3;
+    uint32_t rebootWindowMs = 10000;
+  };
+
   unLisp &getLisp() {
     return unLisp::getInstance();
   }
@@ -65,6 +74,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
   }
 
   virtual void attach() override {
+    _initPrimitives();
     mNetwork.attach();
     mMQTT.attach();
 
@@ -122,14 +132,31 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     }
   }
 
-  void configureNetworkController(uint8_t pinBtn = 0, uint8_t activeLevelBtn = LOW, uint8_t pinLed = 2) {
+  void configureNetworkController(const NetworkControllerConfig &config) {
+    configureNetworkController(config.pinBtn,
+                               config.activeLevelBtn,
+                               config.pinLed,
+                               config.activeLevelLed,
+                               config.maxRebootCount,
+                               config.rebootWindowMs);
+  }
+
+  void configureNetworkController(uint8_t pinBtn = UINT8_MAX,
+                                  uint8_t activeLevelBtn = LOW,
+                                  uint8_t pinLed = UINT8_MAX,
+                                  uint8_t activeLevelLed = HIGH,
+                                  uint8_t maxRebootCount = 3,
+                                  uint32_t rebootWindowMs = 10000) {
     if (mpNetworkDevice) {
       UNIOT_LOG_WARN("Network Controller already configured");
       return;
     }
 
-    mpNetworkDevice = MakeUnique<NetworkController>(mNetwork, pinBtn, activeLevelBtn, pinLed);
-    PrimitiveExpeditor::getRegisterManager().link(primitive::name::bclicked, &mpNetworkDevice->getButton(), FOURCC(ctrl));
+    mpNetworkDevice = MakeUnique<NetworkController>(mNetwork, pinBtn, activeLevelBtn, pinLed, activeLevelLed, maxRebootCount, rebootWindowMs);
+    auto ctrlBtn = mpNetworkDevice->getButton();
+    if (ctrlBtn) {
+      PrimitiveExpeditor::getRegisterManager().link(primitive::name::bclicked, ctrlBtn, FOURCC(ctrl));
+    }
   }
 
  private:
@@ -153,7 +180,6 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     _initMqtt();
     _initTasks();
     _initListeners();
-    _initPrimitives();
   }
 
   inline void _initMqtt() {
@@ -170,11 +196,21 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
   }
 
   inline void _initPrimitives() {
-    getLisp().pushPrimitive(primitive::dwrite);
-    getLisp().pushPrimitive(primitive::dread);
-    getLisp().pushPrimitive(primitive::awrite);
-    getLisp().pushPrimitive(primitive::aread);
-    getLisp().pushPrimitive(primitive::bclicked);
+    if (PrimitiveExpeditor::getRegisterManager().getRegisterLength(primitive::name::dwrite)) {
+      getLisp().pushPrimitive(primitive::dwrite);
+    }
+    if (PrimitiveExpeditor::getRegisterManager().getRegisterLength(primitive::name::dread)) {
+      getLisp().pushPrimitive(primitive::dread);
+    }
+    if (PrimitiveExpeditor::getRegisterManager().getRegisterLength(primitive::name::awrite)) {
+      getLisp().pushPrimitive(primitive::awrite);
+    }
+    if (PrimitiveExpeditor::getRegisterManager().getRegisterLength(primitive::name::aread)) {
+      getLisp().pushPrimitive(primitive::aread);
+    }
+    if (PrimitiveExpeditor::getRegisterManager().getRegisterLength(primitive::name::bclicked)) {
+      getLisp().pushPrimitive(primitive::bclicked);
+    }
   }
 
   inline void _initListeners() {

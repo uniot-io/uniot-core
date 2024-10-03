@@ -63,6 +63,14 @@ class RegisterManager {
     return mObjectRegistry.get<T>(name, index);
   }
 
+  size_t getRegisterLength(const String &name) const {
+    auto length = mGpioRegistry.getRegisterLength(name);
+    if (!length) {
+      length = mObjectRegistry.getRegisterLength(name);
+    }
+    return length;
+  }
+
   void serializeRegisters(CBORObject &obj) {
     mGpioRegistry.iterateRegisters([&](const String &name, SharedPointer<Array<uint8_t>> values) {
       obj.putArray(name.c_str()).append(values->size(), values->raw());
