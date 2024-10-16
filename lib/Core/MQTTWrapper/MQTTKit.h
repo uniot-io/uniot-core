@@ -58,6 +58,7 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
         mPath(credentials),
         mInfoExtender(infoExtender),
         mPubSubClient(mWiFiClient),
+        mNetworkConnected(false),
         mConnectionId(0) {
     mPubSubClient.setCallback([this](char *topic, uint8_t *payload, unsigned int length) {
       mDevices.forEach([&](MQTTDevice *device) {
@@ -78,6 +79,7 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
     });
     _initTasks();
     CoreEventListener::listenToEvent(NetworkScheduler::Topic::CONNECTION);
+    CoreEventListener::listenToEvent(Date::Topic::TIME);
 
     // mWiFiClient.allowSelfSignedCerts();
     // mWiFiClient.setInsecure();
@@ -85,6 +87,7 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
 
   ~MQTTKit() {
     CoreEventListener::stopListeningToEvent(NetworkScheduler::Topic::CONNECTION);
+    CoreEventListener::stopListeningToEvent(Date::Topic::TIME);
     // TODO: implement, remove all devices
   }
 
@@ -131,16 +134,31 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
     if (NetworkScheduler::CONNECTION == topic) {
       switch (msg) {
         case NetworkScheduler::SUCCESS:
-          mTaskMQTT->attach(10);
+          mNetworkConnected = true;
+          Date::getInstance().forceSync();
           break;
         case NetworkScheduler::ACCESS_POINT:
         case NetworkScheduler::CONNECTING:
         case NetworkScheduler::DISCONNECTED:
         case NetworkScheduler::FAILED:
         default:
+          mNetworkConnected = false;
           mTaskMQTT->detach();
           break;
       }
+      return;
+    }
+    if (Date::TIME == topic) {
+      switch (msg) {
+        case Date::SYNCED:
+          if (!mTaskMQTT->isAttached()) {
+            mTaskMQTT->attach(10);
+          }
+          break;
+        default:
+          break;
+      }
+      return;
     }
   }
 
@@ -152,6 +170,10 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
  private:
   inline void _initTasks() {
     mTaskMQTT = TaskScheduler::make([this](SchedulerTask &self, short t) {
+      if (!mNetworkConnected) {
+        UNIOT_LOG_DEBUG("MQTT: Network is not connected");
+        return;
+      }
       if (!mPubSubClient.connected()) {
         UNIOT_LOG_DEBUG("Attempting MQTT connection #%d...", mConnectionId);
         Bytes packetExtention;
@@ -201,8 +223,10 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
   Bytes _buildCOSEMessage(const Bytes &payload, bool sign = false) {
     COSEMessage obj;
     obj.setPayload(payload);
+    auto kid = mpCredentials->keyId();  // NOTE: dynamic data must be within the scope of the obj.build() function
     if (sign) {
       obj.sign(*mpCredentials);
+      obj.setUnprotectedKid(kid);
     }
     return obj.build();
   }
@@ -258,6 +282,7 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
   CBORExtender mInfoExtender;
   PubSubClient mPubSubClient;
 
+  bool mNetworkConnected;
   int mConnectionId;
 
   WiFiClient mWiFiClient;

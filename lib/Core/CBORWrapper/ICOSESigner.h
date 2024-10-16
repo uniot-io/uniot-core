@@ -26,6 +26,7 @@ namespace uniot {
 class ICOSESigner {
  public:
   virtual ~ICOSESigner() {}
+  virtual Bytes keyId() const = 0;
   virtual Bytes sign(const Bytes &data) const = 0;
   virtual COSEAlgorithm signerAlgorithm() const = 0;
 };

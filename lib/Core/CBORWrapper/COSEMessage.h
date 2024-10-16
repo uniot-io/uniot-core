@@ -72,6 +72,10 @@ class COSEMessage {
     return mRoot._getMap(mpUnprotectedHeader);
   }
 
+  inline Bytes getUnprotectedKid() {
+    return getUnprotectedHeader().getBytes(COSEHeaderLabel::KeyIdentifier);
+  }
+
   inline Bytes getPayload() {
     return mRoot._getBytes(mpPayload);
   }
@@ -86,6 +90,10 @@ class COSEMessage {
     auto alg = pHeader.getInt(COSEHeaderLabel::Algorithm);
 
     return alg != 0 && signature.size() > 0;
+  }
+
+  void setUnprotectedKid(const Bytes& kid) {
+    getUnprotectedHeader().put(COSEHeaderLabel::KeyIdentifier, kid.raw(), kid.size());
   }
 
   bool setPayload(const Bytes &payload) {

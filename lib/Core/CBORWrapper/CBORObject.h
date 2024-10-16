@@ -131,10 +131,25 @@ class CBORObject {
     if (existing) {
       updated = cn_cbor_string_update(existing, value);
       if (!updated) {
-        UNIOT_LOG_WARN_IF(_isPtrEqual(existing, value), "pointer to the same value is specified for '%s'", key);
+        UNIOT_LOG_WARN_IF(_isPtrEqual(existing, value), "pointer to the same value is specified for '%d'", key);
       }
     } else {
       updated = cn_cbor_mapput_int(mpMapNode, key, cn_cbor_string_create(value, _errback()), _errback());
+    }
+    _markAsDirty(updated);
+    return *this;
+  }
+
+    CBORObject &put(int key, const uint8_t *value, int size) {
+    bool updated = false;
+    auto existing = cn_cbor_mapget_int(mpMapNode, key);
+    if (existing) {
+      updated = cn_cbor_data_update(existing, value, size);
+      if (!updated) {
+        UNIOT_LOG_WARN_IF(_isPtrEqual(existing, value), "pointer to the same value is specified for '%d'", key);
+      }
+    } else {
+      updated = cn_cbor_mapput_int(mpMapNode, key, cn_cbor_data_create(value, size, _errback()), _errback());
     }
     _markAsDirty(updated);
     return *this;
@@ -270,6 +285,10 @@ class CBORObject {
   Bytes build() const {
     auto visitSiblings = mpParentObject == nullptr;
     return _build(mpMapNode, visitSiblings);
+  }
+
+  bool isChild() const {
+    return mpParentObject != nullptr;
   }
 
   bool dirty() const {

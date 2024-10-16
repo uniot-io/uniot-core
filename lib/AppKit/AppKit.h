@@ -97,6 +97,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     eventBus.openDataChannel(unLisp::Channel::OUT_LISP_ERR, 1);
     eventBus.openDataChannel(unLisp::Channel::OUT_EVENT, 10);
     eventBus.openDataChannel(unLisp::Channel::IN_EVENT, 20);
+    eventBus.registerEntity(&Date::getInstance());
     eventBus.registerEntity(&mNetwork);
     eventBus.registerEntity(&mMQTT);
     eventBus.registerEntity(&getLisp());
@@ -119,6 +120,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     eventBus.closeDataChannel(unLisp::Channel::OUT_LISP_ERR);
     eventBus.closeDataChannel(unLisp::Channel::OUT_EVENT);
     eventBus.closeDataChannel(unLisp::Channel::IN_EVENT);
+    eventBus.unregisterEntity(&Date::getInstance());
     eventBus.unregisterEntity(&mNetwork);
     eventBus.unregisterEntity(&mMQTT);
     eventBus.unregisterEntity(&getLisp());

@@ -92,6 +92,10 @@ class Credentials : public CBORStorage, public ICOSESigner {
 #endif
   }
 
+  virtual Bytes keyId() const override {
+    return mPublicKeyRaw;
+  }
+
   virtual Bytes sign(const Bytes &data) const override {
     uint8_t signature[64];
     uint8_t publicKey[32];
@@ -130,13 +134,15 @@ class Credentials : public CBORStorage, public ICOSESigner {
   void _derivePublicKey() {
     uint8_t publicKey[32];
     Ed25519::derivePublicKey(publicKey, mPrivateKey.raw());
-    mPublicKey = Bytes(publicKey, sizeof(publicKey)).toHexString();
+    mPublicKeyRaw = Bytes(publicKey, sizeof(publicKey));
+    mPublicKey = mPublicKeyRaw.toHexString();
   }
 
   String mOwnerId;
   String mCreatorId;
   String mDeviceId;
   Bytes mPrivateKey;
+  Bytes mPublicKeyRaw;
   String mPublicKey;
 };
 }  // namespace uniot

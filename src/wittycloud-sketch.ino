@@ -16,11 +16,17 @@ auto taskPrintTime = TaskScheduler::make([](SchedulerTask& self, short t) {
 
 void inject() {
   auto& MainAppKit = AppKit::getInstance();
-  MainAppKit.configureNetworkController(PIN_BUTTON, BTN_PIN_LEVEL, RED);
+#if defined(ESP8266)
+  MainAppKit.configureNetworkController({.pinBtn = PIN_BUTTON, .pinLed = RED, .maxRebootCount = 255});
   PrimitiveExpeditor::getRegisterManager().setDigitalOutput(RED, GREEN, BLUE);
-  PrimitiveExpeditor::getRegisterManager().setDigitalInput(RED, GREEN, BLUE);
+  PrimitiveExpeditor::getRegisterManager().setDigitalInput(0, PIN_BUTTON);
   PrimitiveExpeditor::getRegisterManager().setAnalogOutput(RED, GREEN, BLUE);
   PrimitiveExpeditor::getRegisterManager().setAnalogInput(LDR);
+#elif defined(ESP32)
+  MainAppKit.configureNetworkController({.pinBtn = 3, .pinLed = 8, .activeLevelLed = LOW, .maxRebootCount = 255});
+  PrimitiveExpeditor::getRegisterManager().setDigitalOutput(8, 10);
+  PrimitiveExpeditor::getRegisterManager().setDigitalInput(3);
+#endif
 
   MainEventBus.registerKit(MainAppKit);
 
@@ -34,7 +40,6 @@ void inject() {
 
   MainAppKit.attach();
 
-  UNIOT_LOG_INFO("%s: %s", "CHIP_ID", String(ESP.getChipId(), HEX).c_str());
   UNIOT_LOG_INFO("%s: %s", "DEVICE_ID", MainAppKit.getCredentials().getDeviceId().c_str());
   UNIOT_LOG_INFO("%s: %s", "OWNER_ID", MainAppKit.getCredentials().getOwnerId().c_str());
 }
