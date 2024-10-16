@@ -56,7 +56,7 @@ class Button : public IExecutor, public ObjectRegisterRecord {
     return was;
   }
 
-  virtual uint8_t execute() override {
+  virtual void execute(short _) override {
     bool curState = digitalRead(mPin) == mActiveLevel;
     if (curState && ++mLongPressTicker == mLongPressTicks) {
       mWasLongPress = true;
@@ -79,8 +79,6 @@ class Button : public IExecutor, public ObjectRegisterRecord {
       resetLongPress();
       mAutoResetTicker = 0;
     }
-
-    return 0;
   }
 
   virtual type_id getTypeId() const override {

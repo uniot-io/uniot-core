@@ -58,7 +58,7 @@ class EventBus : public uniot::IExecutor {
   bool isDataChannelEmpty(T_topic topic);
 
   void emitEvent(T_topic topic, T_msg msg);
-  virtual uint8_t execute() override;
+  virtual void execute(short _) override;
 
  private:
   ClearQueue<EventEntity<T_topic, T_msg, T_data> *> mEntities; // TODO: need real set; std::set is broken into esp xtensa sdk

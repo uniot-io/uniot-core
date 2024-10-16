@@ -79,12 +79,11 @@ namespace uniot {
       return mApIp;
     }
 
-    virtual uint8_t execute() {
+    virtual void execute(short _) {
       if(mIsStarted) {
         mpDnsServer->processNextRequest();
         mpWebServer->handleClient();
       }
-      return 0;
     }
 
   private:

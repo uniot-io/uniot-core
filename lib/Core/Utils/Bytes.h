@@ -118,7 +118,7 @@ class Bytes {
     return *this;
   }
 
-  uint8_t *raw() const {
+  const uint8_t *raw() const {
     return mBuffer;
   }
 

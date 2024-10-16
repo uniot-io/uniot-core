@@ -24,6 +24,6 @@ class IExecutor
 {
 public:
   virtual ~IExecutor() {}
-  virtual uint8_t execute() = 0;
+  virtual void execute(short times) = 0;
 };
 } // namespace uniot

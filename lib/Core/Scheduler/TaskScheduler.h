@@ -40,7 +40,7 @@ class SchedulerTask : public Task {
   using spSchedulerTaskCallback = SharedPointer<SchedulerTaskCallback>;
 
   SchedulerTask(IExecutor &executor)
-      : SchedulerTask([&](SchedulerTask &, short) { executor.execute(); }) {}
+      : SchedulerTask([&](SchedulerTask &, short times) { executor.execute(times); }) {}
 
   SchedulerTask(SchedulerTaskCallback callback)
       : Task(), mTotalElapsedMs(0), mRepeatTimes(0), mCanDoHardWork(false) {

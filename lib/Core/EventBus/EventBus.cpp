@@ -88,7 +88,7 @@ void EventBus<T_topic, T_msg, T_data>::emitEvent(T_topic topic, T_msg msg) {
 }
 
 template <class T_topic, class T_msg, class T_data>
-uint8_t EventBus<T_topic, T_msg, T_data>::execute() {
+void EventBus<T_topic, T_msg, T_data>::execute(short _) {
   while (!mEvents.isEmpty()) {
     auto event = mEvents.hardPop();
     // NOTE: Is it worth making a separate list for listeners to reduce the number of iterations?
@@ -106,7 +106,6 @@ uint8_t EventBus<T_topic, T_msg, T_data>::execute() {
       yield();
     });
   }
-  return 0;
 }
 }  // namespace uniot
 

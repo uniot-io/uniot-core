@@ -41,7 +41,7 @@ class WifiStorage : public CBORStorage {
   }
 
   bool isCredentialsValid() {
-    return mSsid.length() && mPassword.length();
+    return !mSsid.isEmpty();
   }
 
   virtual bool store() override {

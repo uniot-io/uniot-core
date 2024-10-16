@@ -128,7 +128,7 @@ namespace uniot {
         }
       });
       mTaskConnectSta = TaskScheduler::make([this](SchedulerTask &self, short t) {
-        WiFi.disconnect(true);
+        WiFi.disconnect(true, true);
         bool disconect = true;
         WiFi.softAPdisconnect(true); // !!!!!!!!!!!!
         WiFi.setHostname(mApName.c_str());
