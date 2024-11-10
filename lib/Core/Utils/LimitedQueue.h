@@ -73,6 +73,11 @@ class LimitedQueue : public ClearQueue<T> {
     return mSize;
   }
 
+  void clean() {
+    ClearQueue<T>::clean();
+    mSize = 0;
+  }
+
  private:
   size_t mLimit;
   size_t mSize;
