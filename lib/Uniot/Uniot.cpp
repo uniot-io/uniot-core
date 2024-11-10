@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2024 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,29 +18,7 @@
 #if defined(ESP8266)
 #include <CrashStorage.h>
 #endif
-#include <Date.h>
 #include <Uniot.h>
-
-uniot::TaskScheduler MainScheduler;
-uniot::CoreEventBus MainEventBus(FOURCC(main));
-
-void setup() {
-  UNIOT_LOG_SET_READY();
-
-  auto taskHandleEventBus = uniot::TaskScheduler::make(MainEventBus);
-  MainScheduler.push("event_bus", taskHandleEventBus);
-  taskHandleEventBus->attach(10);
-
-  auto taskStoreDate = uniot::TaskScheduler::make(uniot::Date::getInstance());
-  MainScheduler.push("store_date", taskStoreDate);
-  taskStoreDate->attach(5 * 60 * 1000UL);  // 5 minutes
-
-  inject();
-}
-
-void loop() {
-  MainScheduler.loop();
-}
 
 #if defined(ESP8266)
 extern "C" void custom_crash_callback(struct rst_info *resetInfo, uint32_t stackStart, uint32_t stackEnd) {

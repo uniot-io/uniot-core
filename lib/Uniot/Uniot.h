@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2024 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,43 @@
 #pragma once
 
 #include <Arduino.h>
-#include <TaskScheduler.h>
-#include <EventBus.h>
 #include <Credentials.h>
+#include <Date.h>
+#include <EventBus.h>
 #include <Logger.h>
+#include <TaskScheduler.h>
 
-extern "C" {
-  void inject(void);
-}
+class UniotCore {
+ public:
+  UniotCore() : mScheduler(), mEventBus(FOURCC(main)) {}
 
-extern uniot::TaskScheduler MainScheduler;
-extern uniot::CoreEventBus MainEventBus;
+  void begin(uint32_t eventBusTaskPeriod = 10, uint32_t storeDateTaskPeriod = 5 * 60 * 1000UL) {
+    UNIOT_LOG_SET_READY();
+
+    auto taskHandleEventBus = uniot::TaskScheduler::make(mEventBus);
+    mScheduler.push("event_bus", taskHandleEventBus);
+    taskHandleEventBus->attach(eventBusTaskPeriod);
+
+    auto taskStoreDate = uniot::TaskScheduler::make(uniot::Date::getInstance());
+    mScheduler.push("store_date", taskStoreDate);
+    taskStoreDate->attach(storeDateTaskPeriod);
+  }
+
+  void loop() {
+    mScheduler.loop();
+  }
+
+  uniot::CoreEventBus& getEventBus() {
+    return mEventBus;
+  }
+
+  uniot::TaskScheduler& getScheduler() {
+    return mScheduler;
+  }
+
+ private:
+  uniot::TaskScheduler mScheduler;
+  uniot::CoreEventBus mEventBus;
+};
+
+UniotCore Uniot;

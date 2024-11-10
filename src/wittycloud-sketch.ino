@@ -14,7 +14,8 @@ auto taskPrintTime = TaskScheduler::make([](SchedulerTask& self, short t) {
   Serial.println(Date::getFormattedTime());
 });
 
-void inject() {
+void setup() {
+  Uniot.begin();
   auto& MainAppKit = AppKit::getInstance();
 #if defined(ESP8266)
   MainAppKit.configureNetworkController({.pinBtn = PIN_BUTTON, .pinLed = RED, .maxRebootCount = 255});
@@ -28,9 +29,9 @@ void inject() {
   PrimitiveExpeditor::getRegisterManager().setDigitalInput(3);
 #endif
 
-  MainEventBus.registerKit(MainAppKit);
+  Uniot.getEventBus().registerKit(MainAppKit);
 
-  MainScheduler
+  Uniot.getScheduler()
       .push(MainAppKit)
       .push("print_time", taskPrintTime)
       .push("print_heap", taskPrintHeap);
@@ -42,4 +43,23 @@ void inject() {
 
   UNIOT_LOG_INFO("%s: %s", "DEVICE_ID", MainAppKit.getCredentials().getDeviceId().c_str());
   UNIOT_LOG_INFO("%s: %s", "OWNER_ID", MainAppKit.getCredentials().getOwnerId().c_str());
+
+  //   esp_chip_info_t chip_info;
+  // esp_chip_info(&chip_info);
+
+  // // Print basic chip information
+  // Serial.println("====================================");
+  // Serial.println("ESP32-C3 Chip Information:");
+  // Serial.printf("Number of CPU cores: %d\n", chip_info.cores);
+  // Serial.printf("WiFi%s%s\n",
+  //               (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
+  //               (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
+  // Serial.printf("Silicon revision: %d\n", chip_info.revision);
+  // Serial.printf("Flash size: %dMB\n", spi_flash_get_chip_size() / (1024 * 1024));
+  // Serial.printf("Model: ESP32-C3\n"); // Assuming it's ESP32-C3; adjust if necessary
+  // Serial.println("====================================");
+}
+
+void loop() {
+  Uniot.loop();
 }
