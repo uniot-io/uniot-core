@@ -36,6 +36,8 @@ class Button : public IExecutor, public ObjectRegisterRecord {
         mActiveLevel(activeLevel),
         mLongPressTicks(longPressTicks),
         mAutoResetTicks(autoResetTicks),
+        mWasClick(false),
+        mWasLongPress(false),
         OnLongPress(commonCallback),
         OnClick(commonCallback),
         mPrevState(false),
