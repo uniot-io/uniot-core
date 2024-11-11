@@ -58,4 +58,4 @@ class UniotCore {
   uniot::CoreEventBus mEventBus;
 };
 
-UniotCore Uniot;
+extern UniotCore Uniot;
