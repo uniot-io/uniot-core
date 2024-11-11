@@ -17,6 +17,7 @@
  */
 
 #pragma once
+#pragma message("Warning: This library is deprecated. Please migrate to uniot-core.")
 
 #include <Arduino.h>
 #include <Uniot.h>
