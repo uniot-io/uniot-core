@@ -1,9 +1,9 @@
 {
-  "name": "Uniot",
-  "description": "Uniot is an IoT platform with its own task scheduler and lisp interpreter",
-  "keywords": "iot,m2m,automation,async,wifi,app,cloud,web,control",
+  "name": "uniot-core",
+  "description": "Uniot is a comprehensive IoT platform framework designed to enable seamless automation, edge device networking, and task scheduling. With its native task scheduler and integrated Lisp interpreter, Uniot provides a robust, flexible environment for building connected applications.",
+  "keywords": "iot,m2m,automation,async,wifi,app,cloud,web,control,edge-computing",
   "authors": {
-    "name": "Uniot Team",
+    "name": "Uniot Labs",
     "url": "https://github.com/uniot-io",
     "maintainer": true
   },
@@ -23,7 +23,6 @@
       "-I lib/Core",
       "-I lib/AppKit",
       "-I lib/WebPages",
-      "-I lib/Platforms",
 
       "-I lib/Core/EventBus",
       "-I lib/Core/Scheduler",
@@ -43,7 +42,6 @@
       "+<lib/Core/*>",
       "+<lib/AppKit/*>",
       "+<lib/WebPages/*>",
-      "+<lib/Platforms/*>",
 
       "+<lib/Core/EventBus/*>",
       "+<lib/Core/Scheduler/*>",
@@ -60,24 +58,27 @@
   },
   "dependencies": [{
       "name": "uniot-cbor",
-      "version": "https://github.com/uniot-io/uniot-cbor.git"
+      "version": "https://github.com/uniot-io/uniot-cbor.git#0.2.4"
     },
     {
       "name": "uniot-lisp",
-      "version": "https://github.com/uniot-io/uniot-lisp.git"
+      "version": "https://github.com/uniot-io/uniot-lisp.git#0.2.3"
     },
     {
       "name": "uniot-pubsubclient",
-      "version": "https://github.com/uniot-io/uniot-pubsubclient.git"
+      "version": "https://github.com/uniot-io/uniot-pubsubclient.git#0.2.8"
     },
     {
       "name": "uniot-crypto",
-      "version": "https://github.com/uniot-io/uniot-crypto.git"
+      "version": "https://github.com/uniot-io/uniot-crypto.git#0.2.1"
     }
   ],
   "homepage": "https://uniot.io",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "license": "GPL-3.0",
   "frameworks": "arduino",
-  "platforms": ["espressif8266"]
+  "platforms": [
+    "espressif8266",
+    "espressif32"
+  ]
 }
