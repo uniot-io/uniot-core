@@ -1,6 +1,6 @@
 {
   "name": "Uniot",
-  "description": "Uniot is an IoT platform with its own task scheduler and lisp interpreter",
+  "description": "Deprecated: Please use `uniot-core` for new projects.",
   "keywords": "iot,m2m,automation,async,wifi,app,cloud,web,control",
   "authors": {
     "name": "Uniot Team",
@@ -19,65 +19,25 @@
   },
   "build": {
     "flags": [
-      "-I lib/Uniot",
-      "-I lib/Core",
-      "-I lib/AppKit",
-      "-I lib/WebPages",
-      "-I lib/Platforms",
-
-      "-I lib/Core/EventBus",
-      "-I lib/Core/Scheduler",
-      "-I lib/Core/Network",
-      "-I lib/Core/Storage",
-      "-I lib/Core/Utils",
-      "-I lib/Core/CBORWrapper",
-      "-I lib/Core/LispWrapper",
-      "-I lib/Core/MQTTWrapper",
-      "-I lib/Core/Register",
-      "-I lib/Core/Hardware",
-      "-I lib/Core/Date"
+      "-I lib/Uniot"
     ],
     "srcDir": ".",
     "srcFilter": [
-      "+<lib/Uniot/*>",
-      "+<lib/Core/*>",
-      "+<lib/AppKit/*>",
-      "+<lib/WebPages/*>",
-      "+<lib/Platforms/*>",
-
-      "+<lib/Core/EventBus/*>",
-      "+<lib/Core/Scheduler/*>",
-      "+<lib/Core/Network/*>",
-      "+<lib/Core/Storage/*>",
-      "+<lib/Core/Utils/*>",
-      "+<lib/Core/CBORWrapper/*>",
-      "+<lib/Core/LispWrapper/*>",
-      "+<lib/Core/MQTTWrapper/*>",
-      "+<lib/Core/Register/*>",
-      "+<lib/Core/Hardware/*>",
-      "+<lib/Core/Date/*>"
+      "+<lib/Uniot/*>"
     ]
   },
-  "dependencies": [{
-      "name": "uniot-cbor",
-      "version": "https://github.com/uniot-io/uniot-cbor.git"
-    },
+  "dependencies": [
     {
-      "name": "uniot-lisp",
-      "version": "https://github.com/uniot-io/uniot-lisp.git"
-    },
-    {
-      "name": "uniot-pubsubclient",
-      "version": "https://github.com/uniot-io/uniot-pubsubclient.git"
-    },
-    {
-      "name": "uniot-crypto",
-      "version": "https://github.com/uniot-io/uniot-crypto.git"
+      "name": "uniot-core",
+      "version": "^0.7.2"
     }
   ],
   "homepage": "https://uniot.io",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "license": "GPL-3.0",
   "frameworks": "arduino",
-  "platforms": ["espressif8266"]
+  "platforms": [
+    "espressif8266",
+    "espressif32"
+  ]
 }

@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2023 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2020 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,20 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <UniotLegacy.h>
 
-#include "CallbackEventListener.h"
+uniot::TaskScheduler &MainScheduler = Uniot.getScheduler();
+uniot::CoreEventBus &MainEventBus = Uniot.getEventBus();
 
-namespace uniot
-{
-template <class T_topic, class T_msg, class T_data>
-CallbackEventListener<T_topic, T_msg, T_data>::CallbackEventListener(EventListenerCallback callback)
-    : mCallback(callback) {}
-
-template <class T_topic, class T_msg, class T_data>
-void CallbackEventListener<T_topic, T_msg, T_data>::onEventReceived(T_topic topic, T_msg msg)
-{
-  mCallback(topic, msg);
+void setup() {
+  Uniot.begin();
+  inject();
 }
-} // namespace uniot
 
-template class uniot::CallbackEventListener<unsigned int, int, Bytes>;
+void loop() {
+  Uniot.loop();
+}

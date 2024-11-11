@@ -1,8 +1,17 @@
 #include <AppKit.h>
-#include <Board-WittyCloud.h>
 #include <Date.h>
 #include <Logger.h>
 #include <Uniot.h>
+#include <UniotLegacy.h>
+
+#define PIN_LDR A0
+#define PIN_RED 15
+#define PIN_GREEN 12
+#define PIN_BLUE 13
+#define PIN_LED 2
+#define PIN_BUTTON 4
+#define LED_PIN_LEVEL HIGH
+#define BTN_PIN_LEVEL LOW
 
 using namespace uniot;
 
@@ -17,11 +26,11 @@ auto taskPrintTime = TaskScheduler::make([](SchedulerTask& self, short t) {
 void inject() {
   auto& MainAppKit = AppKit::getInstance();
 #if defined(ESP8266)
-  MainAppKit.configureNetworkController({.pinBtn = PIN_BUTTON, .pinLed = RED, .maxRebootCount = 255});
-  PrimitiveExpeditor::getRegisterManager().setDigitalOutput(RED, GREEN, BLUE);
+  MainAppKit.configureNetworkController({.pinBtn = PIN_BUTTON, .pinLed = PIN_RED, .maxRebootCount = 255});
+  PrimitiveExpeditor::getRegisterManager().setDigitalOutput(PIN_RED, PIN_GREEN, PIN_BLUE);
   PrimitiveExpeditor::getRegisterManager().setDigitalInput(0, PIN_BUTTON);
-  PrimitiveExpeditor::getRegisterManager().setAnalogOutput(RED, GREEN, BLUE);
-  PrimitiveExpeditor::getRegisterManager().setAnalogInput(LDR);
+  PrimitiveExpeditor::getRegisterManager().setAnalogOutput(PIN_RED, PIN_GREEN, PIN_BLUE);
+  PrimitiveExpeditor::getRegisterManager().setAnalogInput(PIN_LDR);
 #elif defined(ESP32)
   MainAppKit.configureNetworkController({.pinBtn = 3, .pinLed = 8, .activeLevelLed = LOW, .maxRebootCount = 255});
   PrimitiveExpeditor::getRegisterManager().setDigitalOutput(8, 10);

@@ -19,14 +19,11 @@
 #pragma once
 
 #include <Arduino.h>
-#include <TaskScheduler.h>
-#include <EventBus.h>
-#include <Credentials.h>
-#include <Logger.h>
+#include <Uniot.h>
 
 extern "C" {
   void inject(void);
 }
 
-extern uniot::TaskScheduler MainScheduler;
-extern uniot::CoreEventBus MainEventBus;
+extern uniot::TaskScheduler &MainScheduler;
+extern uniot::CoreEventBus &MainEventBus;
