@@ -177,6 +177,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
           info.put("public_key", mCredentials.getPublicKey().c_str());
           info.put("mqtt_size", MQTT_MAX_PACKET_SIZE);
           info.put("debug", UNIOT_LOG_ENABLED);
+          info.put("lisp_heap", UNIOT_LISP_HEAP);
         }),
         mpNetworkDevice(nullptr) {
     _initMqtt();
