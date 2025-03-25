@@ -35,7 +35,7 @@
 namespace uniot {
 class Credentials : public CBORStorage, public ICOSESigner {
  public:
-  Credentials() : CBORStorage("credentials.cbor") {
+  Credentials() : CBORStorage("credentials.cbor"), mOnwerChanged(false) {
     mCreatorId = UNIOT_CREATOR_ID;
     mDeviceId = _calcDeviceId();
     Credentials::restore();
@@ -64,11 +64,22 @@ class Credentials : public CBORStorage, public ICOSESigner {
   }
 
   void setOwnerId(const String &id) {
+    if (mOwnerId != id) {
+      mOnwerChanged = true;
+    }
     mOwnerId = id;
   }
 
   const String &getOwnerId() const {
     return mOwnerId;
+  }
+
+  bool isOwnerChanged() const {
+    return mOnwerChanged;
+  }
+
+  void resetOwnerChanged() {
+    mOnwerChanged = false;
   }
 
   const String &getCreatorId() const {
@@ -144,5 +155,7 @@ class Credentials : public CBORStorage, public ICOSESigner {
   Bytes mPrivateKey;
   Bytes mPublicKeyRaw;
   String mPublicKey;
+
+  bool mOnwerChanged;
 };
 }  // namespace uniot

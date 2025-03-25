@@ -255,7 +255,13 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
         switch (msg) {
           case MQTTKit::SUCCESS:
             UNIOT_LOG_DEBUG("AppKit Subscriber, MQTT SUCCESS");
-            mMQTT.renewSubscriptions();
+            if (mCredentials.isOwnerChanged()) {
+              UNIOT_LOG_INFO("Owner changed, renewing subscriptions");
+              mMQTT.renewSubscriptions();
+              mCredentials.resetOwnerChanged();
+            } else {
+              UNIOT_LOG_INFO("Owner not changed, do not renew subscriptions");
+            }
             break;
           case MQTTKit::FAILED:
           default:
