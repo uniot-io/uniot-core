@@ -20,8 +20,10 @@
 
 #if defined(ESP8266)
     #include "ESP8266WiFi.h"
+    #include <ESP8266mDNS.h>
 #elif defined(ESP32)
     #include "WiFi.h"
+    #include <ESPmDNS.h>
 #endif
 
 #include <Patches.h>
@@ -59,7 +61,11 @@ namespace uniot {
       WiFi.setAutoConnect(false);
       WiFi.setAutoReconnect(false);
 
+#if defined(UNIOT_MODE_AP_STA)
+      WiFi.mode(WIFI_AP_STA);
+#else
       WiFi.mode(WIFI_STA);
+#endif
       _initTasks();
       _initServerCallbacks();
     }
@@ -72,25 +78,33 @@ namespace uniot {
       scheduler.push("sta_connect", mTaskConnectSta);
       scheduler.push("sta_connecting", mTaskConnecting);
       scheduler.push("wifi_monitor", mTaskMonitoring);
+#if defined(UNIOT_MDNS)
+      scheduler.push("mdns", mTaskMDNS);
+#endif
     }
 
     virtual void attach() override {
       mWifiStorage.restore();
       if(mWifiStorage.isCredentialsValid()) {
         mTaskConnectSta->attach(500, 1);
-      } else {
+      }
+#if defined(UNIOT_MODE_AP_STA)
+      mTaskConfigAp->attach(500, 1);
+#else
+      else {
         mTaskConfigAp->attach(500, 1);
       }
+#endif
     }
 
     void forget() {
+      UNIOT_LOG_DEBUG("Forget credentials: %s", mWifiStorage.getSsid().c_str());
       mWifiStorage.clean();
       mTaskConfigAp->attach(500, 1);
     }
 
     bool reconnect() {
       if(mWifiStorage.isCredentialsValid()) {
-        mTaskConfigAp->detach();
         mTaskConnectSta->attach(500, 1);
         return true;
       }
@@ -111,8 +125,15 @@ namespace uniot {
       });
 
       mTaskConfigAp = TaskScheduler::make([this](SchedulerTask &self, short t) {
+#if defined(UNIOT_MODE_AP_STA)
+        if(WiFi.getMode() != WIFI_AP_STA) {
+          WiFi.mode(WIFI_AP_STA);
+        }
+#else
         WiFi.disconnect(true);
         WiFi.softAPdisconnect(true);
+#endif
+
         if( WiFi.softAPConfig(mConfigServer.ip(), mConfigServer.ip(),  mApSubnet)
           && WiFi.softAP(mApName.c_str()))
         {
@@ -128,17 +149,27 @@ namespace uniot {
         }
       });
       mTaskConnectSta = TaskScheduler::make([this](SchedulerTask &self, short t) {
+#if defined(UNIOT_MODE_AP_STA)
+        WiFi.disconnect(false, true);
+        if(WiFi.getMode() != WIFI_AP_STA) {
+          WiFi.mode(WIFI_AP_STA);
+        }
+#else
         WiFi.disconnect(true, true);
-        bool disconect = true;
-        WiFi.softAPdisconnect(true); // !!!!!!!!!!!!
+        WiFi.softAPdisconnect(true);
+#endif
+
         WiFi.setHostname(mApName.c_str());
         bool connect = WiFi.begin(mWifiStorage.getSsid().c_str(), mWifiStorage.getPassword().c_str()) != WL_CONNECT_FAILED;
-        if (disconect && connect)
+        if (connect)
         {
 #if defined(ESP32) && defined(ENABLE_LOWER_WIFI_TX_POWER)
           WiFi.setTxPower(WIFI_TX_POWER_LEVEL);
 #endif
+
+#if not defined(UNIOT_MODE_AP_STA)
           mTaskServe->detach();
+#endif
           mTaskConnecting->attach(100, 100);
           CoreEventEmitter::sendDataToChannel(Channel::OUT_SSID, Bytes(mWifiStorage.getSsid()));
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::CONNECTING);
@@ -153,7 +184,9 @@ namespace uniot {
             mTaskConnectSta->attach(500, 1);
           } else {
             tries = 0;
+#if not defined(UNIOT_MODE_AP_STA)
             mTaskConfigAp->attach(500, 1);
+#endif
             CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
           }
         };
@@ -161,10 +194,23 @@ namespace uniot {
         switch(WiFi.status()){
           case WL_CONNECTED:
           mTaskConnecting->detach();
+#if not defined(UNIOT_MODE_AP_STA)
           mTaskStop->attach(500, 1);
+#endif
           mTaskMonitoring->attach(2000);
           mWifiStorage.store();
           mpCredentials->store(); // NOTE: it is stored each time it is connected to the network
+
+#if defined(UNIOT_MDNS)
+          // Start mDNS responder to enable UNIOT-XXXX.local domain access
+          if (MDNS.begin(mApName.c_str())) {
+            mTaskMDNS->attach(100);
+            MDNS.addService("http", "tcp", 80);
+            UNIOT_LOG_INFO("mDNS started: %s.local", mApName.c_str());
+          } else {
+            UNIOT_LOG_WARN("Failed to start mDNS");
+          }
+#endif
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::SUCCESS);
           break;
 
@@ -188,9 +234,22 @@ namespace uniot {
       mTaskMonitoring = TaskScheduler::make([this](SchedulerTask &self, short times) {
         if(WiFi.status() != WL_CONNECTED) {
           mTaskMonitoring->detach();
+
+#if defined(UNIOT_MDNS)
+          // Stop mDNS when disconnected from WiFi
+          mTaskMDNS->detach();
+          MDNS.end();
+#endif
+
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::DISCONNECTED);
         }
       });
+
+#if defined(UNIOT_MDNS)
+      mTaskMDNS = TaskScheduler::make([this] (SchedulerTask &self, short times) {
+        MDNS.update();
+      });
+#endif
     }
 
     void _initServerCallbacks() {
@@ -243,5 +302,9 @@ namespace uniot {
     TaskScheduler::TaskPtr mTaskConnectSta;
     TaskScheduler::TaskPtr mTaskConnecting;
     TaskScheduler::TaskPtr mTaskMonitoring;
+
+#if defined(UNIOT_MDNS)
+    TaskScheduler::TaskPtr mTaskMDNS;
+#endif
   };
 }
