@@ -18,14 +18,10 @@
 
 #pragma once
 
-#if defined(ESP8266)
-#include "ESP8266WebServer.h"
-typedef ESP8266WebServer WebServer;
-#elif defined(ESP32)
-#include <WebServer.h>
-#endif
 #include <Common.h>
 #include <DNSServer.h>
+
+#include <ESPAsyncWebServer.h>
 #include <IExecutor.h>
 
 #define DNS_PORT 53
@@ -39,7 +35,7 @@ class ConfigCaptivePortal : public IExecutor {
       : mIsStarted(false),
         mApIp(apIp),
         mpDnsServer(new DNSServer()),
-        mpWebServer(new WebServer(HTTP_PORT)) {}
+        mpWebServer(new AsyncWebServer(HTTP_PORT)) {}
 
   bool start() {
     if (!mIsStarted) {
@@ -59,18 +55,18 @@ class ConfigCaptivePortal : public IExecutor {
       // DNSServer has problem with memory deallocation when stop() called
       // TODO: fix, pull request
       mpDnsServer->stop();
-      mpWebServer->stop();
+      mpWebServer->end();
       mIsStarted = false;
     }
   }
 
   void reset() {
     mpDnsServer.reset(new DNSServer());
-    mpWebServer.reset(new WebServer(HTTP_PORT));
+    mpWebServer.reset(new AsyncWebServer(HTTP_PORT));
     mIsStarted = false;
   }
 
-  WebServer* get() {
+  AsyncWebServer* get() {
     return mpWebServer.get();
   }
 
@@ -78,10 +74,9 @@ class ConfigCaptivePortal : public IExecutor {
     return mApIp;
   }
 
-  virtual void execute(short _) {
+  virtual void execute(short _) override {
     if (mIsStarted) {
       mpDnsServer->processNextRequest();
-      mpWebServer->handleClient();
     }
   }
 
@@ -90,6 +85,6 @@ class ConfigCaptivePortal : public IExecutor {
 
   IPAddress mApIp;
   UniquePointer<DNSServer> mpDnsServer;
-  UniquePointer<WebServer> mpWebServer;
+  UniquePointer<AsyncWebServer> mpWebServer;
 };
 }  // namespace uniot
