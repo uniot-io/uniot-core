@@ -78,6 +78,7 @@ namespace uniot {
       scheduler.push("sta_connect", mTaskConnectSta);
       scheduler.push("sta_connecting", mTaskConnecting);
       scheduler.push("wifi_monitor", mTaskMonitoring);
+      scheduler.push("wifi_scan", mTaskScan);
 #if defined(UNIOT_MDNS)
       scheduler.push("mdns", mTaskMDNS);
 #endif
@@ -141,6 +142,7 @@ namespace uniot {
           WiFi.setTxPower(WIFI_TX_POWER_LEVEL);
 #endif
           mTaskStart->attach(500, 1);
+          mTaskScan->once(500);
           CoreEventEmitter::sendDataToChannel(Channel::OUT_SSID, Bytes(mApName));
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::ACCESS_POINT);
         } else {
@@ -169,6 +171,7 @@ namespace uniot {
 
 #if not defined(UNIOT_MODE_AP_STA)
           mTaskServe->detach();
+          mTaskScan->detach();
 #endif
           mTaskConnecting->attach(100, 100);
           CoreEventEmitter::sendDataToChannel(Channel::OUT_SSID, Bytes(mWifiStorage.getSsid()));
@@ -250,41 +253,57 @@ namespace uniot {
         MDNS.update();
       });
 #endif
+
+      mTaskScan = TaskScheduler::make([this] (SchedulerTask &self, short times) {
+        WiFi.scanNetworksAsync([this](int n) {
+          mNetworks = "[";
+          for (auto i = 0; i < n; ++i) {
+            mNetworks += '[';
+            mNetworks += '"' + WiFi.SSID(i) + '"' + ',';
+            mNetworks += WiFi.RSSI(i);
+            mNetworks += ',';
+            mNetworks += static_cast<int>(WiFi.encryptionType(i) == ENC_TYPE_NONE);
+            mNetworks += ']';
+            if (i < n - 1) {
+              mNetworks += ',';
+            }
+          }
+          mNetworks += ']';
+          WiFi.scanDelete();
+          UNIOT_LOG_DEBUG("Networks: %d", n);
+          mTaskScan->once(5000);
+        });
+      });
     }
 
     void _initServerCallbacks() {
-      mConfigServer.get()->onNotFound([this] {
-        mConfigServer.get()->sendHeader("Location", "/", true);
-        mConfigServer.get()->send_P(307, text, text);
+      mConfigServer.get()->onNotFound([](AsyncWebServerRequest *request) {
+        auto response = request->beginResponse(307);
+        response->addHeader("Location", "/");
+        request->send(response);
       });
 
-      mConfigServer.get()->on("/", [this] {
-        mConfigServer.get()->sendHeader("Content-Encoding", "gzip");
-        mConfigServer.get()->send_P(200, text_html, CONFIG_MIN_HTML_GZ, CONFIG_MIN_HTML_GZ_LENGTH);
+      mConfigServer.get()->on("/", [this](AsyncWebServerRequest *request) {
+        auto response = request->beginResponse_P(200, "text/html", CONFIG_MIN_HTML_GZ, CONFIG_MIN_HTML_GZ_LENGTH, nullptr);
+        response->addHeader("Content-Encoding", "gzip");
+        request->send(response);
       });
 
-      mConfigServer.get()->on("/scan", [this] {
-        // TODO: implement async scan
-        auto n = WiFi.scanNetworks();
-        String networks = "[";
-        for (auto i = 0; i < n; ++i) {
-          networks += '"' + WiFi.SSID(i) + '"';
-          if (i < n - 1)
-            networks += ',';
-        }
-        networks += ']';
-        UNIOT_LOG_DEBUG("Networks: %s", networks.c_str());
-        mConfigServer.get()->send(200, text, networks);
+      mConfigServer.get()->on("/scan", [this](AsyncWebServerRequest *request) {
+        UNIOT_LOG_DEBUG("Networks: %s", mNetworks.c_str());
+        request->send(200, "text", mNetworks);
       });
 
-      mConfigServer.get()->on("/config", [this] {
-        mWifiStorage.setCredentials(mConfigServer.get()->arg("ssid"), mConfigServer.get()->arg("pass"));
-        mConfigServer.get()->sendHeader("Location", "/", true);
-        mConfigServer.get()->send_P(307, text, text);
+      mConfigServer.get()->on("/config", [this](AsyncWebServerRequest *request) {
+        mWifiStorage.setCredentials(request->arg("ssid"), request->arg("pass"));
         if(mWifiStorage.isCredentialsValid()) {
           mTaskConnectSta->attach(500, 1);
-          mpCredentials->setOwnerId(mConfigServer.get()->arg("acc"));
+          mpCredentials->setOwnerId(request->arg("acc"));
         }
+
+        auto response = request->beginResponse(307);
+        response->addHeader("Location", "/");
+        request->send(response);
       });
     }
 
@@ -302,6 +321,8 @@ namespace uniot {
     TaskScheduler::TaskPtr mTaskConnectSta;
     TaskScheduler::TaskPtr mTaskConnecting;
     TaskScheduler::TaskPtr mTaskMonitoring;
+    TaskScheduler::TaskPtr mTaskScan;
+    String mNetworks;
 
 #if defined(UNIOT_MDNS)
     TaskScheduler::TaskPtr mTaskMDNS;
