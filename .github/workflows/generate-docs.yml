@@ -1,0 +1,36 @@
+name: Generate and Deploy Documentation
+
+on:
+  workflow_dispatch:
+  push:
+    tags: [ '*.*.*' ]
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout firmware repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Ensures all tags are available
+
+      - name: Install dependencies (Doxygen, Graphviz, jq)
+        run: |
+          sudo apt-get update
+            sudo apt-get install -y graphviz jq
+            # Install specific Doxygen version
+            DOXYGEN_VERSION=1.13.2
+            wget https://www.doxygen.nl/files/doxygen-${DOXYGEN_VERSION}.linux.bin.tar.gz
+            tar -xzf doxygen-${DOXYGEN_VERSION}.linux.bin.tar.gz
+            sudo cp doxygen-${DOXYGEN_VERSION}/bin/doxygen /usr/local/bin/
+            doxygen --version
+
+      - name: Generate Documentation
+        run: ./scripts/generate_docs.sh
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./doxygen/docs/
