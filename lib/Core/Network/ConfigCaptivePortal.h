@@ -26,22 +26,29 @@
 
 #define DNS_PORT 53
 #define HTTP_PORT 80
+#define WS_URL "/ws"
 #define DOMAIN_NAME "*"
 
 namespace uniot {
 class ConfigCaptivePortal : public IExecutor {
  public:
-  ConfigCaptivePortal(const IPAddress& apIp)
+  ConfigCaptivePortal(const IPAddress& apIp, AwsEventHandler wsHandler = nullptr)
       : mIsStarted(false),
         mApIp(apIp),
         mpDnsServer(new DNSServer()),
-        mpWebServer(new AsyncWebServer(HTTP_PORT)) {}
+        mpWebServer(new AsyncWebServer(HTTP_PORT)),
+        mpWebSocket(new AsyncWebSocket(WS_URL)),
+        mWebSocketHandler(wsHandler) {}
 
   bool start() {
     if (!mIsStarted) {
       mpDnsServer->setTTL(300);
       mpDnsServer->setErrorReplyCode(DNSReplyCode::ServerFailure);
       if (mpDnsServer->start(DNS_PORT, DOMAIN_NAME, mApIp)) {
+        if (mWebSocketHandler) {
+          mpWebSocket->onEvent(mWebSocketHandler);
+          mpWebServer->addHandler(mpWebSocket.get());
+        }
         mpWebServer->begin();
         return mIsStarted = true;
       }
@@ -56,13 +63,16 @@ class ConfigCaptivePortal : public IExecutor {
       // TODO: fix, pull request
       mpDnsServer->stop();
       mpWebServer->end();
+      mpWebSocket->closeAll();
+      mpWebSocket->cleanupClients();
       mIsStarted = false;
     }
   }
 
   void reset() {
     mpDnsServer.reset(new DNSServer());
-    mpWebServer.reset(new AsyncWebServer(HTTP_PORT));
+    // mpWebServer.reset(new AsyncWebServer(HTTP_PORT));
+    // mpWebSocket.reset(new AsyncWebSocket(WS_URL));
     mIsStarted = false;
   }
 
@@ -77,6 +87,7 @@ class ConfigCaptivePortal : public IExecutor {
   virtual void execute(short _) override {
     if (mIsStarted) {
       mpDnsServer->processNextRequest();
+      mpWebSocket->cleanupClients();
     }
   }
 
@@ -86,5 +97,7 @@ class ConfigCaptivePortal : public IExecutor {
   IPAddress mApIp;
   UniquePointer<DNSServer> mpDnsServer;
   UniquePointer<AsyncWebServer> mpWebServer;
+  UniquePointer<AsyncWebSocket> mpWebSocket;
+  AwsEventHandler mWebSocketHandler;
 };
 }  // namespace uniot

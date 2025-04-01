@@ -51,7 +51,10 @@ namespace uniot {
     NetworkScheduler(Credentials &credentials)
         : mpCredentials(&credentials),
           mApSubnet(255, 255, 255, 0),
-          mConfigServer(IPAddress(1, 1, 1, 1))
+          mConfigServer(IPAddress(1, 1, 1, 1),
+                        [this](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
+                          _handleWebSocketEvent(server, client, type, arg, data, len);
+                        })
     {
       mApName = "UNIOT-" + String(mpCredentials->getShortDeviceId(), HEX);
       mApName.toUpperCase();
@@ -123,6 +126,7 @@ namespace uniot {
       mTaskStop = TaskScheduler::make([this](SchedulerTask &self, short t) {
         mTaskServe->detach();
         mConfigServer.stop();
+        mConfigServer.reset();
       });
 
       mTaskConfigAp = TaskScheduler::make([this](SchedulerTask &self, short t) {
@@ -305,6 +309,32 @@ namespace uniot {
         response->addHeader("Location", "/");
         request->send(response);
       });
+    }
+
+    void _handleWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
+      switch (type) {
+        case WS_EVT_CONNECT:
+          // mAppState.Network.WebSocketsClients = mWebSocket.count();
+          UNIOT_LOG_INFO("WebSocket client #%u connected from %s", client->id(), client->remoteIP().toString().c_str());
+          break;
+        case WS_EVT_DISCONNECT:
+          // mAppState.Network.WebSocketsClients = mWebSocket.count();
+          UNIOT_LOG_INFO("WebSocket client #%u disconnected", client->id());
+          break;
+        case WS_EVT_DATA:
+          _handleWebSocketMessage(arg, data, len);
+          break;
+        case WS_EVT_PONG:
+        case WS_EVT_ERROR:
+          break;
+      }
+    }
+
+    void _handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
+      AwsFrameInfo *info = (AwsFrameInfo *)arg;
+      if (info->opcode == WS_TEXT) {
+        String msg = Bytes(data, len).toString();
+      }
     }
 
     Credentials *mpCredentials;
