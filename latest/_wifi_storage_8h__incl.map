@@ -1,0 +1,40 @@
+<map id="WifiStorage.h" name="WifiStorage.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="465,5,574,31"/>
+<area shape="rect" id="Node000002" href="$_c_b_o_r_storage_8h.html" title=" " alt="" coords="395,79,516,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="511,33,477,70,473,67,507,29"/>
+<area shape="rect" id="Node000017" title=" " alt="" coords="540,79,629,104"/>
+<area shape="poly" id="edge21_Node000001_Node000017" title=" " alt="" coords="532,29,567,67,563,70,528,33"/>
+<area shape="rect" id="Node000003" href="$_storage_8h.html" title=" " alt="" coords="352,152,436,177"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="447,106,415,143,411,140,443,103"/>
+<area shape="rect" id="Node000015" href="$_c_b_o_r_object_8h.html" title=" " alt="" coords="491,152,604,177"/>
+<area shape="poly" id="edge15_Node000002_Node000015" title=" " alt="" coords="472,102,523,141,520,146,468,106"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="183,225,261,251"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="367,180,264,222,262,218,365,175"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="285,225,335,251"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="382,179,336,218,333,214,379,175"/>
+<area shape="rect" id="Node000006" href="$_bytes_8h.html" title=" " alt="" coords="359,225,429,251"/>
+<area shape="poly" id="edge5_Node000003_Node000006" title=" " alt="" coords="397,178,397,212,391,212,391,178"/>
+<area shape="rect" id="Node000010" href="$_logger_8h.html" title=" " alt="" coords="459,299,537,324"/>
+<area shape="poly" id="edge14_Node000003_Node000010" title=" " alt="" coords="406,176,443,224,485,286,481,289,439,227,401,179"/>
+<area shape="rect" id="Node000007" href="$_common_8h.html" title=" " alt="" coords="233,299,326,324"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="377,253,311,294,308,289,374,248"/>
+<area shape="poly" id="edge9_Node000006_Node000010" title=" " alt="" coords="412,248,471,288,468,293,409,253"/>
+<area shape="rect" id="Node000012" title=" " alt="" coords="350,299,435,324"/>
+<area shape="poly" id="edge11_Node000006_Node000012" title=" " alt="" coords="396,251,396,285,390,285,391,251"/>
+<area shape="rect" id="Node000013" title=" " alt="" coords="5,299,92,324"/>
+<area shape="poly" id="edge12_Node000006_Node000013" title=" " alt="" coords="359,250,347,253,106,301,105,296,345,248,358,245"/>
+<area shape="rect" id="Node000014" title=" " alt="" coords="116,299,208,324"/>
+<area shape="poly" id="edge13_Node000006_Node000014" title=" " alt="" coords="359,253,213,297,212,292,357,248"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="407,372,485,397"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="307,322,407,364,405,369,305,326"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="249,372,309,397"/>
+<area shape="poly" id="edge8_Node000007_Node000009" title=" " alt="" coords="282,324,282,358,277,358,277,324"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="519,372,603,397"/>
+<area shape="poly" id="edge10_Node000010_Node000011" title=" " alt="" coords="510,323,543,360,539,363,506,326"/>
+<area shape="poly" id="edge17_Node000015_Node000006" title=" " alt="" coords="524,180,432,222,430,217,522,175"/>
+<area shape="poly" id="edge20_Node000015_Node000008" title=" " alt="" coords="554,177,561,205,566,243,565,285,560,306,551,325,528,351,499,369,496,364,525,347,546,323,555,304,559,284,561,243,556,206,549,178"/>
+<area shape="poly" id="edge18_Node000015_Node000010" title=" " alt="" coords="546,179,509,287,504,285,541,177"/>
+<area shape="poly" id="edge16_Node000015_Node000011" title=" " alt="" coords="562,176,580,197,595,224,603,252,605,274,595,325,579,361,574,359,590,323,599,274,597,253,590,226,576,200,558,179"/>
+<area shape="rect" id="Node000016" title=" " alt="" coords="663,225,744,251"/>
+<area shape="poly" id="edge19_Node000015_Node000016" title=" " alt="" coords="573,175,666,217,664,222,571,180"/>
+</map>

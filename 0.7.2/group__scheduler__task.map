@@ -1,0 +1,6 @@
+<map id="Task" name="Task">
+<area shape="rect" id="Node000001" title="Task implementation for the Uniot scheduler system." alt="" coords="180,31,231,56"/>
+<area shape="rect" id="Node000003" href="$group__scheduler__task__esp32.html" title="ESP32&#45;specific task implementation for the Uniot Core." alt="" coords="287,5,381,31"/>
+<area shape="rect" id="Node000004" href="$group__scheduler__task__esp8266.html" title="ESP8266&#45;specific task implementation for the Uniot Core." alt="" coords="279,55,389,80"/>
+<area shape="rect" id="Node000002" href="$group__scheduling.html" title="Task scheduling system for the Uniot Core." alt="" coords="5,31,132,56"/>
+</map>

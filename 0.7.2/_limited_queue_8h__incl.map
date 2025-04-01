@@ -1,0 +1,9 @@
+<map id="LimitedQueue.h" name="LimitedQueue.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="39,5,165,31"/>
+<area shape="rect" id="Node000002" href="$_clear_queue_8h.html" title=" " alt="" coords="47,79,157,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="105,31,105,65,99,65,99,31"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,152,89,177"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="95,106,67,143,62,140,91,103"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="113,152,200,177"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="113,103,142,140,137,143,109,106"/>
+</map>

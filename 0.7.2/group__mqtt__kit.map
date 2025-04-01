@@ -1,0 +1,4 @@
+<map id="MQTT Kit" name="MQTT Kit">
+<area shape="rect" id="Node000002" href="$group__mqtt__communication.html" title=" " alt="" coords="5,5,172,31"/>
+<area shape="rect" id="Node000001" title="MQTT communication wrapper that manages devices and their subscriptions." alt="" coords="220,5,303,31"/>
+</map>

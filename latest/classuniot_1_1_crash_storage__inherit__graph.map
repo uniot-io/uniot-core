@@ -1,0 +1,5 @@
+<map id="uniot::CrashStorage" name="uniot::CrashStorage">
+<area shape="rect" id="Node000001" title="Handles crash data storage and retrieval for ESP8266." alt="" coords="5,79,156,104"/>
+<area shape="rect" id="Node000002" href="$classuniot_1_1_storage.html" title=" " alt="" coords="24,5,137,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="83,44,83,79,78,79,78,44"/>
+</map>

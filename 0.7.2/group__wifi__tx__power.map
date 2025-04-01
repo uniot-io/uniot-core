@@ -1,0 +1,4 @@
+<map id="WiFi Transmission Power Patch" name="WiFi Transmission Power Patch">
+<area shape="rect" id="Node000002" href="$group__patches.html" title="Configuration patches for hardware&#45;specific optimizations." alt="" coords="5,13,77,38"/>
+<area shape="rect" id="Node000001" title="Configures WiFi transmission power settings for ESP32 devices." alt="" coords="125,5,308,45"/>
+</map>

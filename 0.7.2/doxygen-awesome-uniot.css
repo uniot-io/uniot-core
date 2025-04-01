@@ -1,0 +1,122 @@
+html {
+    --primary-color: #4C68FC;
+    --primary-dark-color: #3D53CA;
+    --primary-light-color: #7086FD;
+}
+
+html.dark-mode {
+    --page-background-color: rgb(29, 29, 29);
+    --primary-color: #4C68FC;
+    --primary-dark-color: #3D53CA;
+    --primary-light-color: #7086FD;
+}
+
+html.light-mode {
+    --primary-color: #4C68FC;
+    --primary-dark-color: #3D53CA;
+    --primary-light-color: #7086FD;
+}
+
+#titlearea {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    padding-bottom: 0;
+    margin-bottom: -0.25rem;
+}
+
+#projectalign {
+    padding-left: 0;
+}
+
+#projectalign #projectname {
+    padding-top: 1rem;
+    padding-bottom: 0.5rem;
+}
+
+#projectnumber {
+    font-size: 0.9rem;
+}
+
+#projectlogo img {
+    max-height: calc(var(--title-font-size) * 2.5);
+    margin-right: 0;
+}
+
+table.retval .paramname, table.tparams .paramname {
+    padding-right: var(--spacing-small);
+}
+
+table.fieldtable td.fieldinit, table.fieldtable td.fieldname {
+    padding-top: 7px;
+}
+
+#version-dropdown {
+    background-color: var(--side-nav-background);
+    color: var(--header-foreground);
+    font-size: 0.9rem;
+    padding: 3px;
+    border: none;
+    text-align: center;
+    outline: none;
+    margin-bottom: 2px;
+}
+
+.github-corner svg {
+    fill: var(--primary-light-color);
+    color: var(--page-background-color);
+    width: 72px;
+    height: 72px;
+}
+
+@media screen and (max-width: 767px) {
+    .github-corner svg {
+        width: 50px;
+        height: 50px;
+    }
+    #version-dropdown {
+        background-color: var(--page-background-color);
+        margin-bottom: 8px;
+    }
+}
+
+.alter-theme-button {
+    display: inline-block;
+    cursor: pointer;
+    background: var(--primary-color);
+    color: var(--page-background-color) !important;
+    border-radius: var(--border-radius-medium);
+    padding: var(--spacing-small) var(--spacing-medium);
+    text-decoration: none;
+}
+
+.alter-theme-button:hover {
+    background: var(--primary-dark-color);
+}
+
+html.dark-mode .darkmode_inverted_image img, /* < doxygen 1.9.3 */
+html.dark-mode .darkmode_inverted_image object[type="image/svg+xml"] /* doxygen 1.9.3 */ {
+    filter: brightness(89%) hue-rotate(180deg) invert();
+}
+
+.bordered_image {
+    border-radius: var(--border-radius-small);
+    border: 1px solid var(--separator-color);
+    display: inline-block;
+    overflow: hidden;
+}
+
+html.dark-mode .bordered_image img, /* < doxygen 1.9.3 */
+html.dark-mode .bordered_image object[type="image/svg+xml"] /* doxygen 1.9.3 */ {
+    border-radius: var(--border-radius-small);
+}
+
+.title_screenshot {
+    filter: drop-shadow(0px 3px 10px rgba(0,0,0,0.22));
+    max-width: 500px;
+    margin: var(--spacing-large) 0;
+}
+
+.title_screenshot .caption {
+    display: none;
+}

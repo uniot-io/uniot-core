@@ -1,0 +1,4 @@
+<map id="WiFi Storage" name="WiFi Storage">
+<area shape="rect" id="Node000002" href="$group__fs__storage.html" title="File system storage management for Uniot devices." alt="" coords="5,5,157,31"/>
+<area shape="rect" id="Node000001" title="Storage class for WiFi credentials." alt="" coords="205,5,309,31"/>
+</map>

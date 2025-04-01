@@ -1,0 +1,351 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <meta name="generator" content="Doxygen 1.13.2" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Uniot Core: Logger.h Source File</title>
+    <link href="tabs.css" rel="stylesheet" type="text/css" />
+    <link rel="icon" type="image/svg+xml" href="logo.png" />
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="dynsections.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-darkmode-toggle.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-fragment-copy-button.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-paragraph-link.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-interactive-toc.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-tabs.js"></script>
+    <script type="text/javascript" src="version-dropdown.js"></script>
+    <script type="text/javascript">
+        DoxygenAwesomeFragmentCopyButton.init()
+        DoxygenAwesomeDarkModeToggle.init()
+        DoxygenAwesomeParagraphLink.init()
+        DoxygenAwesomeInteractiveToc.init()
+        DoxygenAwesomeTabs.init()
+    </script>
+    <link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+    <link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+    <link href="doxygen.css" rel="stylesheet" type="text/css" />
+    <link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only-darkmode-toggle.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-uniot.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+    <!-- https://tholman.com/github-corners/ -->
+    <a href="https://github.com/uniot-io/uniot-core" class="github-corner" title="View source on GitHub" target="_blank"
+        rel="noopener noreferrer">
+        <svg viewBox="0 0 250 250" width="40" height="40"
+            style="position: absolute; top: 0; border: 0; right: 0; z-index: 99;" aria-hidden="true">
+            <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+            <path
+                d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+                fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+            <path
+                d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+                fill="currentColor" class="octo-body"></path>
+        </svg></a>
+    <style>
+        .github-corner:hover .octo-arm {
+            animation: octocat-wave 560ms ease-in-out
+        }
+        @keyframes octocat-wave {
+            0%,
+            100% {
+                transform: rotate(0)
+            }
+            20%,
+            60% {
+                transform: rotate(-25deg)
+            }
+            40%,
+            80% {
+                transform: rotate(10deg)
+            }
+        }
+        @media (max-width:500px) {
+            .github-corner:hover .octo-arm {
+                animation: none
+            }
+            .github-corner .octo-arm {
+                animation: octocat-wave 560ms ease-in-out
+            }
+        }
+    </style>
+    <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+        <div id="titlearea">
+            <table cellspacing="0" cellpadding="0">
+                <tbody>
+                    <tr>
+                        <td id="projectlogo"><img alt="Logo" src="logo.png" /></td>
+                    </tr>
+                    <tr>
+                        <td id="projectalign">
+                            <div id="projectname">
+                                Uniot Core
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="projectalign_number" id="projectalign">
+                            <span id="projectnumber">0.7.2</span>
+                        </td>
+                    </tr>
+                    <!-- <tr>
+                        <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Search" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+                    </tr> -->
+                </tbody>
+            </table>
+        </div>
+        <!-- end header part -->
+<!-- Generated by Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','Search',true);
+  $(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('_logger_8h_source.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Loading...</div>
+<div class="SRStatus" id="Searching">Searching...</div>
+<div class="SRStatus" id="NoMatches">No Matches</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">Logger.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="_logger_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> * This is a part of the Uniot project.</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment"> * Copyright (C) 2016-2020 Uniot &lt;contact@uniot.io&gt;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment"> * This program is free software: you can redistribute it and/or modify</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="comment"> * it under the terms of the GNU General Public License as published by</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="comment"> * the Free Software Foundation, either version 3 of the License, or</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="comment"> * (at your option) any later version.</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="comment"> * This program is distributed in the hope that it will be useful,</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="comment"> * but WITHOUT ANY WARRANTY; without even the implied warranty of</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="comment"> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="comment"> * GNU General Public License for more details.</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="comment"> * You should have received a copy of the GNU General Public License</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="comment"> * along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span></div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span><span class="preprocessor">#ifndef __FUNC_NAME__</span></div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="preprocessor">#if defined(__GNUC__) || defined(__clang__)</span></div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="preprocessor">  #define __FUNC_NAME__ __func__</span></div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="preprocessor">#else</span></div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno"><a class="line" href="group__logger.html#ga7fd8b85d60b666e8457f0ff6d80b5005">   46</a></span><span class="preprocessor">  #define __FUNC_NAME__ __FUNCTION__</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span></div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno"><a class="line" href="group__logger.html#gaa6073fa702993c17d3fc6ce114a72ee7">   60</a></span><span class="preprocessor">#define UNIOT_LOG_LEVEL_ERROR 0</span></div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno"><a class="line" href="group__logger.html#gac45fc4a9ed434f0b1b646942c71034e9">   61</a></span><span class="preprocessor">#define UNIOT_LOG_LEVEL_WARN  1</span></div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno"><a class="line" href="group__logger.html#ga336e2633d7f9782adf0399fa30cfb018">   62</a></span><span class="preprocessor">#define UNIOT_LOG_LEVEL_INFO  2</span></div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno"><a class="line" href="group__logger.html#ga90e6ad4c439f738161d48a7c5aa151f2">   63</a></span><span class="preprocessor">#define UNIOT_LOG_LEVEL_DEBUG 3</span></div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno"><a class="line" href="group__logger.html#ga798f3fdc418ae4edf9829f05e63fde8e">   64</a></span><span class="preprocessor">#define UNIOT_LOG_LEVEL_TRACE 4</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span></div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="preprocessor">#ifndef UNIOT_LOG_LEVEL</span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="preprocessor">#define UNIOT_LOG_LEVEL UNIOT_LOG_LEVEL_DEBUG</span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span></div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="preprocessor">#if UNIOT_LOG_ENABLED</span></div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span> </div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span><span class="preprocessor">#include &lt;Arduino.h&gt;</span></div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span></div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="preprocessor">#ifndef UNIOT_LOG_STREAM</span></div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno"><a class="line" href="group__logger.html#ga1377f9485664c6726077c3c04af9b1d0">   92</a></span><span class="preprocessor">#define UNIOT_LOG_STREAM Serial</span></div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span></div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="preprocessor">#ifndef UNIOT_LOG_BAUD_RATE</span></div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno"><a class="line" href="group__logger.html#ga9450bf3ebbb0eaead7c21e8af6158554">  102</a></span><span class="preprocessor">#define UNIOT_LOG_BAUD_RATE 115200</span></div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span></div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span><span class="preprocessor">#ifndef UNIOT_LOG_BUF_SIZE</span></div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno"><a class="line" href="group__logger.html#ga7d0be77be6473f55d071484b181e4a0c">  112</a></span><span class="preprocessor">#define UNIOT_LOG_BUF_SIZE 256</span></div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span></div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="preprocessor">#ifndef UNIOT_LOG_SET_READY</span></div>
+<div class="foldopen" id="foldopen00122" data-start="" data-end="">
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno"><a class="line" href="group__logger.html#ga46187165be18757874b82b858a0e562e">  122</a></span><span class="preprocessor">#define UNIOT_LOG_SET_READY()          \</span></div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span><span class="preprocessor">  do {                                 \</span></div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span><span class="preprocessor">    if (!UNIOT_LOG_STREAM) {                 \</span></div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span><span class="preprocessor">      UNIOT_LOG_STREAM.begin(UNIOT_LOG_BAUD_RATE); \</span></div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span><span class="preprocessor">      UNIOT_LOG_STREAM.print(&quot;\n\n&quot;);        \</span></div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span><span class="preprocessor">    }                                  \</span></div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span><span class="preprocessor">  } while (0)</span></div>
+</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span></div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span><span class="preprocessor">#ifndef UNIOT_LOG_PRINT</span></div>
+<div class="foldopen" id="foldopen00138" data-start="" data-end="">
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno"><a class="line" href="group__logger.html#gaa5d13412287252288ffa001c504717cf">  138</a></span><span class="preprocessor">#define UNIOT_LOG_PRINT(...)         \</span></div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span><span class="preprocessor">  do {                               \</span></div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span><span class="preprocessor">    if (UNIOT_LOG_STREAM)                  \</span></div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span><span class="preprocessor">      UNIOT_LOG_STREAM.print(__VA_ARGS__); \</span></div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span><span class="preprocessor">  } while (0)</span></div>
+</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span></div>
+<div class="foldopen" id="foldopen00159" data-start="" data-end="">
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno"><a class="line" href="group__logger.html#ga1831b0bc6bbdfe3699244dc68f877e05">  159</a></span><span class="preprocessor">#define UNIOT_LOG(log_type, log_fmt, log_arg...)                         \</span></div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span><span class="preprocessor">  do {                                                                   \</span></div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span><span class="preprocessor">    uniot_log_printf(&quot;[&quot; #log_type &quot;][%lu][%s:%d][%s] &quot; log_fmt &quot;\n&quot;,    \</span></div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span><span class="preprocessor">                     millis(), __FILE__, __LINE__, __FUNC_NAME__, ##log_arg); \</span></div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span><span class="preprocessor">  } while (0)</span></div>
+</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span></div>
+<div class="foldopen" id="foldopen00175" data-start="" data-end="">
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno"><a class="line" href="group__logger.html#gaf764134b1724429603aa22609e9095c6">  175</a></span><span class="preprocessor">#define UNIOT_LOG_IF(log_type, log_cond, log_fmt, log_arg...) \</span></div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span><span class="preprocessor">  do {                                                        \</span></div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span><span class="preprocessor">    if (log_cond)                                             \</span></div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span><span class="preprocessor">      UNIOT_LOG(log_type, log_fmt, ##log_arg);                \</span></div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span><span class="preprocessor">  } while (0)</span></div>
+</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span></div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span></div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>uniot_log_printf(<span class="keyword">const</span> <span class="keywordtype">char</span> *format, ...) {</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>  va_list arg;</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>  va_start(arg, format);</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>  <span class="keywordtype">char</span> buf[<a class="code hl_define" href="group__logger.html#ga7d0be77be6473f55d071484b181e4a0c">UNIOT_LOG_BUF_SIZE</a>];</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>  <span class="keywordtype">int</span> len = vsnprintf(buf, <span class="keyword">sizeof</span>(buf), format, arg);</div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>  va_end(arg);</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>  <a class="code hl_define" href="group__logger.html#gaa5d13412287252288ffa001c504717cf">UNIOT_LOG_PRINT</a>(buf);</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>  <span class="keywordflow">if</span> (len &gt;= (<span class="keywordtype">int</span>)<span class="keyword">sizeof</span>(buf))</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>    <a class="code hl_define" href="group__logger.html#gaa5d13412287252288ffa001c504717cf">UNIOT_LOG_PRINT</a>(<span class="stringliteral">&quot; [...]\n&quot;</span>);</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>  <span class="keywordflow">return</span> len;</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>}</div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span> </div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span><span class="preprocessor">#else  </span><span class="comment">/* UNIOT_LOG_ENABLED not defined */</span><span class="preprocessor"></span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span><span class="preprocessor">#include &lt;<a class="code" href="_common_8h.html">Common.h</a>&gt;</span></div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span> </div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span><span class="preprocessor">#define UNIOT_LOG_SET_READY() do {} while(0)</span></div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span><span class="preprocessor">#define UNIOT_LOG_PRINT(...) (UNUSED(__VA_ARGS__))</span></div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span><span class="preprocessor">#define UNIOT_LOG(log_type, ...) (UNUSED(__VA_ARGS__))</span></div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span><span class="preprocessor">#define UNIOT_LOG_IF(log_type, ...) (UNUSED(__VA_ARGS__))</span></div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span> </div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span><span class="preprocessor">#if UNIOT_LOG_LEVEL_ERROR &lt;= UNIOT_LOG_LEVEL</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno"><a class="line" href="group__logger.html#gae7f8e668ab060e28b0d4e202ba4e75d8">  226</a></span><span class="preprocessor">#define UNIOT_LOG_ERROR(...) UNIOT_LOG(ERROR, __VA_ARGS__)</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno"><a class="line" href="group__logger.html#gadb8dec4b2a53f4efc886ceb95b68d71d">  234</a></span><span class="preprocessor">#define UNIOT_LOG_ERROR_IF(log_cond, log...) UNIOT_LOG_IF(ERROR, log_cond, ##log)</span></div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span><span class="preprocessor">#else</span></div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span><span class="preprocessor">#define UNIOT_LOG_ERROR(...) (UNUSED(__VA_ARGS__))</span></div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span><span class="preprocessor">#define UNIOT_LOG_ERROR_IF(...) (UNUSED(__VA_ARGS__))</span></div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span> </div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span><span class="preprocessor">#if UNIOT_LOG_LEVEL_WARN &lt;= UNIOT_LOG_LEVEL</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno"><a class="line" href="group__logger.html#ga6aa8da997113dabcea141812ad53df9e">  247</a></span><span class="preprocessor">#define UNIOT_LOG_WARN(...) UNIOT_LOG(WARN, __VA_ARGS__)</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno"><a class="line" href="group__logger.html#ga7e2d9b599360c3bd8594a08fed92602e">  255</a></span><span class="preprocessor">#define UNIOT_LOG_WARN_IF(log_cond, log...) UNIOT_LOG_IF(WARN, log_cond, ##log)</span></div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span><span class="preprocessor">#else</span></div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span><span class="preprocessor">#define UNIOT_LOG_WARN(...) (UNUSED(__VA_ARGS__))</span></div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span><span class="preprocessor">#define UNIOT_LOG_WARN_IF(...) (UNUSED(__VA_ARGS__))</span></div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span> </div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span><span class="preprocessor">#if UNIOT_LOG_LEVEL_INFO &lt;= UNIOT_LOG_LEVEL</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno"><a class="line" href="group__logger.html#ga351f1dfd44a22a48f7d024cb16b8feff">  268</a></span><span class="preprocessor">#define UNIOT_LOG_INFO(...) UNIOT_LOG(INFO, __VA_ARGS__)</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno"><a class="line" href="group__logger.html#ga30dcc3b556323f4752a681df86f3143e">  276</a></span><span class="preprocessor">#define UNIOT_LOG_INFO_IF(log_cond, log...) UNIOT_LOG_IF(INFO, log_cond, ##log)</span></div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span><span class="preprocessor">#else</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span><span class="preprocessor">#define UNIOT_LOG_INFO(...) (UNUSED(__VA_ARGS__))</span></div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span><span class="preprocessor">#define UNIOT_LOG_INFO_IF(...) (UNUSED(__VA_ARGS__))</span></div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span> </div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span><span class="preprocessor">#if UNIOT_LOG_LEVEL_DEBUG &lt;= UNIOT_LOG_LEVEL</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno"><a class="line" href="group__logger.html#gacf7522274a024d43a62daaec56772e1c">  293</a></span><span class="preprocessor">#define UNIOT_LOG_DEBUG(...) UNIOT_LOG(DEBUG, __VA_ARGS__)</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00301" name="l00301"></a><span class="lineno"><a class="line" href="group__logger.html#gafc4aae068fe284455e6f86f6042ba155">  301</a></span><span class="preprocessor">#define UNIOT_LOG_DEBUG_IF(log_cond, log...) UNIOT_LOG_IF(DEBUG, log_cond, ##log)</span></div>
+<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span><span class="preprocessor">#else</span></div>
+<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span><span class="preprocessor">#define UNIOT_LOG_DEBUG(...) (UNUSED(__VA_ARGS__))</span></div>
+<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span><span class="preprocessor">#define UNIOT_LOG_DEBUG_IF(...) (UNUSED(__VA_ARGS__))</span></div>
+<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span> </div>
+<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span><span class="preprocessor">#if UNIOT_LOG_LEVEL_TRACE &lt;= UNIOT_LOG_LEVEL</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno"><a class="line" href="group__logger.html#ga3d0df12a4c2a492e49d5df64b60ecd7f">  314</a></span><span class="preprocessor">#define UNIOT_LOG_TRACE(...) UNIOT_LOG(TRACE, __VA_ARGS__)</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00322" name="l00322"></a><span class="lineno"><a class="line" href="group__logger.html#ga86c946cd707e2b463305bf8bc06eae02">  322</a></span><span class="preprocessor">#define UNIOT_LOG_TRACE_IF(log_cond, log...) UNIOT_LOG_IF(TRACE, log_cond, ##log)</span></div>
+<div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span><span class="preprocessor">#else</span></div>
+<div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span><span class="preprocessor">#define UNIOT_LOG_TRACE(...) (UNUSED(__VA_ARGS__))</span></div>
+<div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span><span class="preprocessor">#define UNIOT_LOG_TRACE_IF(...) (UNUSED(__VA_ARGS__))</span></div>
+<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span></div>
+<div class="ttc" id="a_common_8h_html"><div class="ttname"><a href="_common_8h.html">Common.h</a></div></div>
+<div class="ttc" id="agroup__logger_html_ga7d0be77be6473f55d071484b181e4a0c"><div class="ttname"><a href="group__logger.html#ga7d0be77be6473f55d071484b181e4a0c">UNIOT_LOG_BUF_SIZE</a></div><div class="ttdeci">#define UNIOT_LOG_BUF_SIZE</div><div class="ttdoc">Maximum size of the logging buffer.</div><div class="ttdef"><b>Definition</b> Logger.h:112</div></div>
+<div class="ttc" id="agroup__logger_html_gaa5d13412287252288ffa001c504717cf"><div class="ttname"><a href="group__logger.html#gaa5d13412287252288ffa001c504717cf">UNIOT_LOG_PRINT</a></div><div class="ttdeci">#define UNIOT_LOG_PRINT(...)</div><div class="ttdoc">Print to the logging stream.</div><div class="ttdef"><b>Definition</b> Logger.h:138</div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_97aefd0d527b934f1d99a682da8fe6a9.html">lib</a></li><li class="navelem"><a class="el" href="dir_a7e9f68611f01b5eb6ddd8cd40b75845.html">Core</a></li><li class="navelem"><a class="el" href="_logger_8h.html">Logger.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>

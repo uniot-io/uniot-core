@@ -1,0 +1,4 @@
+<map id="Patches" name="Patches">
+<area shape="rect" id="Node000001" title="Configuration patches for hardware&#45;specific optimizations." alt="" coords="5,13,77,38"/>
+<area shape="rect" id="Node000002" href="$group__wifi__tx__power.html" title="Configures WiFi transmission power settings for ESP32 devices." alt="" coords="125,5,308,45"/>
+</map>

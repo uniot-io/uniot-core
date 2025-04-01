@@ -1,0 +1,4 @@
+<map id="ESP8266 Task" name="ESP8266 Task">
+<area shape="rect" id="Node000002" href="$group__scheduler__task.html" title="Task implementation for the Uniot scheduler system." alt="" coords="5,5,56,31"/>
+<area shape="rect" id="Node000001" title="ESP8266&#45;specific task implementation for the Uniot Core." alt="" coords="104,5,215,31"/>
+</map>

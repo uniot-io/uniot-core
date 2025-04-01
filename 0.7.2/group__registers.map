@@ -1,0 +1,9 @@
+<map id="Named Registers" name="Named Registers">
+<area shape="rect" id="Node000001" title="Named registers for storing and managing collections of values." alt="" coords="5,129,140,155"/>
+<area shape="rect" id="Node000002" href="$group__registers__gpio__register.html" title="Specialized GpioRegister class for GPIO pin management." alt="" coords="221,5,333,31"/>
+<area shape="rect" id="Node000006" href="$group__registers__manager.html" title="Manages GPIO and Object registers." alt="" coords="209,55,346,80"/>
+<area shape="rect" id="Node000003" href="$group__registers__object__register.html" title="A registry system for managing object references by name." alt="" coords="216,104,339,129"/>
+<area shape="rect" id="Node000004" href="$group__registers__object__register__record.html" title="Base class for objects that can be registered in the ObjectRegister." alt="" coords="192,153,363,179"/>
+<area shape="rect" id="Node000007" href="$group__registers__proxy.html" title="Proxy class for RegisterManager that provides scoped access to a named register." alt="" coords="188,203,367,228"/>
+<area shape="rect" id="Node000005" href="$group__registers__register.html" title="A generalized Register class template that stores named collections of typed values." alt="" coords="239,252,315,277"/>
+</map>

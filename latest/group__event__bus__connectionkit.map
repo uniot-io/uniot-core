@@ -1,0 +1,4 @@
+<map id="Connection Kit" name="Connection Kit">
+<area shape="rect" id="Node000001" title="Interface for components that need to connect to an EventBus." alt="" coords="140,5,257,31"/>
+<area shape="rect" id="Node000002" href="$group__event__bus__main.html" title="The EventBus is a central communication hub for event&#45;driven architecture." alt="" coords="5,5,92,31"/>
+</map>

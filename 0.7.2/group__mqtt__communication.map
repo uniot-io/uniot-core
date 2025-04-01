@@ -1,0 +1,8 @@
+<map id="MQTT Communication" name="MQTT Communication">
+<area shape="rect" id="Node000003" href="$group__callback__mqtt__device.html" title="MQTT device implementation that delegates message handling to a callback function." alt="" coords="365,5,492,31"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="151,80,317,105"/>
+<area shape="rect" id="Node000004" href="$group__mqtt__device.html" title="Base class for MQTT&#45;enabled devices in the Uniot ecosystem." alt="" coords="374,55,483,80"/>
+<area shape="rect" id="Node000005" href="$group__mqtt__kit.html" title="MQTT communication wrapper that manages devices and their subscriptions." alt="" coords="387,104,470,129"/>
+<area shape="rect" id="Node000006" href="$group__mqtt__path.html" title="Utility class for generating standardized MQTT topic paths." alt="" coords="383,153,475,179"/>
+<area shape="rect" id="Node000002" href="$group__networking.html" title="Networking and communication classes for the Uniot project." alt="" coords="5,80,103,105"/>
+</map>

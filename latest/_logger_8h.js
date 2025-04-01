@@ -1,0 +1,26 @@
+var _logger_8h =
+[
+    [ "__FUNC_NAME__", "group__logger.html#ga7fd8b85d60b666e8457f0ff6d80b5005", null ],
+    [ "UNIOT_LOG", "group__logger.html#ga1831b0bc6bbdfe3699244dc68f877e05", null ],
+    [ "UNIOT_LOG_BAUD_RATE", "group__logger.html#ga9450bf3ebbb0eaead7c21e8af6158554", null ],
+    [ "UNIOT_LOG_BUF_SIZE", "group__logger.html#ga7d0be77be6473f55d071484b181e4a0c", null ],
+    [ "UNIOT_LOG_DEBUG", "group__logger.html#gacf7522274a024d43a62daaec56772e1c", null ],
+    [ "UNIOT_LOG_DEBUG_IF", "group__logger.html#gafc4aae068fe284455e6f86f6042ba155", null ],
+    [ "UNIOT_LOG_ERROR", "group__logger.html#gae7f8e668ab060e28b0d4e202ba4e75d8", null ],
+    [ "UNIOT_LOG_ERROR_IF", "group__logger.html#gadb8dec4b2a53f4efc886ceb95b68d71d", null ],
+    [ "UNIOT_LOG_IF", "group__logger.html#gaf764134b1724429603aa22609e9095c6", null ],
+    [ "UNIOT_LOG_INFO", "group__logger.html#ga351f1dfd44a22a48f7d024cb16b8feff", null ],
+    [ "UNIOT_LOG_INFO_IF", "group__logger.html#ga30dcc3b556323f4752a681df86f3143e", null ],
+    [ "UNIOT_LOG_LEVEL_DEBUG", "group__logger.html#ga90e6ad4c439f738161d48a7c5aa151f2", null ],
+    [ "UNIOT_LOG_LEVEL_ERROR", "group__logger.html#gaa6073fa702993c17d3fc6ce114a72ee7", null ],
+    [ "UNIOT_LOG_LEVEL_INFO", "group__logger.html#ga336e2633d7f9782adf0399fa30cfb018", null ],
+    [ "UNIOT_LOG_LEVEL_TRACE", "group__logger.html#ga798f3fdc418ae4edf9829f05e63fde8e", null ],
+    [ "UNIOT_LOG_LEVEL_WARN", "group__logger.html#gac45fc4a9ed434f0b1b646942c71034e9", null ],
+    [ "UNIOT_LOG_PRINT", "group__logger.html#gaa5d13412287252288ffa001c504717cf", null ],
+    [ "UNIOT_LOG_SET_READY", "group__logger.html#ga46187165be18757874b82b858a0e562e", null ],
+    [ "UNIOT_LOG_STREAM", "group__logger.html#ga1377f9485664c6726077c3c04af9b1d0", null ],
+    [ "UNIOT_LOG_TRACE", "group__logger.html#ga3d0df12a4c2a492e49d5df64b60ecd7f", null ],
+    [ "UNIOT_LOG_TRACE_IF", "group__logger.html#ga86c946cd707e2b463305bf8bc06eae02", null ],
+    [ "UNIOT_LOG_WARN", "group__logger.html#ga6aa8da997113dabcea141812ad53df9e", null ],
+    [ "UNIOT_LOG_WARN_IF", "group__logger.html#ga7e2d9b599360c3bd8594a08fed92602e", null ]
+];

@@ -1,0 +1,5 @@
+<map id="Event Bus" name="Event Bus">
+<area shape="rect" id="Node000002" href="$group__event__bus.html" title="Event&#45;driven communication module for component interactions." alt="" coords="5,5,184,31"/>
+<area shape="rect" id="Node000001" title="The EventBus is a central communication hub for event&#45;driven architecture." alt="" coords="232,5,319,31"/>
+<area shape="rect" id="Node000003" href="$group__event__bus__connectionkit.html" title="Interface for components that need to connect to an EventBus." alt="" coords="367,5,484,31"/>
+</map>

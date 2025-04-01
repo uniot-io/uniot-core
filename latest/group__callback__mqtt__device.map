@@ -1,0 +1,4 @@
+<map id="Callback Device" name="Callback Device">
+<area shape="rect" id="Node000001" title="MQTT device implementation that delegates message handling to a callback function." alt="" coords="220,5,347,31"/>
+<area shape="rect" id="Node000002" href="$group__mqtt__communication.html" title=" " alt="" coords="5,5,172,31"/>
+</map>

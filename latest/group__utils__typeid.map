@@ -1,0 +1,4 @@
+<map id="TypeId" name="TypeId">
+<area shape="rect" id="Node000002" href="$group__utils.html" title="Common utility components and functions for the Uniot Core." alt="" coords="5,5,79,31"/>
+<area shape="rect" id="Node000001" title="Provides a lightweight type identification system for runtime type checking and safe casting." alt="" coords="127,5,191,31"/>
+</map>

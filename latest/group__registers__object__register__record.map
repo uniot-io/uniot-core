@@ -1,0 +1,4 @@
+<map id="Object Register Record" name="Object Register Record">
+<area shape="rect" id="Node000002" href="$group__registers.html" title="Named registers for storing and managing collections of values." alt="" coords="5,5,140,31"/>
+<area shape="rect" id="Node000001" title="Base class for objects that can be registered in the ObjectRegister." alt="" coords="188,5,359,31"/>
+</map>

@@ -1,0 +1,660 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <meta name="generator" content="Doxygen 1.13.2" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Uniot Core: Common</title>
+    <link href="tabs.css" rel="stylesheet" type="text/css" />
+    <link rel="icon" type="image/svg+xml" href="logo.png" />
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="dynsections.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-darkmode-toggle.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-fragment-copy-button.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-paragraph-link.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-interactive-toc.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-tabs.js"></script>
+    <script type="text/javascript" src="version-dropdown.js"></script>
+    <script type="text/javascript">
+        DoxygenAwesomeFragmentCopyButton.init()
+        DoxygenAwesomeDarkModeToggle.init()
+        DoxygenAwesomeParagraphLink.init()
+        DoxygenAwesomeInteractiveToc.init()
+        DoxygenAwesomeTabs.init()
+    </script>
+    <link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+    <link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+    <link href="doxygen.css" rel="stylesheet" type="text/css" />
+    <link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only-darkmode-toggle.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-uniot.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+    <!-- https://tholman.com/github-corners/ -->
+    <a href="https://github.com/uniot-io/uniot-core" class="github-corner" title="View source on GitHub" target="_blank"
+        rel="noopener noreferrer">
+        <svg viewBox="0 0 250 250" width="40" height="40"
+            style="position: absolute; top: 0; border: 0; right: 0; z-index: 99;" aria-hidden="true">
+            <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+            <path
+                d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+                fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+            <path
+                d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+                fill="currentColor" class="octo-body"></path>
+        </svg></a>
+    <style>
+        .github-corner:hover .octo-arm {
+            animation: octocat-wave 560ms ease-in-out
+        }
+        @keyframes octocat-wave {
+            0%,
+            100% {
+                transform: rotate(0)
+            }
+            20%,
+            60% {
+                transform: rotate(-25deg)
+            }
+            40%,
+            80% {
+                transform: rotate(10deg)
+            }
+        }
+        @media (max-width:500px) {
+            .github-corner:hover .octo-arm {
+                animation: none
+            }
+            .github-corner .octo-arm {
+                animation: octocat-wave 560ms ease-in-out
+            }
+        }
+    </style>
+    <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+        <div id="titlearea">
+            <table cellspacing="0" cellpadding="0">
+                <tbody>
+                    <tr>
+                        <td id="projectlogo"><img alt="Logo" src="logo.png" /></td>
+                    </tr>
+                    <tr>
+                        <td id="projectalign">
+                            <div id="projectname">
+                                Uniot Core
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="projectalign_number" id="projectalign">
+                            <span id="projectnumber">0.7.2</span>
+                        </td>
+                    </tr>
+                    <!-- <tr>
+                        <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Search" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+                    </tr> -->
+                </tbody>
+            </table>
+        </div>
+        <!-- end header part -->
+<!-- Generated by Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','Search',true);
+  $(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('group__common.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Loading...</div>
+<div class="SRStatus" id="Searching">Searching...</div>
+<div class="SRStatus" id="NoMatches">No Matches</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#define-members">Macros</a> &#124;
+<a href="#func-members">Functions</a>  </div>
+  <div class="headertitle"><div class="title">Common<div class="ingroups"><a class="el" href="group__utils.html">Utilities</a></div></div></div>
+</div><!--header-->
+<div class="contents">
+
+<p>Common utilities and macros for the Uniot Core.  
+<a href="#details">More...</a></p>
+<div class="dynheader">
+Collaboration diagram for Common:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="group__common.svg" width="214" height="36"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_four_c_c.html">FourCC&lt; a, b, c, d &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a four-character code (<a class="el" href="struct_four_c_c.html" title="Creates a four-character code (FourCC) value from template parameters.">FourCC</a>) value from template parameters.  <a href="struct_four_c_c.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:gac0f65366c74074e79421dd75da295b5b" id="r_gac0f65366c74074e79421dd75da295b5b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#gac0f65366c74074e79421dd75da295b5b">COUNT_OF</a>(arr)</td></tr>
+<tr class="memdesc:gac0f65366c74074e79421dd75da295b5b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculates the number of elements in a statically allocated array.  <br /></td></tr>
+<tr class="separator:gac0f65366c74074e79421dd75da295b5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8fe7233af1b52efbec7ec2e694de97d4" id="r_ga8fe7233af1b52efbec7ec2e694de97d4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ga8fe7233af1b52efbec7ec2e694de97d4">ARRAY_ELEMENT_SAFE</a>(arr,  index)</td></tr>
+<tr class="memdesc:ga8fe7233af1b52efbec7ec2e694de97d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provides safe array access with bounds checking.  <br /></td></tr>
+<tr class="separator:ga8fe7233af1b52efbec7ec2e694de97d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga848200da0c950d753656e2dedfce7c6f" id="r_ga848200da0c950d753656e2dedfce7c6f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ga848200da0c950d753656e2dedfce7c6f">FOURCC</a>(name)</td></tr>
+<tr class="memdesc:ga848200da0c950d753656e2dedfce7c6f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a <a class="el" href="struct_four_c_c.html" title="Creates a four-character code (FourCC) value from template parameters.">FourCC</a> constant from a string literal.  <br /></td></tr>
+<tr class="separator:ga848200da0c950d753656e2dedfce7c6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga33c7fd2f50d3ec327a9fbb5e88fde3fa" id="r_ga33c7fd2f50d3ec327a9fbb5e88fde3fa"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ga33c7fd2f50d3ec327a9fbb5e88fde3fa">ALIAS_IMPLICIT_FUNCTION</a>(high,  low)</td></tr>
+<tr class="memdesc:ga33c7fd2f50d3ec327a9fbb5e88fde3fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates an alias for a function that forwards all arguments implicitly.  <br /></td></tr>
+<tr class="separator:ga33c7fd2f50d3ec327a9fbb5e88fde3fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad8567841ceca8ed2a2ad44fcf7edb0c4" id="r_gad8567841ceca8ed2a2ad44fcf7edb0c4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#gad8567841ceca8ed2a2ad44fcf7edb0c4">ALIAS_EXPLICIT_FUNCTION</a>(high,  low)</td></tr>
+<tr class="memdesc:gad8567841ceca8ed2a2ad44fcf7edb0c4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates an alias for a template function that forwards all arguments explicitly.  <br /></td></tr>
+<tr class="separator:gad8567841ceca8ed2a2ad44fcf7edb0c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:ga7c7c5f02bd9d71a3887c0b7e02d3674b" id="r_ga7c7c5f02bd9d71a3887c0b7e02d3674b"><td class="memTemplParams" colspan="2">template&lt;typename... Args&gt; </td></tr>
+<tr class="memitem:ga7c7c5f02bd9d71a3887c0b7e02d3674b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#ga7c7c5f02bd9d71a3887c0b7e02d3674b">UNUSED</a> (Args &amp;&amp;...args)</td></tr>
+<tr class="memdesc:ga7c7c5f02bd9d71a3887c0b7e02d3674b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility function to mark function parameters as intentionally unused.  <br /></td></tr>
+<tr class="separator:ga7c7c5f02bd9d71a3887c0b7e02d3674b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gadfc0098b76a0fd6d3abdf7b7a25d6def" id="r_gadfc0098b76a0fd6d3abdf7b7a25d6def"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#gadfc0098b76a0fd6d3abdf7b7a25d6def">CRC32</a> (const void *data, size_t length, uint32_t crc=0)</td></tr>
+<tr class="memdesc:gadfc0098b76a0fd6d3abdf7b7a25d6def"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculates CRC32-C (Castagnoli) checksum for data integrity verification.  <br /></td></tr>
+<tr class="separator:gadfc0098b76a0fd6d3abdf7b7a25d6def"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga25f3c0394677d2a7ffc575ecb39fb6e6" id="r_ga25f3c0394677d2a7ffc575ecb39fb6e6"><td class="memTemplParams" colspan="2">template&lt;typename T&gt; </td></tr>
+<tr class="memitem:ga25f3c0394677d2a7ffc575ecb39fb6e6"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#ga25f3c0394677d2a7ffc575ecb39fb6e6">uniot::UniquePointer</a> = std::unique_ptr&lt;T&gt;</td></tr>
+<tr class="memdesc:ga25f3c0394677d2a7ffc575ecb39fb6e6"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classuniot_1_1_type.html" title="Utility class providing static methods for runtime type identification and safe casting.">Type</a> alias for std::unique_ptr with cleaner syntax.  <br /></td></tr>
+<tr class="separator:ga25f3c0394677d2a7ffc575ecb39fb6e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5349de5c3b0f3ee0d72fc97cbc58adf5" id="r_ga5349de5c3b0f3ee0d72fc97cbc58adf5"><td class="memTemplParams" colspan="2">template&lt;typename T&gt; </td></tr>
+<tr class="memitem:ga5349de5c3b0f3ee0d72fc97cbc58adf5"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#ga5349de5c3b0f3ee0d72fc97cbc58adf5">uniot::SharedPointer</a> = std::shared_ptr&lt;T&gt;</td></tr>
+<tr class="memdesc:ga5349de5c3b0f3ee0d72fc97cbc58adf5"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classuniot_1_1_type.html" title="Utility class providing static methods for runtime type identification and safe casting.">Type</a> alias for std::shared_ptr with cleaner syntax.  <br /></td></tr>
+<tr class="separator:ga5349de5c3b0f3ee0d72fc97cbc58adf5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7f06aa8959bf69c3fdf67402a766b1ac" id="r_ga7f06aa8959bf69c3fdf67402a766b1ac"><td class="memTemplParams" colspan="2">template&lt;typename T_First, typename T_Second&gt; </td></tr>
+<tr class="memitem:ga7f06aa8959bf69c3fdf67402a766b1ac"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#ga7f06aa8959bf69c3fdf67402a766b1ac">uniot::Pair</a> = std::pair&lt;T_First, T_Second&gt;</td></tr>
+<tr class="memdesc:ga7f06aa8959bf69c3fdf67402a766b1ac"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classuniot_1_1_type.html" title="Utility class providing static methods for runtime type identification and safe casting.">Type</a> alias for std::pair with cleaner syntax.  <br /></td></tr>
+<tr class="separator:ga7f06aa8959bf69c3fdf67402a766b1ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaecb3cee18105dc9fa363076228b83dec" id="r_gaecb3cee18105dc9fa363076228b83dec"><td class="memTemplParams" colspan="2">template&lt;typename T, typename... Args&gt; </td></tr>
+<tr class="memitem:gaecb3cee18105dc9fa363076228b83dec"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#gaecb3cee18105dc9fa363076228b83dec">uniot::MakeShared</a> (Args &amp;&amp;...args) -&gt; decltype(std::make_shared&lt; T &gt;(std::forward&lt; Args &gt;(args)...))</td></tr>
+<tr class="memdesc:gaecb3cee18105dc9fa363076228b83dec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a shared pointer instance, alias for std::make_shared.  <br /></td></tr>
+<tr class="separator:gaecb3cee18105dc9fa363076228b83dec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga80a9e9438f4242b89580b9fd5cf2c3a8" id="r_ga80a9e9438f4242b89580b9fd5cf2c3a8"><td class="memTemplParams" colspan="2">template&lt;typename T, typename... Args&gt; </td></tr>
+<tr class="memitem:ga80a9e9438f4242b89580b9fd5cf2c3a8"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#ga80a9e9438f4242b89580b9fd5cf2c3a8">uniot::MakeUnique</a> (Args &amp;&amp;...args) -&gt; decltype(std::make_unique&lt; T &gt;(std::forward&lt; Args &gt;(args)...))</td></tr>
+<tr class="memdesc:ga80a9e9438f4242b89580b9fd5cf2c3a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a unique pointer instance, alias for std::make_unique.  <br /></td></tr>
+<tr class="separator:ga80a9e9438f4242b89580b9fd5cf2c3a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0a6e2d2d1d429a4f8d4647788a2c6439" id="r_ga0a6e2d2d1d429a4f8d4647788a2c6439"><td class="memTemplParams" colspan="2">template&lt;typename... Args&gt; </td></tr>
+<tr class="memitem:ga0a6e2d2d1d429a4f8d4647788a2c6439"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#ga0a6e2d2d1d429a4f8d4647788a2c6439">uniot::MakePair</a> (Args &amp;&amp;...args) -&gt; decltype(std::make_pair(std::forward&lt; Args &gt;(args)...))</td></tr>
+<tr class="memdesc:ga0a6e2d2d1d429a4f8d4647788a2c6439"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a pair instance, alias for std::make_pair.  <br /></td></tr>
+<tr class="separator:ga0a6e2d2d1d429a4f8d4647788a2c6439"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<p>Common utilities and macros for the Uniot Core. </p>
+<h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="gad8567841ceca8ed2a2ad44fcf7edb0c4" name="gad8567841ceca8ed2a2ad44fcf7edb0c4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gad8567841ceca8ed2a2ad44fcf7edb0c4">&#9670;&#160;</a></span>ALIAS_EXPLICIT_FUNCTION</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ALIAS_EXPLICIT_FUNCTION</td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>high</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>low</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span>... Args&gt;                                             \</div>
+<div class="line">  <span class="keyword">inline</span> <span class="keyword">auto</span> high(Args &amp;&amp;...args) -&gt; <span class="keyword">decltype</span>(low&lt;T&gt;(std::forward&lt;Args&gt;(args)...)) { \</div>
+<div class="line">    <span class="keywordflow">return</span> low&lt;T&gt;(std::forward&lt;Args&gt;(args)...);                                       \</div>
+<div class="line">  }</div>
+</div><!-- fragment -->
+<p>Creates an alias for a template function that forwards all arguments explicitly. </p>
+<p>Similar to ALIAS_IMPLICIT_FUNCTION but maintains the explicit template parameter.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">high</td><td>New function name </td></tr>
+    <tr><td class="paramname">low</td><td>Original function being aliased </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga33c7fd2f50d3ec327a9fbb5e88fde3fa" name="ga33c7fd2f50d3ec327a9fbb5e88fde3fa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga33c7fd2f50d3ec327a9fbb5e88fde3fa">&#9670;&#160;</a></span>ALIAS_IMPLICIT_FUNCTION</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ALIAS_IMPLICIT_FUNCTION</td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>high</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>low</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">  <span class="keyword">template</span> &lt;<span class="keyword">typename</span>... Args&gt;                                                      \</div>
+<div class="line">  <span class="keyword">inline</span> <span class="keyword">auto</span> high(Args &amp;&amp;...args) -&gt; <span class="keyword">decltype</span>(low(std::forward&lt;Args&gt;(args)...)) { \</div>
+<div class="line">    <span class="keywordflow">return</span> low(std::forward&lt;Args&gt;(args)...);                                       \</div>
+<div class="line">  }</div>
+</div><!-- fragment -->
+<p>Creates an alias for a function that forwards all arguments implicitly. </p>
+<p>Used to expose standard library functions through a custom namespace with the same parameter forwarding behavior.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">high</td><td>New function name </td></tr>
+    <tr><td class="paramname">low</td><td>Original function being aliased </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga8fe7233af1b52efbec7ec2e694de97d4" name="ga8fe7233af1b52efbec7ec2e694de97d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga8fe7233af1b52efbec7ec2e694de97d4">&#9670;&#160;</a></span>ARRAY_ELEMENT_SAFE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ARRAY_ELEMENT_SAFE</td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>arr</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>index</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">((arr)[(((index) &lt; <a class="code hl_define" href="#gac0f65366c74074e79421dd75da295b5b">COUNT_OF</a>(arr)) ? (index) : (<a class="code hl_define" href="#gac0f65366c74074e79421dd75da295b5b">COUNT_OF</a>(arr) - 1))])</div>
+<div class="ttc" id="agroup__common_html_gac0f65366c74074e79421dd75da295b5b"><div class="ttname"><a href="#gac0f65366c74074e79421dd75da295b5b">COUNT_OF</a></div><div class="ttdeci">#define COUNT_OF(arr)</div><div class="ttdoc">Calculates the number of elements in a statically allocated array.</div><div class="ttdef"><b>Definition</b> Common.h:88</div></div>
+</div><!-- fragment -->
+<p>Provides safe array access with bounds checking. </p>
+<p>Returns the element at the specified index if within bounds, otherwise returns the last element. </p>
+
+</div>
+</div>
+<a id="gac0f65366c74074e79421dd75da295b5b" name="gac0f65366c74074e79421dd75da295b5b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gac0f65366c74074e79421dd75da295b5b">&#9670;&#160;</a></span>COUNT_OF</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define COUNT_OF</td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>arr</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">(<span class="keyword">sizeof</span>(arr) / <span class="keyword">sizeof</span>(arr[0]))</div>
+</div><!-- fragment -->
+<p>Calculates the number of elements in a statically allocated array. </p>
+
+</div>
+</div>
+<a id="ga848200da0c950d753656e2dedfce7c6f" name="ga848200da0c950d753656e2dedfce7c6f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga848200da0c950d753656e2dedfce7c6f">&#9670;&#160;</a></span>FOURCC</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define FOURCC</td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>name</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line"><a class="code hl_struct" href="struct_four_c_c.html">FourCC</a>&lt;<a class="code hl_define" href="#ga8fe7233af1b52efbec7ec2e694de97d4">ARRAY_ELEMENT_SAFE</a>(#name, 0), <a class="code hl_define" href="#ga8fe7233af1b52efbec7ec2e694de97d4">ARRAY_ELEMENT_SAFE</a>(#name, 1), <a class="code hl_define" href="#ga8fe7233af1b52efbec7ec2e694de97d4">ARRAY_ELEMENT_SAFE</a>(#name, 2), <a class="code hl_define" href="#ga8fe7233af1b52efbec7ec2e694de97d4">ARRAY_ELEMENT_SAFE</a>(#name, 3)&gt;::Value</div>
+<div class="ttc" id="agroup__common_html_ga8fe7233af1b52efbec7ec2e694de97d4"><div class="ttname"><a href="#ga8fe7233af1b52efbec7ec2e694de97d4">ARRAY_ELEMENT_SAFE</a></div><div class="ttdeci">#define ARRAY_ELEMENT_SAFE(arr, index)</div><div class="ttdoc">Provides safe array access with bounds checking.</div><div class="ttdef"><b>Definition</b> Common.h:97</div></div>
+<div class="ttc" id="astruct_four_c_c_html"><div class="ttname"><a href="struct_four_c_c.html">FourCC</a></div><div class="ttdoc">Creates a four-character code (FourCC) value from template parameters.</div><div class="ttdef"><b>Definition</b> Common.h:43</div></div>
+</div><!-- fragment -->
+<p>Creates a <a class="el" href="struct_four_c_c.html" title="Creates a four-character code (FourCC) value from template parameters.">FourCC</a> constant from a string literal. </p>
+<p>Uses up to the first four characters of the string to create a unique identifier. If the string has fewer than 4 characters, the remaining positions will be filled with the last character. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Typedef Documentation</h2>
+<a id="ga7f06aa8959bf69c3fdf67402a766b1ac" name="ga7f06aa8959bf69c3fdf67402a766b1ac"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7f06aa8959bf69c3fdf67402a766b1ac">&#9670;&#160;</a></span>Pair</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T_First, typename T_Second&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="#ga7f06aa8959bf69c3fdf67402a766b1ac">uniot::Pair</a> = std::pair&lt;T_First, T_Second&gt;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classuniot_1_1_type.html" title="Utility class providing static methods for runtime type identification and safe casting.">Type</a> alias for std::pair with cleaner syntax. </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">T_First</td><td><a class="el" href="classuniot_1_1_type.html" title="Utility class providing static methods for runtime type identification and safe casting.">Type</a> of the first element </td></tr>
+    <tr><td class="paramname">T_Second</td><td><a class="el" href="classuniot_1_1_type.html" title="Utility class providing static methods for runtime type identification and safe casting.">Type</a> of the second element </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga5349de5c3b0f3ee0d72fc97cbc58adf5" name="ga5349de5c3b0f3ee0d72fc97cbc58adf5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga5349de5c3b0f3ee0d72fc97cbc58adf5">&#9670;&#160;</a></span>SharedPointer</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="#ga5349de5c3b0f3ee0d72fc97cbc58adf5">uniot::SharedPointer</a> = std::shared_ptr&lt;T&gt;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classuniot_1_1_type.html" title="Utility class providing static methods for runtime type identification and safe casting.">Type</a> alias for std::shared_ptr with cleaner syntax. </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">T</td><td><a class="el" href="classuniot_1_1_type.html" title="Utility class providing static methods for runtime type identification and safe casting.">Type</a> of the managed object </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga25f3c0394677d2a7ffc575ecb39fb6e6" name="ga25f3c0394677d2a7ffc575ecb39fb6e6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga25f3c0394677d2a7ffc575ecb39fb6e6">&#9670;&#160;</a></span>UniquePointer</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="#ga25f3c0394677d2a7ffc575ecb39fb6e6">uniot::UniquePointer</a> = std::unique_ptr&lt;T&gt;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classuniot_1_1_type.html" title="Utility class providing static methods for runtime type identification and safe casting.">Type</a> alias for std::unique_ptr with cleaner syntax. </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">T</td><td><a class="el" href="classuniot_1_1_type.html" title="Utility class providing static methods for runtime type identification and safe casting.">Type</a> of the managed object </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="gadfc0098b76a0fd6d3abdf7b7a25d6def" name="gadfc0098b76a0fd6d3abdf7b7a25d6def"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gadfc0098b76a0fd6d3abdf7b7a25d6def">&#9670;&#160;</a></span>CRC32()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t CRC32 </td>
+          <td>(</td>
+          <td class="paramtype">const void *</td>          <td class="paramname"><span class="paramname"><em>data</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t</td>          <td class="paramname"><span class="paramname"><em>length</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>crc</em></span><span class="paramdefsep"> = </span><span class="paramdefval">0</span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Calculates CRC32-C (Castagnoli) checksum for data integrity verification. </p>
+<p>This function implements the CRC-32C polynomial used in iSCSI standard.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">data</td><td>Pointer to data buffer </td></tr>
+    <tr><td class="paramname">length</td><td>Size of data buffer in bytes </td></tr>
+    <tr><td class="paramname">crc</td><td>Initial CRC value (defaults to 0) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">uint32_t</td><td>CRC32 checksum value </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga0a6e2d2d1d429a4f8d4647788a2c6439" name="ga0a6e2d2d1d429a4f8d4647788a2c6439"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga0a6e2d2d1d429a4f8d4647788a2c6439">&#9670;&#160;</a></span>MakePair()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename... Args&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto uniot::MakePair </td>
+          <td>(</td>
+          <td class="paramtype">Args &amp;&amp;...</td>          <td class="paramname"><span class="paramname"><em>args</em></span></td><td>)</td>
+          <td> -&gt; decltype(std::make_pair(std::forward&lt;Args&gt;(args)...)) </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Creates a pair instance, alias for std::make_pair. </p>
+
+</div>
+</div>
+<a id="gaecb3cee18105dc9fa363076228b83dec" name="gaecb3cee18105dc9fa363076228b83dec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaecb3cee18105dc9fa363076228b83dec">&#9670;&#160;</a></span>MakeShared()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T, typename... Args&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto uniot::MakeShared </td>
+          <td>(</td>
+          <td class="paramtype">Args &amp;&amp;...</td>          <td class="paramname"><span class="paramname"><em>args</em></span></td><td>)</td>
+          <td> -&gt; decltype(std::make_shared&lt;T&gt;(std::forward&lt;Args&gt;(args)...)) </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Creates a shared pointer instance, alias for std::make_shared. </p>
+
+</div>
+</div>
+<a id="ga80a9e9438f4242b89580b9fd5cf2c3a8" name="ga80a9e9438f4242b89580b9fd5cf2c3a8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga80a9e9438f4242b89580b9fd5cf2c3a8">&#9670;&#160;</a></span>MakeUnique()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T, typename... Args&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto uniot::MakeUnique </td>
+          <td>(</td>
+          <td class="paramtype">Args &amp;&amp;...</td>          <td class="paramname"><span class="paramname"><em>args</em></span></td><td>)</td>
+          <td> -&gt; decltype(std::make_unique&lt;T&gt;(std::forward&lt;Args&gt;(args)...)) </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Creates a unique pointer instance, alias for std::make_unique. </p>
+
+</div>
+</div>
+<a id="ga7c7c5f02bd9d71a3887c0b7e02d3674b" name="ga7c7c5f02bd9d71a3887c0b7e02d3674b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7c7c5f02bd9d71a3887c0b7e02d3674b">&#9670;&#160;</a></span>UNUSED()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename... Args&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void UNUSED </td>
+          <td>(</td>
+          <td class="paramtype">Args &amp;&amp;...</td>          <td class="paramname"><span class="paramname"><em>args</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Utility function to mark function parameters as intentionally unused. </p>
+<p>Prevents compiler warnings about unused parameters by explicitly consuming them.</p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">Args</td><td>Variadic template parameter types </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">args</td><td>Parameters to mark as used </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>

@@ -1,0 +1,4 @@
+<map id="Scheduler" name="Scheduler">
+<area shape="rect" id="Node000002" href="$group__scheduling.html" title="Task scheduling system for the Uniot Core." alt="" coords="5,5,132,31"/>
+<area shape="rect" id="Node000001" title="Main scheduler for managing and executing periodic tasks." alt="" coords="180,5,267,31"/>
+</map>

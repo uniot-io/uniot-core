@@ -1,0 +1,605 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <meta name="generator" content="Doxygen 1.13.2" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Uniot Core: uniot::CrashStorage Class Reference</title>
+    <link href="tabs.css" rel="stylesheet" type="text/css" />
+    <link rel="icon" type="image/svg+xml" href="logo.png" />
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="dynsections.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-darkmode-toggle.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-fragment-copy-button.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-paragraph-link.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-interactive-toc.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-tabs.js"></script>
+    <script type="text/javascript" src="version-dropdown.js"></script>
+    <script type="text/javascript">
+        DoxygenAwesomeFragmentCopyButton.init()
+        DoxygenAwesomeDarkModeToggle.init()
+        DoxygenAwesomeParagraphLink.init()
+        DoxygenAwesomeInteractiveToc.init()
+        DoxygenAwesomeTabs.init()
+    </script>
+    <link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+    <link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+    <link href="doxygen.css" rel="stylesheet" type="text/css" />
+    <link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only-darkmode-toggle.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-uniot.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+    <!-- https://tholman.com/github-corners/ -->
+    <a href="https://github.com/uniot-io/uniot-core" class="github-corner" title="View source on GitHub" target="_blank"
+        rel="noopener noreferrer">
+        <svg viewBox="0 0 250 250" width="40" height="40"
+            style="position: absolute; top: 0; border: 0; right: 0; z-index: 99;" aria-hidden="true">
+            <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+            <path
+                d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+                fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+            <path
+                d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+                fill="currentColor" class="octo-body"></path>
+        </svg></a>
+    <style>
+        .github-corner:hover .octo-arm {
+            animation: octocat-wave 560ms ease-in-out
+        }
+        @keyframes octocat-wave {
+            0%,
+            100% {
+                transform: rotate(0)
+            }
+            20%,
+            60% {
+                transform: rotate(-25deg)
+            }
+            40%,
+            80% {
+                transform: rotate(10deg)
+            }
+        }
+        @media (max-width:500px) {
+            .github-corner:hover .octo-arm {
+                animation: none
+            }
+            .github-corner .octo-arm {
+                animation: octocat-wave 560ms ease-in-out
+            }
+        }
+    </style>
+    <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+        <div id="titlearea">
+            <table cellspacing="0" cellpadding="0">
+                <tbody>
+                    <tr>
+                        <td id="projectlogo"><img alt="Logo" src="logo.png" /></td>
+                    </tr>
+                    <tr>
+                        <td id="projectalign">
+                            <div id="projectname">
+                                Uniot Core
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="projectalign_number" id="projectalign">
+                            <span id="projectnumber">0.7.2</span>
+                        </td>
+                    </tr>
+                    <!-- <tr>
+                        <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Search" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+                    </tr> -->
+                </tbody>
+            </table>
+        </div>
+        <!-- end header part -->
+<!-- Generated by Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','Search',true);
+  $(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('classuniot_1_1_crash_storage.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Loading...</div>
+<div class="SRStatus" id="Searching">Searching...</div>
+<div class="SRStatus" id="NoMatches">No Matches</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pro-methods">Protected Member Functions</a> &#124;
+<a href="#pro-attribs">Protected Attributes</a> &#124;
+<a href="#friends">Friends</a> &#124;
+<a href="classuniot_1_1_crash_storage-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">uniot::CrashStorage Class Reference<div class="ingroups"><a class="el" href="group__fs__storage.html">File System Storage</a> &raquo; <a class="el" href="group__fs__storage__crash.html">Crash Storage</a></div></div></div>
+</div><!--header-->
+<div class="contents">
+
+<p>Handles crash data storage and retrieval for ESP8266.  
+ <a href="#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="_crash_storage_8h_source.html">CrashStorage.h</a>&gt;</code></p>
+<div class="dynheader">
+Inheritance diagram for uniot::CrashStorage:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classuniot_1_1_crash_storage__inherit__graph.svg" width="162" height="110"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:ad1107b6c6dcb87ae69a555d4ce371c3b" id="r_ad1107b6c6dcb87ae69a555d4ce371c3b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad1107b6c6dcb87ae69a555d4ce371c3b">CrashStorage</a> (const String &amp;path)</td></tr>
+<tr class="memdesc:ad1107b6c6dcb87ae69a555d4ce371c3b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a <a class="el" href="classuniot_1_1_crash_storage.html" title="Handles crash data storage and retrieval for ESP8266.">CrashStorage</a> object.  <br /></td></tr>
+<tr class="separator:ad1107b6c6dcb87ae69a555d4ce371c3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add9c11df0878c402544d8cbeedc8fe51" id="r_add9c11df0878c402544d8cbeedc8fe51"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#add9c11df0878c402544d8cbeedc8fe51">~CrashStorage</a> ()</td></tr>
+<tr class="separator:add9c11df0878c402544d8cbeedc8fe51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0c8a8ddebc76fe93a236eb86980a7a01" id="r_a0c8a8ddebc76fe93a236eb86980a7a01"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0c8a8ddebc76fe93a236eb86980a7a01">store</a> () override</td></tr>
+<tr class="memdesc:a0c8a8ddebc76fe93a236eb86980a7a01"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stores crash information to a file.  <br /></td></tr>
+<tr class="separator:a0c8a8ddebc76fe93a236eb86980a7a01"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2eb57b277fb4a16ee4536415661e76f4" id="r_a2eb57b277fb4a16ee4536415661e76f4"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2eb57b277fb4a16ee4536415661e76f4">clean</a> () override</td></tr>
+<tr class="memdesc:a2eb57b277fb4a16ee4536415661e76f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clears crash information and removes file.  <br /></td></tr>
+<tr class="separator:a2eb57b277fb4a16ee4536415661e76f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e7d905ad9fdee02a10300bf469b7947" id="r_a0e7d905ad9fdee02a10300bf469b7947"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0e7d905ad9fdee02a10300bf469b7947">printCrashDataIfExists</a> () const</td></tr>
+<tr class="memdesc:a0e7d905ad9fdee02a10300bf469b7947"><td class="mdescLeft">&#160;</td><td class="mdescRight">Outputs crash data to Serial if it exists.  <br /></td></tr>
+<tr class="separator:a0e7d905ad9fdee02a10300bf469b7947"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classuniot_1_1_storage"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_classuniot_1_1_storage')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classuniot_1_1_storage.html">uniot::Storage</a></td></tr>
+<tr class="memitem:a105f738525740cea617d88a69045577f inherit pub_methods_classuniot_1_1_storage" id="r_a105f738525740cea617d88a69045577f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classuniot_1_1_storage.html#a105f738525740cea617d88a69045577f">Storage</a> (const String &amp;path)</td></tr>
+<tr class="memdesc:a105f738525740cea617d88a69045577f inherit pub_methods_classuniot_1_1_storage"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a <a class="el" href="classuniot_1_1_storage.html">Storage</a> object for a specific file.  <br /></td></tr>
+<tr class="separator:a105f738525740cea617d88a69045577f inherit pub_methods_classuniot_1_1_storage"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf0ad4850cd15cd05a763ce23e6aa0b0 inherit pub_methods_classuniot_1_1_storage" id="r_adf0ad4850cd15cd05a763ce23e6aa0b0"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classuniot_1_1_storage.html#adf0ad4850cd15cd05a763ce23e6aa0b0">~Storage</a> ()</td></tr>
+<tr class="memdesc:adf0ad4850cd15cd05a763ce23e6aa0b0 inherit pub_methods_classuniot_1_1_storage"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor.  <br /></td></tr>
+<tr class="separator:adf0ad4850cd15cd05a763ce23e6aa0b0 inherit pub_methods_classuniot_1_1_storage"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf474b1a7d5895bc599270033646f8a7 inherit pub_methods_classuniot_1_1_storage" id="r_aaf474b1a7d5895bc599270033646f8a7"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classuniot_1_1_storage.html#aaf474b1a7d5895bc599270033646f8a7">restore</a> ()</td></tr>
+<tr class="memdesc:aaf474b1a7d5895bc599270033646f8a7 inherit pub_methods_classuniot_1_1_storage"><td class="mdescLeft">&#160;</td><td class="mdescRight">Loads data from the file system into memory.  <br /></td></tr>
+<tr class="separator:aaf474b1a7d5895bc599270033646f8a7 inherit pub_methods_classuniot_1_1_storage"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
+Protected Member Functions</h2></td></tr>
+<tr class="memitem:af3bbeda0de3f047b6fb8250fb60c4fa4" id="r_af3bbeda0de3f047b6fb8250fb60c4fa4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_bytes.html">Bytes</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af3bbeda0de3f047b6fb8250fb60c4fa4">buildDumpData</a> () const</td></tr>
+<tr class="memdesc:af3bbeda0de3f047b6fb8250fb60c4fa4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generates formatted crash information including stack dump.  <br /></td></tr>
+<tr class="separator:af3bbeda0de3f047b6fb8250fb60c4fa4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_methods_classuniot_1_1_storage"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pro_methods_classuniot_1_1_storage')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classuniot_1_1_storage.html">uniot::Storage</a></td></tr>
+<tr class="memitem:a2e52cea869fbd0dbe079d35f3a6fb705 inherit pro_methods_classuniot_1_1_storage" id="r_a2e52cea869fbd0dbe079d35f3a6fb705"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classuniot_1_1_storage.html#a2e52cea869fbd0dbe079d35f3a6fb705">setPath</a> (const String &amp;path)</td></tr>
+<tr class="memdesc:a2e52cea869fbd0dbe079d35f3a6fb705 inherit pro_methods_classuniot_1_1_storage"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the file path, ensuring it starts with "/".  <br /></td></tr>
+<tr class="separator:a2e52cea869fbd0dbe079d35f3a6fb705 inherit pro_methods_classuniot_1_1_storage"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
+<tr class="memitem:a17547ac86e0faf804dad3b4ea013a36b" id="r_a17547ac86e0faf804dad3b4ea013a36b"><td class="memItemLeft" align="right" valign="top">struct rst_info *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a17547ac86e0faf804dad3b4ea013a36b">mResetInfo</a></td></tr>
+<tr class="memdesc:a17547ac86e0faf804dad3b4ea013a36b"><td class="mdescLeft">&#160;</td><td class="mdescRight">ESP8266 reset/crash information.  <br /></td></tr>
+<tr class="separator:a17547ac86e0faf804dad3b4ea013a36b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86d0d309092a236e0fe1fc81b0e85329" id="r_a86d0d309092a236e0fe1fc81b0e85329"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a86d0d309092a236e0fe1fc81b0e85329">mStackStart</a></td></tr>
+<tr class="memdesc:a86d0d309092a236e0fe1fc81b0e85329"><td class="mdescLeft">&#160;</td><td class="mdescRight">Start address of stack to be dumped.  <br /></td></tr>
+<tr class="separator:a86d0d309092a236e0fe1fc81b0e85329"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1624e7bdd7b45711e0adbf462af16bf6" id="r_a1624e7bdd7b45711e0adbf462af16bf6"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1624e7bdd7b45711e0adbf462af16bf6">mStackEnd</a></td></tr>
+<tr class="memdesc:a1624e7bdd7b45711e0adbf462af16bf6"><td class="mdescLeft">&#160;</td><td class="mdescRight">End address of stack to be dumped.  <br /></td></tr>
+<tr class="separator:a1624e7bdd7b45711e0adbf462af16bf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_attribs_classuniot_1_1_storage"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pro_attribs_classuniot_1_1_storage')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classuniot_1_1_storage.html">uniot::Storage</a></td></tr>
+<tr class="memitem:a4796e6665ae660c5f3a5fa2d8354d514 inherit pro_attribs_classuniot_1_1_storage" id="r_a4796e6665ae660c5f3a5fa2d8354d514"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_bytes.html">Bytes</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classuniot_1_1_storage.html#a4796e6665ae660c5f3a5fa2d8354d514">mData</a></td></tr>
+<tr class="memdesc:a4796e6665ae660c5f3a5fa2d8354d514 inherit pro_attribs_classuniot_1_1_storage"><td class="mdescLeft">&#160;</td><td class="mdescRight">The byte array containing the data to be stored or the loaded data.  <br /></td></tr>
+<tr class="separator:a4796e6665ae660c5f3a5fa2d8354d514 inherit pro_attribs_classuniot_1_1_storage"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2219dad51d4ade2a98aa451520c243fb inherit pro_attribs_classuniot_1_1_storage" id="r_a2219dad51d4ade2a98aa451520c243fb"><td class="memItemLeft" align="right" valign="top">String&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classuniot_1_1_storage.html#a2219dad51d4ade2a98aa451520c243fb">mPath</a></td></tr>
+<tr class="memdesc:a2219dad51d4ade2a98aa451520c243fb inherit pro_attribs_classuniot_1_1_storage"><td class="mdescLeft">&#160;</td><td class="mdescRight">The file path where data is stored.  <br /></td></tr>
+<tr class="separator:a2219dad51d4ade2a98aa451520c243fb inherit pro_attribs_classuniot_1_1_storage"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="friends" name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:a6b7a78446ca341c1b383ae2205d36750" id="r_a6b7a78446ca341c1b383ae2205d36750"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6b7a78446ca341c1b383ae2205d36750">uniotCrashCallback</a> (struct rst_info *resetInfo, uint32_t stackStart, uint32_t stackEnd)</td></tr>
+<tr class="memdesc:a6b7a78446ca341c1b383ae2205d36750"><td class="mdescLeft">&#160;</td><td class="mdescRight">ESP8266 crash callback function registered with system.  <br /></td></tr>
+<tr class="separator:a6b7a78446ca341c1b383ae2205d36750"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
+<tr class="inherit_header pub_static_methods_classuniot_1_1_storage"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_static_methods_classuniot_1_1_storage')"><img src="closed.png" alt="-"/>&#160;Static Public Member Functions inherited from <a class="el" href="classuniot_1_1_storage.html">uniot::Storage</a></td></tr>
+<tr class="memitem:af3fb3f4dbdad4001a68715c4cb7136d0 inherit pub_static_methods_classuniot_1_1_storage" id="r_af3fb3f4dbdad4001a68715c4cb7136d0"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classuniot_1_1_storage.html#af3fb3f4dbdad4001a68715c4cb7136d0">unmount</a> ()</td></tr>
+<tr class="memdesc:af3fb3f4dbdad4001a68715c4cb7136d0 inherit pub_static_methods_classuniot_1_1_storage"><td class="mdescLeft">&#160;</td><td class="mdescRight">Explicitly unmounts the filesystem.  <br /></td></tr>
+<tr class="separator:af3fb3f4dbdad4001a68715c4cb7136d0 inherit pub_static_methods_classuniot_1_1_storage"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Handles crash data storage and retrieval for ESP8266. </p>
+<p><a class="el" href="classuniot_1_1_crash_storage.html" title="Handles crash data storage and retrieval for ESP8266.">CrashStorage</a> extends <a class="el" href="classuniot_1_1_storage.html">Storage</a> to provide crash dump functionality. It captures crash information including exception details, register values, and a stack trace when a crash occurs, saving this information to a file for later diagnostics. </p>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="ad1107b6c6dcb87ae69a555d4ce371c3b" name="ad1107b6c6dcb87ae69a555d4ce371c3b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad1107b6c6dcb87ae69a555d4ce371c3b">&#9670;&#160;</a></span>CrashStorage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uniot::CrashStorage::CrashStorage </td>
+          <td>(</td>
+          <td class="paramtype">const String &amp;</td>          <td class="paramname"><span class="paramname"><em>path</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constructs a <a class="el" href="classuniot_1_1_crash_storage.html" title="Handles crash data storage and retrieval for ESP8266.">CrashStorage</a> object. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">path</td><td>The file path where crash information will be stored </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="add9c11df0878c402544d8cbeedc8fe51" name="add9c11df0878c402544d8cbeedc8fe51"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#add9c11df0878c402544d8cbeedc8fe51">&#9670;&#160;</a></span>~CrashStorage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual uniot::CrashStorage::~CrashStorage </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="af3bbeda0de3f047b6fb8250fb60c4fa4" name="af3bbeda0de3f047b6fb8250fb60c4fa4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af3bbeda0de3f047b6fb8250fb60c4fa4">&#9670;&#160;</a></span>buildDumpData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_bytes.html">Bytes</a> uniot::CrashStorage::buildDumpData </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel protected">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Generates formatted crash information including stack dump. </p>
+<p>Creates a formatted text report of crash information including:</p><ul>
+<li>Crash time and reason</li>
+<li>Exception information</li>
+<li><a class="el" href="classuniot_1_1_register.html">Register</a> values</li>
+<li>Stack dump</li>
+</ul>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname"><a class="el" href="class_bytes.html">Bytes</a></td><td>Formatted crash report data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a2eb57b277fb4a16ee4536415661e76f4" name="a2eb57b277fb4a16ee4536415661e76f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2eb57b277fb4a16ee4536415661e76f4">&#9670;&#160;</a></span>clean()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool uniot::CrashStorage::clean </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel override">override</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Clears crash information and removes file. </p>
+<p>Resets crash data members and cleans the stored file.</p>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">true</td><td>Clean operation was successful </td></tr>
+    <tr><td class="paramname">false</td><td>Clean operation failed (e.g., file system error) </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Reimplemented from <a class="el" href="classuniot_1_1_storage.html#a3646010345ff41494134e76b4cb66037">uniot::Storage</a>.</p>
+
+</div>
+</div>
+<a id="a0e7d905ad9fdee02a10300bf469b7947" name="a0e7d905ad9fdee02a10300bf469b7947"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e7d905ad9fdee02a10300bf469b7947">&#9670;&#160;</a></span>printCrashDataIfExists()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool uniot::CrashStorage::printCrashDataIfExists </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Outputs crash data to Serial if it exists. </p>
+<p>Checks if crash data is available and prints it to the Serial output.</p>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">true</td><td>Crash data was printed to Serial </td></tr>
+    <tr><td class="paramname">false</td><td>No crash data exists to print </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a0c8a8ddebc76fe93a236eb86980a7a01" name="a0c8a8ddebc76fe93a236eb86980a7a01"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0c8a8ddebc76fe93a236eb86980a7a01">&#9670;&#160;</a></span>store()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool uniot::CrashStorage::store </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel override">override</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Stores crash information to a file. </p>
+<p>Builds the crash dump data and writes it to storage.</p>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">true</td><td><a class="el" href="classuniot_1_1_storage.html">Storage</a> operation was successful </td></tr>
+    <tr><td class="paramname">false</td><td><a class="el" href="classuniot_1_1_storage.html">Storage</a> operation failed (e.g., file system error) </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Reimplemented from <a class="el" href="classuniot_1_1_storage.html#a97e216f48617b453c848481706b30cd8">uniot::Storage</a>.</p>
+
+</div>
+</div>
+<h2 class="groupheader">Friends And Related Symbol Documentation</h2>
+<a id="a6b7a78446ca341c1b383ae2205d36750" name="a6b7a78446ca341c1b383ae2205d36750"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6b7a78446ca341c1b383ae2205d36750">&#9670;&#160;</a></span>uniotCrashCallback</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void uniotCrashCallback </td>
+          <td>(</td>
+          <td class="paramtype">struct rst_info *</td>          <td class="paramname"><span class="paramname"><em>resetInfo</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>stackStart</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>stackEnd</em></span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel friend">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>ESP8266 crash callback function registered with system. </p>
+<p>Called by the ESP8266 system when a crash occurs to save crash information to persistent storage for later analysis.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">resetInfo</td><td>Crash reason and register information from ESP8266 </td></tr>
+    <tr><td class="paramname">stackStart</td><td>Start address of the stack to be dumped </td></tr>
+    <tr><td class="paramname">stackEnd</td><td>End address of the stack to be dumped </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Member Data Documentation</h2>
+<a id="a17547ac86e0faf804dad3b4ea013a36b" name="a17547ac86e0faf804dad3b4ea013a36b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a17547ac86e0faf804dad3b4ea013a36b">&#9670;&#160;</a></span>mResetInfo</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct rst_info* uniot::CrashStorage::mResetInfo</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel protected">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>ESP8266 reset/crash information. </p>
+
+</div>
+</div>
+<a id="a1624e7bdd7b45711e0adbf462af16bf6" name="a1624e7bdd7b45711e0adbf462af16bf6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1624e7bdd7b45711e0adbf462af16bf6">&#9670;&#160;</a></span>mStackEnd</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t uniot::CrashStorage::mStackEnd</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel protected">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>End address of stack to be dumped. </p>
+
+</div>
+</div>
+<a id="a86d0d309092a236e0fe1fc81b0e85329" name="a86d0d309092a236e0fe1fc81b0e85329"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a86d0d309092a236e0fe1fc81b0e85329">&#9670;&#160;</a></span>mStackStart</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t uniot::CrashStorage::mStackStart</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel protected">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Start address of stack to be dumped. </p>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following files:<ul>
+<li><a class="el" href="_crash_storage_8h_source.html">CrashStorage.h</a></li>
+<li><a class="el" href="_crash_storage_8cpp.html">CrashStorage.cpp</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="namespaceuniot.html">uniot</a></li><li class="navelem"><a class="el" href="classuniot_1_1_crash_storage.html">CrashStorage</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>
