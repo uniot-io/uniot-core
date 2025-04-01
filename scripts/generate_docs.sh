@@ -11,7 +11,7 @@ cd "$REPO_ROOT"
 # ---------------------------
 # Variables and configuration
 # ---------------------------
-THEME_REPO="https://github.com/belyokhin/uniot-core-doxygen.git"
+THEME_REPO="https://github.com/uniot-io/uniot-doxygen-css.git"
 THEME_DIR="$REPO_ROOT/doxygen"
 
 # ---------------------------
