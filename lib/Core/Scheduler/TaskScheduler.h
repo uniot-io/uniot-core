@@ -16,6 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/** @cond */
+/**
+ * DO NOT DELETE THE "scheduling" GROUP DEFINITION BELOW.
+ * Used to create the Task Scheduling topic in the documentation. If you want to delete this file,
+ * please paste the group definition into another utility and delete this one.
+ */
+/** @endcond */
+
 /**
  * @file TaskScheduler.h
  * @defgroup scheduling Task Scheduling

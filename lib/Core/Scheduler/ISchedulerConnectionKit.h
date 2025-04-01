@@ -24,6 +24,8 @@ class TaskScheduler;
 
 /**
  * @brief Interface for connecting components to the TaskScheduler
+ * @ingroup scheduling
+ * @{
  *
  * This interface facilitates the integration of different components
  * with the TaskScheduler. Implementing classes can register themselves
@@ -55,4 +57,5 @@ public:
    */
   virtual void attach() = 0;
 };
+/** @} */
 } // namespace uniot
