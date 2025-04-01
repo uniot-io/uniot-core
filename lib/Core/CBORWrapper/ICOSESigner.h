@@ -23,11 +23,43 @@
 #include "COSE.h"
 
 namespace uniot {
+/**
+ * @brief Interface for CBOR Object Signing and Encryption (COSE) signing operations
+ * @ingroup utils_cose
+ * @{
+ *
+ * ICOSESigner provides an interface for implementing cryptographic signing
+ * functionality according to the COSE (RFC 8152) standard. Classes implementing
+ * this interface can be used to sign data using various cryptographic algorithms.
+ */
 class ICOSESigner {
  public:
+  /**
+   * @brief Virtual destructor to ensure proper cleanup of derived classes
+   */
   virtual ~ICOSESigner() {}
+
+  /**
+   * @brief Gets the key identifier used by this signer
+   *
+   * @retval Bytes The key identifier as a byte sequence
+   */
   virtual Bytes keyId() const = 0;
+
+  /**
+   * @brief Signs the provided data using the implementation's cryptographic algorithm
+   *
+   * @param data The bytes to be signed
+   * @retval Bytes The resulting signature as a byte sequence
+   */
   virtual Bytes sign(const Bytes &data) const = 0;
+
+  /**
+   * @brief Gets the COSE algorithm identifier used by this signer
+   *
+   * @retval COSEAlgorithm The algorithm identifier as defined in the COSE standard
+   */
   virtual COSEAlgorithm signerAlgorithm() const = 0;
 };
+/** @} */
 }  // namespace uniot

@@ -18,30 +18,52 @@
 
 #pragma once
 
-/*
- * WiFi Transmission Power Patch
+/**
+ * @file Patches.h
+ * @defgroup patches Patches
+ * @brief Configuration patches for hardware-specific optimizations
+ * @{
  *
- * ENABLE_LOWER_WIFI_TX_POWER:
- *   Define this macro to enable lowered WiFi transmission power settings.
- *
- *   Some ESP32-C3 modules may require lower Tx power to ensure stable
- *   WiFi connections due to poor antenna design or power supply limitations.
- *   High Tx power can cause unstable WiFi connections or failure to connect to networks.
- *
- * WIFI_TX_POWER_LEVEL:
- *   Defines the desired WiFi transmission power level.
- *
- *   Available options (depending on the ESP32 library):
- *     - WIFI_POWER_5dBm
- *     - WIFI_POWER_8_5dBm
- *     - WIFI_POWER_11dBm
- *     - WIFI_POWER_13dBm
- *
- *   Lowering the Tx power can mitigate issues related to signal interference
- *   and power instability on certain hardware configurations.
+ * This file contains configuration macros that modify the behavior of the
+ * Uniot framework to accommodate hardware-specific requirements or limitations.
+ * Each patch section contains detailed documentation about its purpose, usage, and
+ * available configuration options.
  */
 
-// #define ENABLE_LOWER_WIFI_TX_POWER
+/**
+ * @defgroup wifi_tx_power WiFi Transmission Power Patch
+ * @brief Configures WiFi transmission power settings for ESP32 devices
+ * @{
+ *
+ * @details
+ * This patch allows for adjusting the WiFi transmission power levels, which can
+ * be necessary for certain ESP32 modules with design limitations or to optimize
+ * power consumption and connection stability.
+ *
+ * Some ESP32-C3 modules may require lower Tx power to ensure stable WiFi connections
+ * due to:
+ * - Poor antenna design
+ * - Power supply limitations
+ * - Signal interference concerns
+ *
+ * High transmission power can lead to:
+ * - Unstable WiFi connections
+ * - Failed network connections
+ * - Excessive power consumption
+ * - Device overheating
+ *
+ * @section wifi_tx_usage Usage
+ * Define ENABLE_LOWER_WIFI_TX_POWER in your build configuration to activate
+ * this patch. Optionally, define WIFI_TX_POWER_LEVEL to set a specific power level.
+ *
+ * @section wifi_tx_config Configuration Options
+ * @par WIFI_TX_POWER_LEVEL
+ * Available options (ESP32 SDK dependent):
+ * - WIFI_POWER_5dBm    (Lowest power, ~5dBm)
+ * - WIFI_POWER_8_5dBm  (Low power, ~8.5dBm) [Default when patch is enabled]
+ * - WIFI_POWER_11dBm   (Medium power, ~11dBm)
+ * - WIFI_POWER_13dBm   (Medium-high power, ~13dBm)
+ */
 #ifdef ENABLE_LOWER_WIFI_TX_POWER
 
 #ifndef WIFI_TX_POWER_LEVEL
@@ -49,3 +71,6 @@
 #endif
 
 #endif
+/** @} */ /* End of wifi_tx_power group */
+
+/** @} */ /* End of patches group */

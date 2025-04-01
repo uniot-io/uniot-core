@@ -16,6 +16,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/** @cond */
+/**
+ * DO NOT DELETE THE "utils" GROUP DEFINITION BELOW.
+ * Used to create the Utilities topic in the documentation. If you want to delete this file,
+ * please paste the group definition into another utility and delete this one.
+ */
+/** @endcond */
+
+/**
+ * @defgroup utils Utilities
+ * @brief Common utility components and functions for the Uniot Core
+ *
+ * This collection offers reusable utilities optimized for embedded systems
+ * in the Uniot Core framework. These components are designed with minimal
+ * memory footprint and efficient performance, specifically targeting IoT
+ * and resource-constrained embedded applications.
+ */
+
 #pragma once
 
 #include <Arduino.h>
@@ -25,9 +43,22 @@
 #include <utility>
 
 namespace uniot {
-
 /**
  * @brief A simple Array class that manages a dynamically allocated array and its size.
+ * @defgroup utils_array Array
+ * @ingroup utils
+ * @{
+ *
+ * This class provides a memory-efficient, dynamic array implementation optimized for
+ * embedded systems. It handles memory allocation, resizing, and element management while
+ * providing a clean interface for array operations.
+ *
+ * Key features:
+ * - Dynamic memory allocation with automatic growth
+ * - Move semantics support (but not copy semantics to prevent accidental deep copies)
+ * - Bounds checking options for safer access
+ * - Optimizations for trivial types
+ * - Memory-efficient design with capacity management
  *
  * @tparam T The type of elements stored in the array.
  */
@@ -100,7 +131,7 @@ class Array {
    * @brief Move assignment operator.
    *
    * @param other The Array to move from.
-   * @return Reference to the current Array.
+   * @retval Array& Reference to the current Array.
    */
   Array& operator=(Array&& other) noexcept {
     if (this != &other) {
@@ -131,7 +162,7 @@ class Array {
    * @brief Provides access to the array elements without bounds checking.
    *
    * @param index The index of the element.
-   * @return Reference to the element at the specified index.
+   * @retval T& Reference to the element at the specified index.
    */
   T& operator[](size_t index) {
     return mData[index];
@@ -141,7 +172,7 @@ class Array {
    * @brief Provides read-only access to the array elements without bounds checking.
    *
    * @param index The index of the element.
-   * @return Const reference to the element at the specified index.
+   * @retval T& Const reference to the element at the specified index.
    */
   const T& operator[](size_t index) const {
     return mData[index];
@@ -152,7 +183,8 @@ class Array {
    *
    * @param index The index of the element.
    * @param outValue Reference to store the retrieved value.
-   * @return true if the element was retrieved successfully, false otherwise.
+   * @retval true The element was retrieved successfully.
+   * @retval false The index is out of bounds.
    */
   bool get(size_t index, T& outValue) const {
     if (index < mSize) {
@@ -167,7 +199,8 @@ class Array {
    *
    * @param index The index of the element.
    * @param value The value to set.
-   * @return true if the element was set successfully, false otherwise.
+   * @retval true The element was set successfully.
+   * @retval false The index is out of bounds.
    */
   bool set(size_t index, const T& value) {
     if (index < mSize) {
@@ -180,28 +213,29 @@ class Array {
   /**
    * @brief Returns the size of the array.
    *
-   * @return The number of elements in the array.
+   * @retval size_t The size of the array.
    */
   size_t size() const { return mSize; }
 
   /**
    * @brief Returns the capacity of the array.
    *
-   * @return The number of elements that can be stored without reallocating.
+   * @retval size_t The number of elements that can be stored without reallocating.
    */
   size_t capacity() const { return mCapacity; }
 
   /**
    * @brief Checks if the array is empty.
    *
-   * @return true if the array is empty, false otherwise.
+   * @retval true The array is empty.
+   * @retval false The array contains elements.
    */
   bool isEmpty() const { return mSize == 0; }
 
   /**
    * @brief Retrieves a const pointer to the underlying data.
    *
-   * @return Const pointer to the first element of the array.
+   * @retval T* Const pointer to the first element of the array.
    */
   const T* raw() const { return mData; }
 
@@ -209,7 +243,8 @@ class Array {
    * @brief Reserves memory for at least the specified number of elements.
    *
    * @param newCapacity The desired capacity.
-   * @return true if the reservation was successful, false otherwise.
+   * @retval true The reservation was successful.
+   * @retval false The reservation failed (e.g., memory allocation error).
    */
   bool reserve(size_t newCapacity) {
     if (newCapacity <= mCapacity) {
@@ -245,7 +280,8 @@ class Array {
    * @brief Adds a new element to the end of the array using copy semantics.
    *
    * @param value The value to add.
-   * @return true if the push was successful, false otherwise.
+   * @retval true The push was successful.
+   * @retval false The push failed (e.g., memory allocation error).
    */
   bool push(const T& value) {
     if (mSize >= mCapacity) {
@@ -262,7 +298,8 @@ class Array {
    * @brief Adds a new element to the end of the array using move semantics.
    *
    * @param value The value to add.
-   * @return true if the push was successful, false otherwise.
+   * @retval true The push was successful.
+   * @retval false The push failed (e.g., memory allocation error).
    */
   bool push(T&& value) {
     if (mSize >= mCapacity) {
@@ -290,7 +327,8 @@ class Array {
   /**
    * @brief Reduces the capacity to fit the current size.
    *
-   * @return true if the operation was successful, false otherwise.
+   * @retval true The shrink was successful.
+   * @retval false The shrink failed (e.g., memory allocation error).
    */
   bool shrink() {
     if (mCapacity == mSize) {
@@ -326,5 +364,5 @@ class Array {
   size_t mSize;
   size_t mCapacity;
 };
-
+/** @} */
 }  // namespace uniot

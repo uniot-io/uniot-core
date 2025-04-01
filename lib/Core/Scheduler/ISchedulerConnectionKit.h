@@ -22,11 +22,37 @@ namespace uniot
 {
 class TaskScheduler;
 
+/**
+ * @brief Interface for connecting components to the TaskScheduler
+ *
+ * This interface facilitates the integration of different components
+ * with the TaskScheduler. Implementing classes can register themselves
+ * and their tasks with the scheduler system.
+ */
 class ISchedulerConnectionKit
 {
 public:
+  /**
+   * @brief Virtual destructor for proper cleanup
+   */
   virtual ~ISchedulerConnectionKit() {}
+
+  /**
+   * @brief Register this component with the given scheduler
+   *
+   * Implementing classes use this method to add themselves or their
+   * tasks to the provided scheduler instance.
+   *
+   * @param scheduler The scheduler to connect with
+   */
   virtual void pushTo(TaskScheduler &scheduler) = 0;
+
+  /**
+   * @brief Initialize and activate the component
+   *
+   * This method should prepare the component for use, typically called
+   * after the component has been registered with a scheduler.
+   */
   virtual void attach() = 0;
 };
 } // namespace uniot

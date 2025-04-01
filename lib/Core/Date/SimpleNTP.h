@@ -5,17 +5,59 @@
 #include <time.h>
 
 namespace uniot {
+/**
+ * @brief Simple Network Time Protocol client for obtaining time from NTP servers
+ * @defgroup date-time-ntp Simple NTP
+ * @ingroup date-time
+ * @{
+ *
+ * SimpleNTP provides functionality to synchronize device time with NTP servers.
+ * It connects to one of several predefined NTP servers, retrieves the current time,
+ * and converts it to Unix epoch format.
+ */
 class SimpleNTP {
  public:
+  /**
+   * @brief Callback function type for time synchronization events
+   *
+   * This callback is triggered when time is successfully synchronized with an NTP server.
+   *
+   * @param epoch The current time as Unix timestamp (seconds since Jan 1, 1970)
+   */
   typedef void (*SyncTimeCallback)(time_t epoch);
+
+  /**
+   * @brief Array of NTP server hostnames to try connecting to
+   *
+   * One server is randomly selected during each sync attempt
+   */
   static constexpr const char *servers[] = {"time.google.com", "time.nist.gov", "pool.ntp.org"};
 
+  /**
+   * @brief Default constructor
+   *
+   * Initializes a SimpleNTP instance with no callback
+   */
   SimpleNTP() : mSyncTimeCallback(nullptr) {}
 
+  /**
+   * @brief Sets the callback function for time synchronization events
+   *
+   * @param callback Function to be called when time is successfully synchronized
+   */
   void setSyncTimeCallback(SyncTimeCallback callback) {
     mSyncTimeCallback = callback;
   }
 
+  /**
+   * @brief Requests and retrieves current time from NTP server
+   *
+   * Connects to a randomly selected NTP server, sends a request packet,
+   * waits for and processes the response to extract the current time.
+   *
+   * @retval time_t Current time in seconds since Jan 1, 1970
+   * @retval 0 if time synchronization failed
+   */
   time_t getNtpTime() {
     WiFiUDP udp;
     const unsigned short localUdpPort = 1234;
@@ -56,6 +98,16 @@ class SimpleNTP {
   }
 
  private:
+  /**
+   * @brief Prepares and sends an NTP request packet
+   *
+   * Creates a standard NTP request packet and sends it to a randomly selected
+   * server from the predefined server list.
+   *
+   * @param udp WiFiUDP instance to use for sending the packet
+   * @retval true Packet sent successfully
+   * @retval false Failed to send packet
+   */
   bool _sendNTPPacket(WiFiUDP &udp) {
     uint8_t packet[48];
     memset(packet, 0, sizeof(packet));
@@ -83,6 +135,19 @@ class SimpleNTP {
     return true;
   }
 
+  /**
+   * @brief Waits for a response from the NTP server
+   *
+   * Attempts to receive a response packet multiple times with delays between attempts.
+   * Returns true as soon as a valid-sized packet is received or false if max retries reached.
+   *
+   * @param udp WiFiUDP instance to receive the response
+   * @param timeout Maximum time to wait for a response (in milliseconds)
+   * @param maxRetries Maximum number of retry attempts
+   * @param retryDelay Delay between retry attempts (in milliseconds)
+   * @retval true Response received successfully
+   * @retval false Response wait timed out
+   */
   bool _waitForResponse(WiFiUDP &udp, unsigned long timeout, int maxRetries, unsigned long retryDelay) {
     UNIOT_LOG_TRACE("Waiting for NTP response with timeout %lu ms and max %d retries.", timeout, maxRetries);
     unsigned long startTime = millis();
@@ -106,6 +171,16 @@ class SimpleNTP {
     return false;
   }
 
+  /**
+   * @brief Processes the NTP response to extract the timestamp
+   *
+   * Reads the NTP response packet, extracts the timestamp fields,
+   * and converts from NTP time format to Unix epoch time.
+   *
+   * @param udp WiFiUDP instance with the received response
+   * @retval time_t Current time in seconds since Jan 1, 1970
+   * @retval 0 Processing failed
+   */
   time_t _processNTPResponse(WiFiUDP &udp) {
     uint8_t packet[48];
     int len = udp.read(packet, sizeof(packet));
@@ -126,6 +201,10 @@ class SimpleNTP {
     return currentEpoch;
   }
 
+  /**
+   * @brief Callback function to be called when time is successfully synced
+   */
   SyncTimeCallback mSyncTimeCallback;
 };
+/** @} */
 }  // namespace uniot

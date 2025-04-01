@@ -23,41 +23,155 @@
 #include <functional>
 
 /**
- * std::queue requires much more resources
+ * @brief A lightweight queue implementation optimized for resource-constrained environments
+ * @defgroup utils_clearqueue ClearQueue
+ * @ingroup utils
+ *
+ * ClearQueue is designed as a simpler alternative to std::queue that requires fewer resources,
+ * making it suitable for embedded systems and IoT devices. It implements a singly linked list
+ * to provide queue functionality with additional operations like unique insertion and element removal.
+ *
+ * @tparam T Type of elements stored in the queue
+ * @{
  */
 template <typename T>
 class ClearQueue {
  public:
+  /**
+   * @brief Callback function type for forEach operations
+   */
   typedef std::function<void(const T &)> VoidCallback;
 
+  /**
+   * @brief Deleted copy constructor to prevent copying
+   */
   ClearQueue(ClearQueue const &) = delete;
+
+  /**
+   * @brief Deleted assignment operator to prevent copying
+   */
   void operator=(ClearQueue const &) = delete;
 
+  /**
+   * @brief Constructs an empty queue
+   */
   ClearQueue();
+
+  /**
+   * @brief Destroys the queue and releases all allocated memory
+   */
   virtual ~ClearQueue();
 
+  /**
+   * @brief Adds an element to the end of the queue
+   *
+   * @param value The value to add to the queue
+   */
   void push(const T &value);
+
+  /**
+   * @brief Adds an element to the queue only if it doesn't already exist
+   *
+   * @param value The value to add to the queue
+   * @retval true The element was added to the queue
+   * @retval false The element already exists in the queue
+   */
   bool pushUnique(const T &value);
+
+  /**
+   * @brief Removes and returns the element at the front of the queue
+   *
+   * @warning This method assumes the queue is not empty. Call isEmpty() before using.
+   * @retval T The front element of the queue
+   */
   T hardPop();
+
+  /**
+   * @brief Returns the element at the front of the queue without removing it
+   *
+   * @warning This method assumes the queue is not empty. Call isEmpty() before using.
+   * @retval T& Reference to the front element of the queue
+   */
   const T &hardPeek() const;
+
+  /**
+   * @brief Safely removes and returns the element at the front of the queue
+   *
+   * @param errorCode Value to return if the queue is empty
+   * @retval T The front element of the queue
+   * @retval errorCode The value to return if the queue is empty
+   */
   T pop(const T &errorCode);
+
+  /**
+   * @brief Safely returns the element at the front of the queue without removing it
+   *
+   * @param errorCode Value to return if the queue is empty
+   * @retval T& Reference to the front element of the queue
+   * @retval errorCode The value to return if the queue is empty
+   */
   const T &peek(const T &errorCode) const;
+
+  /**
+   * @brief Removes the first occurrence of a specific value from the queue
+   *
+   * @param value The value to remove
+   * @retval true The value was found and removed
+   * @retval false The value was not found in the queue
+   */
   bool removeOne(const T &value);
+
+  /**
+   * @brief Checks if the queue contains a specific value
+   *
+   * @param value The value to search for
+   * @retval true The value exists in the queue
+   * @retval false The value does not exist in the queue
+   */
   bool contains(const T &value) const;
+
+  /**
+   * @brief Finds and returns a pointer to the first occurrence of a value
+   *
+   * @param value The value to search for
+   * @retval T* Pointer to the found element
+   * @retval nullptr The value was not found in the queue
+   */
   T *find(const T &value) const;
+
+  /**
+   * @brief Checks if the queue is empty
+   *
+   * @retval true The queue is empty
+   * @retval false The queue contains elements
+   */
   inline bool isEmpty() const;
+
+  /**
+   * @brief Removes all elements from the queue
+   */
   void clean();
+
+  /**
+   * @brief Executes a callback function on each element in the queue
+   *
+   * @param callback Function to execute on each element
+   */
   void forEach(VoidCallback callback) const;
 
  protected:
+  /**
+   * @brief Node structure for the linked list implementation
+   */
   typedef struct node {
-    T value;
-    node *next;
+    T value;     ///< The stored value
+    node *next;  ///< Pointer to the next node
   } *pnode;
 
-  pnode mHead;
-  pnode mTail;
+  pnode mHead;  ///< Pointer to the first node in the queue
+  pnode mTail;  ///< Pointer to the last node in the queue
 };
+/** @} */
 
 template <typename T>
 ClearQueue<T>::ClearQueue() {

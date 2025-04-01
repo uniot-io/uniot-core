@@ -16,6 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/** @cond */
+/**
+ * DO NOT DELETE THE "fs_storage" GROUP DEFINITION BELOW.
+ * Used to create the File System Storage topic in the documentation. If you want to delete this file,
+ * please paste the group definition into another storage and delete this one.
+ */
+/** @endcond */
+
+/**
+ * @defgroup fs_storage File System Storage
+ * @brief File system storage management for Uniot devices
+ */
+
 #pragma once
 
 // doc: https://arduino-esp8266.readthedocs.io/en/latest/filesystem.html
@@ -32,8 +45,29 @@
 #include <Logger.h>
 
 namespace uniot {
+
+/**
+ * @brief Manages data persistence to file system on ESP8266/ESP32 devices
+ * @defgroup fs_storage_base Storage
+ * @ingroup fs_storage
+ *
+ * The Storage class provides a simple interface for saving and restoring data to the
+ * file system. It automatically handles filesystem mounting and unmounting based on
+ * instance counts. It supports both LittleFS and SPIFFS file systems based on compile-time
+ * configuration (UNIOT_USE_LITTLEFS).
+ * @{
+ */
 class Storage {
  public:
+  /**
+   * @brief Constructs a Storage object for a specific file
+   *
+   * Creates a Storage instance associated with a specific file path.
+   * The constructor automatically mounts the filesystem if this is the first Storage
+   * instance created. File path will be prepended with "/" if not already present.
+   *
+   * @param path The file path to use for storage (limited to 31 characters)
+   */
   Storage(const String &path) {
     setPath("/" + path);
 
@@ -51,6 +85,12 @@ class Storage {
     }
   }
 
+  /**
+   * @brief Destructor
+   *
+   * Decrements the instance counter and unmounts the filesystem
+   * when the last instance is destroyed
+   */
   virtual ~Storage() {
     sInstancesCount--;
     if (!sInstancesCount) {
@@ -58,7 +98,16 @@ class Storage {
     }
   }
 
-  // use with caution, but it is better not to use it at all!
+  /**
+   * @brief Explicitly unmounts the filesystem
+   *
+   * This method forcibly unmounts the filesystem regardless of
+   * how many Storage instances exist. Use with extreme caution as
+   * it will affect all other Storage instances.
+   *
+   * @warning This can cause other Storage instances to fail as they
+   * may attempt to access an unmounted filesystem
+   */
   static void unmount() {
     if (sMounted) {
       FileFS.end();
@@ -66,6 +115,16 @@ class Storage {
     }
   }
 
+  /**
+   * @brief Writes the current data to the file system
+   *
+   * Saves the content of mData to the file specified by mPath.
+   * On ESP8266 with SPIFFS, it attempts to run garbage collection
+   * to prevent filesystem fragmentation issues.
+   *
+   * @retval true Data was successfully written to the file
+   * @retval false Failed to open the file for writing
+   */
   virtual bool store() {
     auto file = FileFS.open(mPath, "w");
     if (!file) {
@@ -86,17 +145,36 @@ class Storage {
     return true;
   }
 
+  /**
+   * @brief Loads data from the file system into memory
+   *
+   * Reads the content of the file specified by mPath into mData.
+   * If the file doesn't exist (which is normal on first use), it logs
+   * a warning but doesn't treat it as an error.
+   *
+   * @retval true Data was successfully loaded into mData
+   * @retval false Failed to open the file for reading
+   */
   virtual bool restore() {
     auto file = FileFS.open(mPath, "r");
     if (!file) {
       UNIOT_LOG_WARN("Failed to open %s. It is ok on first start", mPath.c_str());
       return false;
     }
-    mData = _readSmallFile(file);
+    mData = _readSmallFile(file); // TODO: cleanup before read?
     file.close();
     return true;
   }
 
+  /**
+   * @brief Clears data and removes the file from the file system
+   *
+   * Cleans up by both clearing the in-memory data and removing
+   * the associated file from the filesystem.
+   *
+   * @retval true File was successfully removed
+   * @retval false Failed to remove the file
+   */
   virtual bool clean() {
     mData.clean();
     if (!FileFS.remove(mPath)) {
@@ -107,9 +185,26 @@ class Storage {
   }
 
  protected:
+  /**
+   * @brief The byte array containing the data to be stored or the loaded data
+   *
+   * This member stores the actual data that will be written to the file system
+   * or that has been read from the file system.
+   */
   Bytes mData;
+
+  /**
+   * @brief The file path where data is stored
+   *
+   * This is the full path to the file in the filesystem.
+   */
   String mPath;
 
+  /**
+   * @brief Sets the file path, ensuring it starts with "/"
+   *
+   * @param path The file path to set (limited to 31 characters total)
+   */
   void setPath(const String &path) {
     mPath = path;
     // There is a limit of 32 chars in total for filenames.
@@ -118,6 +213,15 @@ class Storage {
   }
 
  private:
+  /**
+   * @brief Helper method to read a file's contents into a Bytes object
+   *
+   * Reads the entire content of the given file into memory and
+   * returns it as a Bytes object.
+   *
+   * @param file An open File object to read from
+   * @retval data The data read from the file
+   */
   Bytes _readSmallFile(File &file) {
     auto toRead = file.size() - file.position();
     char *buf = (char *)malloc(toRead);
@@ -127,7 +231,19 @@ class Storage {
     return data;
   }
 
+  /**
+   * @brief Tracks whether the filesystem is currently mounted
+   *
+   * Shared across all Storage instances to prevent multiple mount attempts.
+   */
   static bool sMounted;
+
+  /**
+   * @brief Tracks the number of active Storage instances
+   *
+   * Used to determine when to unmount the filesystem (when count reaches zero).
+   */
   static unsigned int sInstancesCount;
 };
+/** @} */
 }  // namespace uniot

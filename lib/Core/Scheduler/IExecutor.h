@@ -20,10 +20,29 @@
 
 namespace uniot
 {
+/**
+ * @brief Interface for executing tasks in the scheduler system
+ *
+ * IExecutor provides a common interface for any class that needs to be
+ * executed by the TaskScheduler. This enables different components to
+ * be integrated into the scheduling system.
+ */
 class IExecutor
 {
 public:
+  /**
+   * @brief Virtual destructor for proper cleanup
+   */
   virtual ~IExecutor() {}
+
+  /**
+   * @brief Execute the implementation's functionality
+   *
+   * @param times The number of remaining executions:
+   *        - Positive numbers indicate remaining executions count
+   *        - Negative numbers indicate infinite executions (repeat forever)
+   *        - Zero indicates the last execution has occurred
+   */
   virtual void execute(short times) = 0;
 };
 } // namespace uniot

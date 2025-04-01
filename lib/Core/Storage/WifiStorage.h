@@ -22,34 +22,89 @@
 #include <EEPROM.h>
 
 namespace uniot {
+/**
+ * @brief Storage class for WiFi credentials
+ * @defgroup fs_storage_wifi WiFi Storage
+ * @ingroup fs_storage
+ *
+ * WifiStorage provides methods for saving, retrieving, and managing WiFi credentials
+ * (SSID and password). It persists the data in CBOR format in a file named "wifi.cbor".
+ * @{
+ */
 class WifiStorage : public CBORStorage {
  public:
+  /**
+   * @brief Construct a new WifiStorage object
+   *
+   * Initializes the storage with the filename "wifi.cbor"
+   */
   WifiStorage() : CBORStorage("wifi.cbor") {
   }
 
+  /**
+   * @brief Get the stored WiFi SSID
+   *
+   * @retval String& The stored SSID
+   */
   const String& getSsid() const {
     return mSsid;
   }
 
+  /**
+   * @brief Get the stored WiFi password
+   *
+   * @retval String& The stored password
+   */
   const String& getPassword() const {
     return mPassword;
   }
 
+  /**
+   * @brief Set WiFi credentials
+   *
+   * @param ssid The WiFi network name
+   * @param password The WiFi network password
+   */
   void setCredentials(const String& ssid, const String& password) {
     mSsid = ssid;
     mPassword = password;
   }
 
+  /**
+   * @brief Check if stored credentials are valid
+   *
+   * Checks if SSID is not empty, which is considered a minimum requirement
+   * for valid credentials.
+   *
+   * @retval true Credentials are valid
+   * @retval false Credentials are invalid (SSID is empty)
+   */
   bool isCredentialsValid() {
     return !mSsid.isEmpty();
   }
 
+  /**
+   * @brief Store WiFi credentials to persistent storage
+   *
+   * Stores the SSID and password to the CBOR object and persists it to storage.
+   *
+   * @retval true Storage operation was successful
+   * @retval false Storage operation failed (e.g., file system error)
+   */
   virtual bool store() override {
     object().put("ssid", mSsid.c_str());
     object().put("pass", mPassword.c_str());
     return CBORStorage::store();
   }
 
+  /**
+   * @brief Restore WiFi credentials from persistent storage
+   *
+   * Loads the CBOR object from storage and extracts SSID and password.
+   *
+   * @retval true Restore operation was successful
+   * @retval false Restore operation failed (e.g., file system error)
+   */
   virtual bool restore() override {
     if (CBORStorage::restore()) {
       mSsid = object().getString("ssid");
@@ -59,6 +114,14 @@ class WifiStorage : public CBORStorage {
     return false;
   }
 
+  /**
+   * @brief Clear stored WiFi credentials
+   *
+   * Resets SSID and password to empty strings and cleans the storage.
+   *
+   * @retval true Clean operation was successful
+   * @retval false Clean operation failed (e.g., file system error)
+   */
   virtual bool clean() override {
     mSsid = "";
     mPassword = "";
@@ -66,7 +129,8 @@ class WifiStorage : public CBORStorage {
   }
 
  private:
-  String mSsid;
-  String mPassword;
+  String mSsid;     ///< WiFi network name
+  String mPassword; ///< WiFi network password
 };
+/** @} */
 }  // namespace uniot

@@ -25,9 +25,24 @@
 #include <unLisp.h>
 
 namespace uniot {
-
+/**
+ * @brief A device class that integrates MQTT connectivity with unLisp scripting capabilities
+ * @defgroup app-kit-lisp-device Lisp Device
+ * @ingroup app-kit
+ * @{
+ *
+ * LispDevice provides an environment for executing and managing unLisp scripts
+ * through MQTT communication. It handles script storage, execution, event processing,
+ * and communication with the Uniot ecosystem.
+ */
 class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListener {
  public:
+  /**
+   * @brief Constructs a LispDevice instance
+   *
+   * Initializes the device with default settings and registers event listeners
+   * for unLisp message, request, and event outputs.
+   */
   LispDevice()
       : MQTTDevice(),
         CBORStorage("lisp.cbor"),
@@ -40,15 +55,32 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
     CoreEventListener::listenToEvent(unLisp::Topic::OUT_LISP_EVENT);
   }
 
+  /**
+   * @brief Sets up MQTT topic subscriptions for the device
+   *
+   * Subscribes to device-specific script topics and group-wide event topics
+   * to receive scripts and events from the MQTT broker.
+   */
   virtual void syncSubscriptions() override {
     mTopicScript = MQTTDevice::subscribeDevice("script");
     mTopicEvents = MQTTDevice::subscribeGroup("all", "event/+");
   }
 
+  /**
+   * @brief Provides access to the unLisp interpreter instance
+   *
+   * @retval unLisp& The unLisp interpreter instance
+   */
   unLisp &getLisp() {
     return unLisp::getInstance();
   }
 
+  /**
+   * @brief Loads and executes previously stored code from persistent storage
+   *
+   * Restores code, persistence flag, and checksum from CBOR storage.
+   * If persistence is enabled and code exists, runs the stored code.
+   */
   void runStoredCode() {
     if (CBORStorage::restore()) {
       auto code = object().getString("code");
@@ -61,6 +93,15 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
     }
   }
 
+  /**
+   * @brief Stores the current script state to persistent storage
+   *
+   * Saves persistence flag, checksum, and code (if persistence is enabled)
+   * to the CBOR storage.
+   *
+   * @retval true Storage operation was successful
+   * @retval false Storage operation failed
+   */
   bool store() {
     object()
         .put("persist", mPersist)
@@ -71,6 +112,15 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
     return CBORStorage::store();
   }
 
+  /**
+   * @brief Processes events received from the unLisp interpreter
+   *
+   * Handles various event types including errors, logs, debug messages,
+   * and system events from the unLisp environment.
+   *
+   * @param topic The event topic identifier
+   * @param msg The message identifier within the topic
+   */
   virtual void onEventReceived(unsigned int topic, int msg) override {
     if (topic == unLisp::Topic::OUT_LISP_MSG) {
       if (msg == unLisp::Msg::OUT_MSG_ERROR) {
@@ -138,6 +188,14 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
     }
   }
 
+  /**
+   * @brief Processes MQTT messages received on subscribed topics
+   *
+   * Routes incoming messages to appropriate handlers based on topic matching.
+   *
+   * @param topic The MQTT topic of the received message
+   * @param payload The message payload data
+   */
   virtual void handle(const String &topic, const Bytes &payload) override {
     if (MQTTDevice::isTopicMatch(mTopicScript, topic)) {
       MQTTDevice::publishEmptyDevice("debug/err"); // clear previous errors
@@ -150,6 +208,15 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
     }
   }
 
+  /**
+   * @brief Processes script payloads received via MQTT
+   *
+   * Extracts script code, persistence flag, and calculates checksum.
+   * Determines whether to run the script based on current state and script identity.
+   * If executed, stores the script state for potential future use.
+   *
+   * @param payload CBOR encoded payload containing script and execution parameters
+   */
   void handleScript(const Bytes &payload) {
     static bool firstPacketReceived = false;
     CBORObject packet(payload);
@@ -177,12 +244,19 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
       UNIOT_LOG_INFO("script ignored: %s", script.c_str());
     }
 
-    // let's free some memory
+    // Free memory to avoid fragmentation
     object().clean();
     // NOTE: you may need getLasCode() somewhere else, but it has already cleaned here
     getLisp().cleanLastCode(); // Is it safe?
   }
 
+  /**
+   * @brief Processes event payloads received via MQTT
+   *
+   * Forwards valid events to the unLisp interpreter for processing.
+   *
+   * @param payload CBOR encoded payload containing event data
+   */
   void handleEvent(const Bytes &payload) {
     if (payload.size() > 0) {
       // TODO: implement event validation
@@ -192,12 +266,12 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
   }
 
  private:
-  uint32_t mChecksum;
-  bool mPersist;
-  bool mFailedWithError;
+  uint32_t mChecksum;     ///< Checksum of the current script for identity verification
+  bool mPersist;          ///< Flag indicating if the current script should persist across reboots
+  bool mFailedWithError;  ///< Flag indicating if the last script execution failed with an error
 
-  String mTopicScript;
-  String mTopicEvents;
+  String mTopicScript;    ///< MQTT topic for receiving script messages
+  String mTopicEvents;    ///< MQTT topic for receiving event messages
 };
-
+/** @} */
 }  // namespace uniot

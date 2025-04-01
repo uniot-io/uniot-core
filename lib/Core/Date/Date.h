@@ -15,6 +15,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+/** @cond */
+/**
+ * DO NOT DELETE THE "date-time" GROUP DEFINITION BELOW.
+ * Used to create the Uniot Lisp topic in the documentation. If you want to delete this file,
+ * please paste the group definition into another file and delete this one.
+ */
+/** @endcond */
+
+/**
+ * @defgroup date-time Date and Time Management
+ * @ingroup utils
+ * @brief A class for managing date and time in Uniot devices
+ */
+
 #pragma once
 
 #if defined(ESP8266)
@@ -33,26 +48,74 @@
 #include <time.h>
 
 namespace uniot {
+/**
+ * @brief Time and date management class for Uniot devices
+ * @defgroup date-time-main Main Component
+ * @ingroup date-time
+ * @{
+ *
+ * The Date class provides functionality for managing time synchronization via NTP
+ * and persisting the system time between device reboots. It implements:
+ * - IExecutor: For scheduled time persistence tasks
+ * - CBORStorage: For time persistence to flash storage
+ * - Singleton: To ensure only one instance manages time
+ * - CoreEventEmitter: To emit events on time sync
+ */
 class Date : public IExecutor, public CBORStorage, public Singleton<Date>, public CoreEventEmitter {
   friend class Singleton<Date>;
 
  public:
+  /**
+   * @brief Event topics related to date and time
+   */
   enum Topic { TIME = FOURCC(date) };
+
+  /**
+   * @brief Message types for date-related events
+   */
   enum Msg { SYNCED = 0 };
 
+  /**
+   * @brief Returns the current Unix timestamp
+   *
+   * @retval time_t Current time as Unix timestamp (seconds since epoch)
+   */
   static time_t now() {
     return getInstance()._now();
   }
 
+  /**
+   * @brief Gets the current time in human-readable format
+   *
+   * @retval String Time in "YYYY-MM-DD HH:MM:SS" format
+   */
   static String getFormattedTime() {
     return getInstance()._getFormattedTime();
   }
 
+  /**
+   * @brief Stores the current time to persistent storage
+   *
+   * Saves the current epoch time to CBOR storage to preserve
+   * time information between device reboots.
+   *
+   * @retval true Storage operation was successful
+   * @retval false Storage operation failed
+   */
   bool store() override {
     CBORStorage::object().put("epoch", static_cast<int64_t>(this->_now()));
     return CBORStorage::store();
   }
 
+  /**
+   * @brief Restores time from persistent storage
+   *
+   * Loads the last saved epoch time from CBOR storage and
+   * sets the system time accordingly.
+   *
+   * @retval true Restore operation was successful
+   * @retval false Restore operation failed
+   */
   bool restore() override {
     if (CBORStorage::restore()) {
       auto currentEpoch = CBORStorage::object().getInt("epoch");
@@ -63,12 +126,25 @@ class Date : public IExecutor, public CBORStorage, public Singleton<Date>, publi
     return false;
   }
 
+  /**
+   * @brief Periodic execution callback
+   *
+   * Called periodically to store the current time to persistent storage.
+   *
+   * @param _ Unused parameter required by IExecutor interface
+   */
   virtual void execute(short _) override {
     if (!this->store()) {
       UNIOT_LOG_ERROR("failed to store current epoch in CBORStorage");
     }
   }
 
+  /**
+   * @brief Forces immediate NTP time synchronization
+   *
+   * Reconfigures the NTP client and initiates an immediate
+   * time sync request regardless of the regular sync schedule.
+   */
   void forceSync() {
     _reconfigure();
     auto epoch = mSNTP.getNtpTime();
@@ -78,6 +154,12 @@ class Date : public IExecutor, public CBORStorage, public Singleton<Date>, publi
   }
 
  private:
+  /**
+   * @brief Private constructor for singleton pattern
+   *
+   * Sets up time synchronization callbacks and initializes the system.
+   * Configures platform-specific time sync notification handlers.
+   */
   Date() : CBORStorage("date.cbor") {
 #if defined(ESP8266)
     settimeofday_cb([this](bool from_sntp) {
@@ -101,11 +183,26 @@ class Date : public IExecutor, public CBORStorage, public Singleton<Date>, publi
     this->restore();
   }
 
+  /**
+   * @brief Callback triggered when time synchronization occurs
+   *
+   * Stores the newly synchronized time and emits an event
+   * to notify system components of the time change.
+   */
   void _timeSyncCallback() {
     execute(0);
     CoreEventEmitter::emitEvent(Topic::TIME, Msg::SYNCED);
   }
 
+  /**
+   * @brief Sets the system time to the specified epoch
+   *
+   * Platform-specific implementation to set the device's system time.
+   *
+   * @param epoch Unix timestamp to set as current time
+   * @retval true Time was set successfully
+   * @retval false Failed to set time
+   */
   bool _setTime(time_t epoch) {
 #if defined(ESP8266)
     tune_timeshift64(epoch * 1000000ULL);
@@ -119,14 +216,32 @@ class Date : public IExecutor, public CBORStorage, public Singleton<Date>, publi
     return true;
   }
 
+  /**
+   * @brief Reconfigures the NTP client with server settings
+   *
+   * Sets up the time zone (UTC+0) and NTP server pool.
+   */
   void _reconfigure() {
     configTime(0, 0, SimpleNTP::servers[0], SimpleNTP::servers[1], SimpleNTP::servers[2]);
   }
 
+  /**
+   * @brief Returns the current system time
+   *
+   * @retval time_t Current Unix timestamp
+   */
   time_t _now() {
     return time(nullptr);
   }
 
+  /**
+   * @brief Formats the current time as a human-readable string
+   *
+   * Converts the current Unix timestamp to a formatted date and time string
+   * in the format "YYYY-MM-DD HH:MM:SS".
+   *
+   * @retval String Formatted date and time
+   */
   String _getFormattedTime() {
     tm tm;
     auto currentEpoc = this->_now();
@@ -140,6 +255,8 @@ class Date : public IExecutor, public CBORStorage, public Singleton<Date>, publi
     return String(formattedTime);
   }
 
+  /** @brief NTP client instance */
   SimpleNTP mSNTP;
 };
+/** @} */
 }  // namespace uniot

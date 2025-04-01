@@ -28,11 +28,27 @@
 #include "ICOSESigner.h"
 
 namespace uniot {
+/**
+ * @brief Implementation of COSE_Sign1 message format as specified in RFC 8152
+ * @ingroup utils_cose
+ * @{
+ *
+ * This class provides functionality to create, read, sign, and verify COSE_Sign1 messages.
+ * It implements the message structure defined in section 4.2 of RFC 8152.
+ * The class supports EdDSA signatures (algorithm -8).
+ */
 class COSEMessage {
  public:
+  /** @brief Copy constructor disabled */
   COSEMessage(COSEMessage const &) = delete;
+  /** @brief Assignment operator disabled */
   void operator=(COSEMessage const &) = delete;
 
+  /**
+   * @brief Default constructor
+   *
+   * Creates an empty COSE_Sign1 message with default structure
+   */
   COSEMessage()
       : mpProtectedHeader(nullptr),
         mpUnprotectedHeader(nullptr),
@@ -42,6 +58,11 @@ class COSEMessage {
     _create();
   }
 
+  /**
+   * @brief Constructs a message from existing CBOR data
+   *
+   * @param buf CBOR-encoded COSE_Sign1 message
+   */
   COSEMessage(Bytes buf)
       : mpProtectedHeader(nullptr),
         mpUnprotectedHeader(nullptr),
@@ -50,40 +71,86 @@ class COSEMessage {
     mReadSuccess = _read(buf);
   }
 
+  /** @brief Destructor */
   virtual ~COSEMessage() {
     _clean();
   }
 
+  /**
+   * @brief Reads a CBOR-encoded COSE_Sign1 message
+   *
+   * @param buf CBOR data to parse
+   * @retval true The message was read successfully
+   * @retval false The message was not read successfully
+   */
   bool read(const Bytes &buf) {
     _clean();
     mReadSuccess = _read(buf);
     return mReadSuccess;
   }
 
+  /**
+   * @brief Checks if the message was read successfully
+   *
+   * @retval true The read operation was successful
+   * @retval false The read operation failed
+   */
   inline bool wasReadSuccessful() const {
     return mReadSuccess;
   }
 
+  /**
+   * @brief Gets the protected header as a byte string
+   *
+   * @retval Bytes Contains the CBOR-encoded protected header
+   */
   inline Bytes getProtectedHeader() {
     return mRoot._getBytes(mpProtectedHeader);
   }
 
+  /**
+   * @brief Gets the unprotected header as a CBORObject
+   *
+   * @retval CBORObject Represents the unprotected header
+   */
   inline CBORObject getUnprotectedHeader() {
     return mRoot._getMap(mpUnprotectedHeader);
   }
 
+  /**
+   * @brief Gets the key identifier from the unprotected header
+   *
+   * @retval Bytes Contains the key identifier (kid)
+   * @retval Bytes Empty if the key identifier is not present
+   */
   inline Bytes getUnprotectedKid() {
     return getUnprotectedHeader().getBytes(COSEHeaderLabel::KeyIdentifier);
   }
 
+  /**
+   * @brief Gets the payload of the message
+   *
+   * @retval Bytes Contains the payload data
+   */
   inline Bytes getPayload() {
     return mRoot._getBytes(mpPayload);
   }
 
+  /**
+   * @brief Gets the signature of the message
+   *
+   * @retval Bytes Contains the signature
+   */
   inline Bytes getSignature() {
     return mRoot._getBytes(mpSignature);
   }
 
+  /**
+   * @brief Checks if the message has a valid signature structure
+   *
+   * @retval true The message is signed (has an algorithm and non-empty signature)
+   * @retval false The message is not signed
+   */
   inline bool isSigned() {
     auto signature = getSignature();
     CBORObject pHeader(getProtectedHeader());
@@ -92,15 +159,33 @@ class COSEMessage {
     return alg != 0 && signature.size() > 0;
   }
 
+  /**
+   * @brief Sets the key identifier in the unprotected header
+   *
+   * @param kid Key identifier to set
+   */
   void setUnprotectedKid(const Bytes& kid) {
     getUnprotectedHeader().put(COSEHeaderLabel::KeyIdentifier, kid.raw(), kid.size());
   }
 
+  /**
+   * @brief Sets the payload of the message
+   *
+   * @param payload Data to set as the payload
+   * @retval true The payload was set successfully
+   * @retval false The payload was not set successfully
+   */
   bool setPayload(const Bytes &payload) {
     mRawPayload = payload;
     return cn_cbor_data_update(mpPayload, mRawPayload.raw(), mRawPayload.size());
   }
 
+  /**
+   * @brief Signs the message using the provided signer
+   *
+   * @param signer Object implementing the ICOSESigner interface that performs the signature
+   * @param external Optional external data to include in the signature calculation (AAD)
+   */
   void sign(const ICOSESigner &signer, const Bytes &external = Bytes()) {
     auto alg = signer.signerAlgorithm();
     if (alg != COSEAlgorithm::EdDSA) {
@@ -117,6 +202,13 @@ class COSEMessage {
     _setSignature(signature);
   }
 
+  /**
+   * @brief Verifies the signature of the message using the provided public key
+   *
+   * @param publicKey Public key to use for verification
+   * @retval true The signature is valid
+   * @retval false The signature is invalid
+   */
   bool verify(const Bytes &publicKey) {
     CBORObject pHeader(getProtectedHeader());
     auto alg = pHeader.getInt(COSEHeaderLabel::Algorithm);
@@ -136,16 +228,27 @@ class COSEMessage {
     }
   }
 
+  /**
+   * @brief Builds the CBOR representation of the message
+   *
+   * @retval Bytes Contains the CBOR-encoded message
+   */
   Bytes build() const {
     return mRoot.build();
   }
 
+  /**
+   * @brief Resets the message to its initial empty state
+   */
   void clean() {
     _clean();
     _create();
   }
 
  private:
+  /**
+   * @brief Creates the initial COSE_Sign1 structure
+   */
   void _create() {
     mRoot._clean();
     auto root = cn_cbor_array_create(mRoot._errback());
@@ -156,6 +259,13 @@ class COSEMessage {
     mRoot.mpMapNode = cn_cbor_tag_create(COSETag::Sign1, root, mRoot._errback());
   }
 
+  /**
+   * @brief Parses CBOR data into a COSE_Sign1 message
+   *
+   * @param buf CBOR data to parse
+   * @retval true Parsing was successful
+   * @retval false Parsing failed
+   */
   bool _read(const Bytes &buf) {
     mRoot.read(buf);
 
@@ -225,6 +335,9 @@ class COSEMessage {
     return true;
   }
 
+  /**
+   * @brief Cleans up all internal data structures
+   */
   void _clean() {
     mRoot._clean();
     mpProtectedHeader = nullptr;
@@ -237,16 +350,36 @@ class COSEMessage {
     mRawSignature.clean();
   }
 
+  /**
+   * @brief Sets the protected header from a CBORObject
+   *
+   * @param pHeader CBORObject containing the header data
+   * @retval true The protected header was set successfully
+   * @retval false The protected header was not set successfully
+   */
   bool _setProtectedHeader(const CBORObject &pHeader) {
     mRawProtectedHeader = pHeader.build();
     return cn_cbor_data_update(mpProtectedHeader, mRawProtectedHeader.raw(), mRawProtectedHeader.size());
   }
 
+  /**
+   * @brief Sets the signature value
+   *
+   * @param signature Signature bytes to set
+   * @retval true The signature was set successfully
+   * @retval false The signature was not set successfully
+   */
   bool _setSignature(const Bytes &signature) {
     mRawSignature = signature;
     return cn_cbor_data_update(mpSignature, mRawSignature.raw(), mRawSignature.size());
   }
 
+  /**
+   * @brief Constructs the Sig_structure for signing/verification as defined in RFC 8152
+   *
+   * @param external Optional external data (AAD) to include in the signature calculation
+   * @retval Bytes Contains the CBOR-encoded Sig_structure data
+   */
   Bytes _toBeSigned(const Bytes &external = Bytes()) {
     auto protectedHeader = getProtectedHeader();
     auto payload = getPayload();
@@ -262,15 +395,16 @@ class COSEMessage {
     return rawSigStruct;
   }
 
-  CBORObject mRoot;
-  cn_cbor *mpProtectedHeader;
-  cn_cbor *mpUnprotectedHeader;
-  cn_cbor *mpPayload;
-  cn_cbor *mpSignature;
+  CBORObject mRoot;                 /**< Root CBOR object for the message */
+  cn_cbor *mpProtectedHeader;       /**< Pointer to the protected header in the CBOR structure */
+  cn_cbor *mpUnprotectedHeader;     /**< Pointer to the unprotected header in the CBOR structure */
+  cn_cbor *mpPayload;               /**< Pointer to the payload in the CBOR structure */
+  cn_cbor *mpSignature;             /**< Pointer to the signature in the CBOR structure */
 
-  Bytes mRawProtectedHeader;
-  Bytes mRawPayload;
-  Bytes mRawSignature;
-  bool mReadSuccess;
+  Bytes mRawProtectedHeader;        /**< Raw bytes of the protected header */
+  Bytes mRawPayload;                /**< Raw bytes of the payload */
+  Bytes mRawSignature;              /**< Raw bytes of the signature */
+  bool mReadSuccess;                /**< Flag indicating if the last read operation was successful */
 };
+/** @} */
 }  // namespace uniot
