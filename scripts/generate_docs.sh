@@ -77,13 +77,6 @@ cp -R docs/html/* docs/"$VERSION"/
 # Remove the original docs/html folder as it's no longer needed
 rm -rf docs/html
 
-# Copy a custom index.html from the theme repo to docs/index.html
-if [ -f "index.html" ]; then
-  cp "index.html" docs/index.html
-else
-  echo "Warning: No custom index.html found in the repository root."
-fi
-
 # ---------------------------
 # Generate versions.json from git tags
 # ---------------------------
