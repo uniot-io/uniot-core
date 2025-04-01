@@ -16,6 +16,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/** @cond */
+/**
+ * DO NOT DELETE THE "networking" GROUP DEFINITION BELOW.
+ * Used to create the Networking topic in the documentation. If you want to delete this file,
+ * please paste the group definition into another file and delete this one.
+ */
+/** @endcond */
+
+/**
+ * @defgroup networking Networking
+ * @brief Networking and communication classes for the Uniot project
+ */
+
+/**
+ * @defgroup mqtt_communication MQTT Communication
+ * @ingroup networking
+ */
+
 #pragma once
 
 #if defined(ESP8266)
@@ -42,17 +60,44 @@
 #include "MQTTPath.h"
 
 namespace uniot {
+/**
+ * @brief MQTT communication wrapper that manages devices and their subscriptions
+ * @defgroup mqtt_kit MQTT Kit
+ * @ingroup mqtt_communication
+ *
+ * This class handles MQTT connections, message processing, and device management.
+ * It implements ISchedulerConnectionKit for integration with the task scheduler system
+ * and inherits from CoreEventListener to handle network and time-related events.
+ * @{
+ */
 class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
+  /** @brief Function type for extending CBOR objects with additional data */
   typedef std::function<void(CBORObject &)> CBORExtender;
   friend class MQTTDevice;
 
  public:
-  enum Topic { CONNECTION = FOURCC(mqtt) };
-  enum Msg {
-    FAILED = 0,
-    SUCCESS
+  /**
+   * @enum Topic
+   * @brief Event topics this class can emit
+   */
+  enum Topic {
+    CONNECTION = FOURCC(mqtt) /**< MQTT connection topic (value from FOURCC("mqtt")) */
   };
 
+  /**
+   * @enum Msg
+   * @brief Message types for the CONNECTION topic
+   */
+  enum Msg {
+    FAILED = 0,       /**< Connection failed */
+    SUCCESS = 1       /**< Connection successful */
+  };
+
+  /**
+   * @brief Constructs an MQTTKit instance
+   * @param credentials The credentials to use for MQTT authentication
+   * @param infoExtender Optional callback to extend status messages with additional data
+   */
   MQTTKit(const Credentials &credentials, CBORExtender infoExtender = nullptr)
       : mpCredentials(&credentials),
         mPath(credentials),
@@ -85,16 +130,31 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
     // mWiFiClient.setInsecure();
   }
 
+  /**
+   * @brief Destructor - cleans up event listeners
+   */
   ~MQTTKit() {
     CoreEventListener::stopListeningToEvent(NetworkScheduler::Topic::CONNECTION);
     CoreEventListener::stopListeningToEvent(Date::Topic::TIME);
     // TODO: implement, remove all devices
   }
 
+  /**
+   * @brief Sets the MQTT broker server address and port
+   * @param domain The server domain name or IP address
+   * @param port The server port
+   */
   void setServer(const char *domain, uint16_t port) {
     mPubSubClient.setServer(domain, port);
   }
 
+  /**
+   * @brief Adds a device to be managed by this MQTT kit
+   *
+   * The device will be initialized with this kit and its topics will be subscribed
+   *
+   * @param device The device to add
+   */
   void addDevice(MQTTDevice &device) {
     if (mDevices.pushUnique(&device)) {
       device.kit(this);
@@ -104,6 +164,13 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
     }
   }
 
+  /**
+   * @brief Removes a device from this MQTT kit
+   *
+   * The device will be detached from this kit and its topic subscriptions will be removed
+   *
+   * @param device The device to remove
+   */
   void removeDevice(MQTTDevice &device) {
     if (mDevices.removeOne(&device)) {
       device.kit(nullptr);
@@ -113,10 +180,20 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
     }
   }
 
+  /**
+   * @brief Gets the MQTT path helper object
+   * @retval mPath The MQTT path helper object
+   */
   const MQTTPath &getPath() {
     return mPath;
   }
 
+  /**
+   * @brief Renews all device subscriptions
+   *
+   * Unsubscribes from all topics and then resubscribes to ensure
+   * subscriptions are current
+   */
   void renewSubscriptions() {
     mDevices.forEach([this](MQTTDevice *device) {
       device->unsubscribeFromAll();
@@ -124,12 +201,31 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
     });
   }
 
+  /**
+   * @brief Registers MQTT tasks with the provided scheduler
+   * @param scheduler The scheduler to register tasks with
+   * @implements ISchedulerConnectionKit
+   */
   virtual void pushTo(TaskScheduler &scheduler) override {
     scheduler.push("mqtt", mTaskMQTT);
   }
 
+  /**
+   * @brief Attaches this kit (empty implementation)
+   * @implements ISchedulerConnectionKit
+   */
   virtual void attach() override {}
 
+  /**
+   * @brief Handles network and time events
+   *
+   * Handles network connection events to enable/disable MQTT connections
+   * and time synchronization events to initialize MQTT tasks
+   *
+   * @param topic The event topic
+   * @param msg The event message
+   * @implements CoreEventListener
+   */
   virtual void onEventReceived(unsigned int topic, int msg) override {
     if (NetworkScheduler::CONNECTION == topic) {
       switch (msg) {
@@ -163,11 +259,18 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
   }
 
  protected:
+  /**
+   * @brief Gets access to the underlying PubSubClient
+   * @retval mPubSubClient The underlying PubSubClient instance
+   */
   PubSubClient *client() {
     return &mPubSubClient;
   }
 
  private:
+  /**
+   * @brief Initializes MQTT connection and maintenance tasks
+   */
   inline void _initTasks() {
     mTaskMQTT = TaskScheduler::make([this](SchedulerTask &self, short t) {
       if (!mNetworkConnected) {
@@ -220,6 +323,12 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
     });
   }
 
+  /**
+   * @brief Creates a COSE message from payload
+   * @param payload The payload to encapsulate
+   * @param sign Whether to sign the message
+   * @retval Bytes COSE message bytes
+   */
   Bytes _buildCOSEMessage(const Bytes &payload, bool sign = false) {
     COSEMessage obj;
     obj.setPayload(payload);
@@ -231,6 +340,13 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
     return obj.build();
   }
 
+  /**
+   * @brief Decodes a COSE message into its payload
+   * @param message The COSE message to decode
+   * @param outPayload The output buffer for the decoded payload
+   * @retval true Decoding was successful
+   * @retval false Decoding failed
+   */
   bool _readCOSEMessage(const Bytes &message, Bytes &outPayload) {
     COSEMessage obj(message);
     if (obj.wasReadSuccessful()) {
@@ -240,26 +356,56 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
     return false;
   }
 
+  /**
+   * @brief Prepares the online status packet
+   *
+   * Adds online status and increments connection ID
+   *
+   * @param packet The CBOR object to populate
+   */
   void _prepareOnlinePacket(CBORObject &packet) {
     packet
         .put("online", 1)
         .put("connection_id", mConnectionId++);
   }
 
+  /**
+   * @brief Prepares the offline status packet
+   *
+   * Sets offline status and maintains current connection ID
+   *
+   * @param packet The CBOR object to populate
+   */
   void _prepareOfflinePacket(CBORObject &packet) {
     packet
         .put("online", 0)
         .put("connection_id", mConnectionId);
   }
 
+  /**
+   * @brief Generates the MQTT client ID
+   * @retval id The client ID string
+   */
   String _getClientId() {
     return "device:" + mpCredentials->getDeviceId();  // TODO: owner
   }
 
+  /**
+   * @brief Generates the MQTT user login
+   * @retval publicKey The public key string
+   */
   String _getUserLogin() {
     return mpCredentials->getPublicKey();
   }
 
+  /**
+   * @brief Generates the MQTT password as a signed CBOR object
+   *
+   * Creates a signed password object containing device ID, owner ID,
+   * creator ID, and timestamp
+   *
+   * @retval password The signed password object
+   */
   Bytes _getUserPassword() {
     CBORObject password;
     auto protectedData = password.putMap("protected");
@@ -276,18 +422,19 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
     return password.build();
   }
 
-  const Credentials *mpCredentials;
+  const Credentials *mpCredentials;  /**< Device credentials */
 
-  MQTTPath mPath;
-  CBORExtender mInfoExtender;
-  PubSubClient mPubSubClient;
+  MQTTPath mPath;                   /**< Helper for building MQTT paths */
+  CBORExtender mInfoExtender;       /**< Callback for extending status info */
+  PubSubClient mPubSubClient;       /**< MQTT client implementation */
 
-  bool mNetworkConnected;
-  int mConnectionId;
+  bool mNetworkConnected;           /**< Network connection status */
+  int mConnectionId;                /**< Current connection sequence number */
 
-  WiFiClient mWiFiClient;
-  // WiFiClientSecure mWiFiClient;
-  ClearQueue<MQTTDevice *> mDevices;
-  TaskScheduler::TaskPtr mTaskMQTT;
+  WiFiClient mWiFiClient;           /**< TCP client for MQTT communication */
+  // WiFiClientSecure mWiFiClient;  /**< Secure TCP client (commented out) */
+  ClearQueue<MQTTDevice *> mDevices; /**< List of managed MQTT devices */
+  TaskScheduler::TaskPtr mTaskMQTT;  /**< MQTT maintenance task */
 };
+/** @} */
 }  // namespace uniot

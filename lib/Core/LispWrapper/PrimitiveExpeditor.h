@@ -16,6 +16,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/** @cond */
+/**
+ * DO NOT DELETE THE "uniot-lisp-primitives" GROUP DEFINITION BELOW.
+ * Used to create the Utilities topic in the documentation. If you want to delete this file,
+ * please paste the group definition into another file and delete this one.
+ */
+/** @endcond */
+
+/**
+ * @defgroup uniot-lisp-primitives Primitives
+ * @ingroup uniot-lisp
+ * @brief A collection of helper classes and functions for managing Lisp primitives.
+ */
+
 #pragma once
 
 #include <Arduino.h>
@@ -26,20 +40,47 @@
 namespace uniot {
 using namespace lisp;
 
+/**
+ * @brief Manages and validates Lisp primitive operations.
+ * @defgroup uniot-lisp-primitive-expeditor Expeditor
+ * @ingroup uniot-lisp-primitives
+ *
+ * Provides utilities for describing lisp primitive functions, validating their arguments,
+ * and extracting values from those arguments. It handles type checking and conversion
+ * between Lisp types and C++ types.
+ * @{
+ */
 class PrimitiveExpeditor {
   class PrimitiveExpeditorInitializer;
+  /**
+   * @struct PrimitiveDescription
+   * @brief Stores metadata about a Lisp primitive function.
+   */
   struct PrimitiveDescription {
-    String name;
-    uint8_t argsCount;
-    Lisp::Type argsTypes[16];
-    Lisp::Type returnType;
+    String name;         ///< Name of the primitive function
+    uint8_t argsCount;   ///< Number of arguments the function expects
+    Lisp::Type argsTypes[16]; ///< Types of each argument
+    Lisp::Type returnType;    ///< Return type of the function
   };
 
  public:
+  /**
+   * @brief Gets the static register manager instance.
+   * @retval RegisterManager& The register manager instance.
+   */
   static RegisterManager &getRegisterManager() {
     return sRegister;
   }
 
+  /**
+   * @brief Describes a primitive function by setting up its metadata.
+   *
+   * @param name Name of the primitive function
+   * @param returnType Return type of the function
+   * @param argsCount Number of arguments the function expects
+   * @param ... Types of each argument (variadic)
+   * @retval initializer PrimitiveExpeditorInitializer object
+   */
   static PrimitiveExpeditorInitializer describe(const String &name, Lisp::Type returnType, int argsCount, ...) {
     sLastDescription.name = name;
     sLastDescription.argsCount = argsCount;
@@ -63,6 +104,15 @@ class PrimitiveExpeditor {
     return {};
   }
 
+  /**
+   * @brief Extracts description metadata from a primitive function.
+   *
+   * Uses setjmp/longjmp to capture the description information when the primitive
+   * is executed in description mode.
+   *
+   * @param primitive Pointer to the primitive function
+   * @retval description PrimitiveDescription object with the function's metadata
+   */
   static PrimitiveDescription extractDescription(Primitive *primitive) {
     volatile auto guard = DescriptionModeGuard(); // volatile to prevent compiler from optimization
     if (primitive) {
@@ -75,14 +125,30 @@ class PrimitiveExpeditor {
     return {};
   }
 
+  /**
+   * @brief Gets the register proxy assigned to this expeditor.
+   * @retval RegisterManagerProxy& The register manager proxy
+   */
   RegisterManagerProxy &getAssignedRegister() {
     return mRegisterProxy;
   }
 
+  /**
+   * @brief Gets the number of arguments in the current function call.
+   * @retval int The number of arguments in the list
+   */
   int getArgsLength() {
     return length(list());
   }
 
+  /**
+   * @brief Checks if a parameter matches an expected Lisp type.
+   *
+   * @param param Object to check
+   * @param expectedType Expected type of the object
+   * @retval true Parameter matches the expected type
+   * @retval false Parameter does not match the expected type
+   */
   bool checkType(Object param, Lisp::Type expectedType) {
     auto paramType = param->type;
     switch (expectedType) {
@@ -125,6 +191,10 @@ class PrimitiveExpeditor {
     return false;
   }
 
+  /**
+   * @brief Evaluates the argument list if not already evaluated.
+   * @retval list The evaluated list of arguments
+   */
   Object evalList() {
     if (!mEvalList) {
       mEvalList = eval_list(mRoot, mEnv, mList);
@@ -132,6 +202,10 @@ class PrimitiveExpeditor {
     return mEvalList;
   }
 
+  /**
+   * @brief Gets the argument list (evaluated or not).
+   * @retval list The list of arguments
+   */
   Object list() {
     if (!mEvalList) {
       return *mList;
@@ -139,20 +213,44 @@ class PrimitiveExpeditor {
     return mEvalList;
   }
 
+  /**
+   * @brief Evaluates a single object in the current environment.
+   *
+   * @param obj Object to evaluate
+   * @retval Object The evaluated object
+   */
   Object evalObj(VarObject obj) {
     return eval(mRoot, mEnv, obj);
   }
 
+  /**
+   * @brief Terminates execution with an error message.
+   *
+   * @param msg Error message to display
+   */
   void terminate(const char *msg) {
     error("[%s] %s", mDescription.name.c_str(), msg);
   }
 
+  /**
+   * @brief Asserts that the function was called with the expected number of arguments.
+   *
+   * @param length Expected number of arguments
+   * @throws Error if the argument count doesn't match
+   */
   void assertArgsCount(int length) {
     if (getArgsLength() != length) {
       error_wrong_params_number();
     }
   }
 
+  /**
+   * @brief Asserts that arguments match the expected types.
+   *
+   * @param length Expected number of arguments
+   * @param types Array of expected argument types
+   * @throws Error if arguments don't match expected types or count
+   */
   void assertArgs(uint8_t length, const Lisp::Type *types) {
     if (getArgsLength() != static_cast<int>(length)) {
       error_wrong_params_number();
@@ -172,6 +270,13 @@ class PrimitiveExpeditor {
     }
   }
 
+  /**
+   * @brief Variadic version of assertArgs.
+   *
+   * @param length Expected number of arguments
+   * @param ... Expected argument types (variadic)
+   * @throws Error if arguments don't match expected types or count
+   */
   void assertArgs(uint8_t length, ...) {
     Lisp::Type types[length];
 
@@ -185,10 +290,21 @@ class PrimitiveExpeditor {
     assertArgs(length, types);
   }
 
+  /**
+   * @brief Asserts arguments against the primitive's description.
+   * @throws Error if arguments don't match the description
+   */
   void assertDescribedArgs() {
     assertArgs(mDescription.argsCount, mDescription.argsTypes);
   }
 
+  /**
+   * @brief Gets an argument at the specified index.
+   *
+   * @param idx Zero-based index of the argument to retrieve
+   * @retval Object The argument object
+   * @throws Error if index is out of bounds
+   */
   Object getArg(int idx) {
     const auto length = getArgsLength();
     if (idx >= length) {
@@ -201,6 +317,14 @@ class PrimitiveExpeditor {
     return param->car;
   }
 
+  /**
+   * @brief Gets a boolean value from an argument.
+   *
+   * @param idx Zero-based index of the argument
+   * @param acceptsInt Whether to accept integer values as booleans
+   * @retval bool The boolan value of the argument
+   * @throws Error if argument doesn't have a compatible type
+   */
   bool getArgBool(int idx, bool acceptsInt = true) {
     auto arg = getArg(idx);
     if (!mEvalList) {
@@ -223,6 +347,14 @@ class PrimitiveExpeditor {
     }
   }
 
+  /**
+   * @brief Gets an integer value from an argument.
+   *
+   * @param idx Zero-based index of the argument
+   * @param acceptsBool Whether to accept boolean values as integers
+   * @retval int The integer value of the argument
+   * @throws Error if argument doesn't have a compatible type
+   */
   int getArgInt(int idx, bool acceptsBool = true) {
     auto arg = getArg(idx);
     if (!mEvalList) {
@@ -245,6 +377,13 @@ class PrimitiveExpeditor {
     }
   }
 
+  /**
+   * @brief Gets a symbol value from an argument.
+   *
+   * @param idx Zero-based index of the argument
+   * @retval symbol The symbol value of the argument
+   * @throws Error if argument is not a symbol
+   */
   const char *getArgSymbol(int idx) {
     auto arg = getArg(idx);
 
@@ -255,55 +394,125 @@ class PrimitiveExpeditor {
     return arg->name;
   }
 
+  /**
+   * @brief Creates a boolean Lisp object.
+   *
+   * @param value Boolean value
+   * @retval Object Lisp object representing the boolean value
+   * @retval Nil If value is false
+   */
   Object makeBool(bool value) {
     return value ? True : Nil;
   }
 
+  /**
+   * @brief Creates an integer Lisp object.
+   *
+   * @param value Integer value
+   * @retval Object Lisp object representing the integer value
+   */
   Object makeInt(int value) {
     return make_int(mRoot, value);
   }
 
+  /**
+   * @brief Creates a symbol Lisp object.
+   *
+   * @param value Symbol name
+   * @retval Object Lisp object representing the symbol
+   */
   Object makeSymbol(const char *value) {
     return make_symbol(mRoot, value);
   }
 
  private:
+  /**
+   * @brief Constructor for PrimitiveExpeditor.
+   *
+   * @param description Primitive function description
+   * @param root Lisp root object
+   * @param env Environment for evaluation
+   * @param list List of arguments
+   */
   PrimitiveExpeditor(const PrimitiveDescription &description, Root root, VarObject env, VarObject list)
       : mDescription(description), mRoot(root), mEnv(env), mList(list), mEvalList(nullptr), mRegisterProxy(description.name, &sRegister) {
   }
 
+  /**
+   * @brief Reports a type error for a parameter.
+   *
+   * @param idx Index of the parameter
+   * @param expectedType Expected type
+   * @param actualType Actual type received
+   */
   void error_invalid_type(int idx, Lisp::Type expectedType, Lisp::Type actualType) {
     error("[%s] Invalid type of %d parameter, expected <%s>, got <%s>", mDescription.name.c_str(), idx, Lisp::str(expectedType), Lisp::str(actualType));
   }
 
+  /**
+   * @brief Reports an incorrect parameter count error.
+   */
   void error_wrong_params_number() {
     error("[%s] Wrong number of params", mDescription.name.c_str());
   }
 
-  PrimitiveDescription mDescription;
-  Root mRoot;
-  VarObject mEnv;
-  VarObject mList;
-  Object mEvalList;
+  PrimitiveDescription mDescription;  ///< Description of the primitive function
+  Root mRoot;                         ///< Lisp root object
+  VarObject mEnv;                     ///< Environment for evaluation
+  VarObject mList;                    ///< List of arguments (not evaluated)
+  Object mEvalList;                   ///< Evaluated list of arguments (lazily initialized)
 
-  RegisterManagerProxy mRegisterProxy;
-  static RegisterManager sRegister;
+  RegisterManagerProxy mRegisterProxy; ///< Proxy to the register manager
+  static RegisterManager sRegister;    ///< Global register manager
 
-  static jmp_buf sDescriptionJumper;
-  static PrimitiveDescription sLastDescription;
+  static jmp_buf sDescriptionJumper;             ///< Jump buffer for description extraction
+  static PrimitiveDescription sLastDescription;  ///< Last description extracted
 
+  /**
+   * @class DescriptionModeGuard
+   * @brief RAII guard for description mode.
+   *
+   * Controls the description mode flag, ensuring it is reset when going out of scope.
+   */
   class DescriptionModeGuard {
    public:
+    /**
+     * @brief Constructor - sets description mode to true.
+     */
     DescriptionModeGuard() { sDescriptionMode = true; }
+
+    /**
+     * @brief Destructor - sets description mode to false.
+     */
     ~DescriptionModeGuard() { sDescriptionMode = false; }
+
+    /**
+     * @brief Checks if we're currently in description mode.
+     * @retval true Description mode is active
+     * @retval false Description mode is inactive
+     */
     static bool isDescriptionMode() { return sDescriptionMode; }
 
    private:
-    static bool sDescriptionMode;
+    static bool sDescriptionMode;  ///< Flag indicating description mode
   };
 
+  /**
+   * @class PrimitiveExpeditorInitializer
+   * @brief Initializer for PrimitiveExpeditor instances.
+   *
+   * Creates a PrimitiveExpeditor with the most recently described primitive.
+   */
   class PrimitiveExpeditorInitializer {
    public:
+    /**
+     * @brief Initializes a PrimitiveExpeditor.
+     *
+     * @param root Lisp root object
+     * @param env Environment for evaluation
+     * @param list List of arguments
+     * @retval expeditor The initialized expeditor
+     */
     PrimitiveExpeditor init(Root root, VarObject env, VarObject list) {
       return {PrimitiveExpeditor::sLastDescription, root, env, list};
     }
@@ -315,4 +524,5 @@ RegisterManager PrimitiveExpeditor::sRegister;
 jmp_buf PrimitiveExpeditor::sDescriptionJumper;
 PrimitiveExpeditor::PrimitiveDescription PrimitiveExpeditor::sLastDescription;
 bool PrimitiveExpeditor::DescriptionModeGuard::sDescriptionMode;
+/** @} */
 }  // namespace uniot

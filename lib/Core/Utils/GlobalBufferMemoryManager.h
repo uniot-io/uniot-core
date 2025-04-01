@@ -22,41 +22,96 @@
 
 namespace uniot {
 
+/**
+ * @brief Memory manager for a global static buffer with dynamic allocation capabilities
+ * @defgroup utils_memory_manager Memory Manager
+ * @ingroup utils
+ * @{
+ *
+ * This class implements a simple memory manager that operates on a static buffer.
+ * It provides dynamic memory allocation within the buffer, using a free-list approach
+ * to track available memory blocks. The memory manager supports allocation, deallocation,
+ * and reallocation operations, making it useful for environments with limited heap
+ * availability or when more controlled memory management is required.
+ */
 class GlobalBufferMemoryManager {
  public:
-  // Initialize the memory manager
+  /**
+   * @brief Initialize the memory manager
+   *
+   * Sets up the free list with a single large block covering the entire buffer.
+   * Must be called before any other memory operations.
+   */
   static void initialize();
 
-  // Allocate memory from the global buffer
+  /**
+   * @brief Allocate memory from the global buffer
+   *
+   * @param size Number of bytes to allocate
+   * @retval void* Pointer to the allocated memory block
+   * @retval nullptr If allocation fails
+   */
   static void* allocate(size_t size);
 
-  // Deallocate previously allocated memory
+  /**
+   * @brief Deallocate previously allocated memory
+   *
+   * Returns the memory block to the free list, merging with adjacent free blocks when possible.
+   *
+   * @param ptr Pointer to memory previously allocated with allocate()
+   */
   static void deallocate(void* ptr);
 
-  // Resize allocated memory
+  /**
+   * @brief Resize allocated memory
+   *
+   * Either returns the existing block if it's large enough, or allocates a new block,
+   * copies the data, and frees the old block.
+   *
+   * @param ptr Pointer to memory previously allocated with allocate(), or nullptr
+   * @param newSize New size in bytes
+   * @retval void* Pointer to the resized memory block
+   * @retval nullptr If reallocation fails
+   */
   static void* reallocate(void* ptr, size_t newSize);
 
-  // Get the total free memory
+  /**
+   * @brief Get the total free memory available in the buffer
+   *
+   * @retval size_t Total bytes available across all free blocks
+   */
   static size_t getTotalFreeMemory();
 
-  // Get the largest free block
+  /**
+   * @brief Get the size of the largest available free block
+   *
+   * @retval size_t Size in bytes of the largest contiguous free block
+   */
   static size_t getLargestFreeBlock();
 
  private:
+  /**
+   * @brief Structure representing a free memory block in the free list
+   *
+   * Each free block tracks its size and contains a pointer to the next free block.
+   * This creates a linked list of available memory regions.
+   */
   struct FreeBlock {
-    size_t size;
-    FreeBlock* next;
+    size_t size;     ///< Size of this free block in bytes
+    FreeBlock* next; ///< Pointer to the next free block in the list
   };
 
-  // Debug flag
+  /// Flag to enable/disable debug output
   static constexpr bool DEBUG = false;
 
-  // Size of the global buffer (change as needed)
+  /// Size of the global buffer in bytes
   static constexpr size_t BUFFER_SIZE = 4096;
 
-  // The global buffer
+  /// The global buffer storage area
   static uint8_t mGlobalBuffer[BUFFER_SIZE];
 
+  /// Head of the free block list
   static FreeBlock* mFreeList;
 };
+/** @} */
 }  // namespace uniot

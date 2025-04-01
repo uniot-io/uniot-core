@@ -25,11 +25,33 @@
 namespace uniot
 {
 
+/**
+ * @brief MQTT device implementation that delegates message handling to a callback function.
+ * @defgroup callback_mqtt_device Callback Device
+ * @ingroup mqtt_communication
+ *
+ * CallbackMQTTDevice extends the base MQTTDevice class by allowing the user to provide
+ * a custom handler function that will be called whenever an MQTT message is received.
+ * This enables flexible message processing without subclassing.
+ * @{
+ */
 class CallbackMQTTDevice : public MQTTDevice
 {
 public:
+  /**
+   * @brief Function type for MQTT message handlers.
+   *
+   * @param device Pointer to the MQTT device that received the message
+   * @param topic The MQTT topic the message was received on
+   * @param payload The message payload as bytes
+   */
   using Handler = std::function<void(MQTTDevice *device, const String &topic, const Bytes &payload)>;
 
+  /**
+   * @brief Constructs a CallbackMQTTDevice with the specified message handler.
+   *
+   * @param handler The callback function that will process incoming MQTT messages
+   */
   CallbackMQTTDevice(Handler handler)
       : MQTTDevice(),
         mHandler(handler)
@@ -37,12 +59,25 @@ public:
   }
 
 protected:
+  /**
+   * @brief Handles incoming MQTT messages by delegating to the callback function.
+   *
+   * This method overrides the base class implementation to log the topic and
+   * invoke the user-provided handler function.
+   *
+   * @param topic The MQTT topic the message was received on
+   * @param payload The message payload as bytes
+   */
   void handle(const String &topic, const Bytes &payload) override
   {
     UNIOT_LOG_DEBUG("topic: %s", topic.c_str());
     mHandler(this, topic, payload);
   }
 
+  /**
+   * @brief The user-provided message handler function.
+   */
   Handler mHandler;
 };
+/** @} */
 } // namespace uniot

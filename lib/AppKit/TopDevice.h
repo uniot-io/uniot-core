@@ -24,22 +24,62 @@
 #include <TaskScheduler.h>
 
 namespace uniot {
-
+/**
+ * @brief Device class for system monitoring and diagnostics
+ * @defgroup app-kit-top-device Table of Processes
+ * @ingroup app-kit
+ * @{
+ *
+ * TopDevice provides system monitoring functionality similar to the Unix 'top' command,
+ * exposing task statistics, memory usage, and system information through MQTT.
+ * This allows for remote monitoring of device performance and resource utilization.
+ */
 class TopDevice : public MQTTDevice {
  public:
+  /**
+   * @brief Construct a new TopDevice instance
+   *
+   * Initializes the TopDevice with default values and no scheduler attached.
+   */
   TopDevice()
       : MQTTDevice(),
         mpScheduler(nullptr) {}
 
+  /**
+   * @brief Set up MQTT topic subscriptions for device monitoring
+   *
+   * Subscribes to debug topics that trigger system information requests:
+   * - debug/top/ask: Request task and performance statistics
+   * - debug/mem/ask: Request memory usage information
+   *
+   * @override Implements MQTTDevice::syncSubscriptions
+   */
   virtual void syncSubscriptions() override {
     mTopicTopAsk = MQTTDevice::subscribeDevice("debug/top/ask");
     mTopicMemAsk = MQTTDevice::subscribeDevice("debug/mem/ask");
   }
 
+  /**
+   * @brief Associate a TaskScheduler with this monitoring device
+   *
+   * Links a TaskScheduler to enable task performance monitoring.
+   * The scheduler is required for the 'top' functionality to work.
+   *
+   * @param scheduler Reference to the TaskScheduler to monitor
+   */
   void setScheduler(const TaskScheduler& scheduler) {
     mpScheduler = &scheduler;
   }
 
+  /**
+   * @brief Handle incoming MQTT messages
+   *
+   * Routes incoming messages to the appropriate handler based on the topic.
+   *
+   * @param topic The MQTT topic of the received message
+   * @param payload The binary payload of the message
+   * @override Implements MQTTDevice::handle
+   */
   virtual void handle(const String& topic, const Bytes& payload) override {
     if (MQTTDevice::isTopicMatch(mTopicTopAsk, topic)) {
       handleTop();
@@ -51,6 +91,16 @@ class TopDevice : public MQTTDevice {
     }
   }
 
+  /**
+   * @brief Handle request for task and system performance data
+   *
+   * Collects and publishes information about:
+   * - All registered tasks (name, status, execution time)
+   * - Idle time of the system
+   * - Current timestamp and system uptime
+   *
+   * Data is sent via MQTT in CBOR format to the "debug/top" topic.
+   */
   void handleTop() {
     if (mpScheduler) {
       CBORObject packet;
@@ -59,8 +109,8 @@ class TopDevice : public MQTTDevice {
       mpScheduler->exportTasksInfo([&](const char* name, bool isAttached, uint64_t elapsedMs) {
         tasksElapsedMs += elapsedMs;
         tasksObj.putArray(name)
-            .append(isAttached)
-            .append(elapsedMs);
+            .append(isAttached)  // Whether the task is currently attached to the scheduler
+            .append(elapsedMs);  // Total execution time in milliseconds
       });
       auto idleMs = mpScheduler->getTotalElapsedMs() - tasksElapsedMs;
       packet.put("idle", idleMs);
@@ -71,6 +121,12 @@ class TopDevice : public MQTTDevice {
     }
   }
 
+  /**
+   * @brief Handle request for memory usage information
+   *
+   * Collects and publishes information about available free heap memory.
+   * Data is sent via MQTT in CBOR format to the "debug/mem" topic.
+   */
   void handleMem() {
     CBORObject packet;
     packet.put("available", static_cast<uint64_t>(ESP.getFreeHeap()));
@@ -78,9 +134,9 @@ class TopDevice : public MQTTDevice {
   }
 
  private:
-  const TaskScheduler* mpScheduler;
-  String mTopicTopAsk;
-  String mTopicMemAsk;
+  const TaskScheduler* mpScheduler;  ///< Pointer to the monitored task scheduler
+  String mTopicTopAsk;               ///< MQTT topic for task performance requests
+  String mTopicMemAsk;               ///< MQTT topic for memory usage requests
 };
-
+/** @} */
 }  // namespace uniot

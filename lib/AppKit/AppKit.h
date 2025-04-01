@@ -16,6 +16,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/** @cond */
+/**
+ * DO NOT DELETE THE "app-kit" GROUP DEFINITION BELOW.
+ * Used to create the Application Kit topic in the documentation. If you want to delete this file,
+ * please paste the group definition into another file and delete this one.
+ */
+/** @endcond */
+
+/**
+ * @defgroup app-kit Application Kit
+ * @brief Application Kit for Uniot Core
+ *
+ * This module provides the main application toolkit that integrates various components of the Uniot system.
+ * It manages network connections, MQTT communication, and device management.
+ */
+
 #pragma once
 
 #include <CallbackEventListener.h>
@@ -33,32 +49,86 @@
 #include <TopDevice.h>
 #include <unLisp.h>
 
+/** @cond */
+/**
+ * DO NOT DELETE THE FOLLOWING DESCRIPTION OF THE NAMESPACE.
+ * This is used to describe the namespace in the documentation. If you want to delete this file,
+ * please paste the namespace description into another file and delete this one.
+ */
+/** @endcond */
+
+/**
+ * @namespace uniot
+ * @brief Contains all classes and functions related to the Uniot Core.
+ */
 namespace uniot {
+/**
+ * @brief Main application toolkit that integrates various components of the Uniot system.
+ * @defgroup app-kit-main AppKit
+ * @ingroup app-kit
+ * @{
+ *
+ * AppKit is a singleton class that provides a unified interface for managing core system components:
+ * - Network connections via NetworkScheduler
+ * - MQTT communication via MQTTKit
+ * - Lisp interpreter integration via unLisp
+ * - Device management via TopDevice and LispDevice
+ *
+ * It implements ICoreEventBusConnectionKit for event bus integration and ISchedulerConnectionKit
+ * for task scheduling integration.
+ */
 class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit, public Singleton<AppKit> {
   friend class Singleton<AppKit>;
 
  public:
+  /**
+   * @struct NetworkControllerConfig
+   * @brief Configuration parameters for NetworkController
+   *
+   * This structure holds all parameters needed to configure the NetworkController component,
+   * including pin assignments and reboot behavior settings.
+   */
   struct NetworkControllerConfig {
-    uint8_t pinBtn = UINT8_MAX;
-    uint8_t activeLevelBtn = LOW;
-    uint8_t pinLed = UINT8_MAX;
-    uint8_t activeLevelLed = HIGH;
-    uint8_t maxRebootCount = 3;
-    uint32_t rebootWindowMs = 10000;
+    uint8_t pinBtn = UINT8_MAX;        ///< Button pin (UINT8_MAX means not used)
+    uint8_t activeLevelBtn = LOW;      ///< Active level for button (LOW or HIGH)
+    uint8_t pinLed = UINT8_MAX;        ///< LED pin (UINT8_MAX means not used)
+    uint8_t activeLevelLed = HIGH;     ///< Active level for LED (LOW or HIGH)
+    uint8_t maxRebootCount = 3;        ///< Maximum number of consecutive reboots
+    uint32_t rebootWindowMs = 10000;   ///< Time window in ms for counting reboots
   };
 
+  /**
+   * @brief Get the Lisp interpreter instance
+   * @retval unLisp& Reference to the unLisp instance
+   */
   unLisp &getLisp() {
     return unLisp::getInstance();
   }
 
+  /**
+   * @brief Get the MQTT communication kit instance
+   * @retval MQTTKit& Reference to the MQTTKit instance
+   */
   MQTTKit &getMQTT() {
     return mMQTT;
   }
 
+  /**
+   * @brief Get the device credentials
+   * @retval Credentials& Reference to the Credentials instance
+   */
   const Credentials &getCredentials() {
     return mCredentials;
   }
 
+  /**
+   * @brief Add all managed tasks to the scheduler
+   *
+   * Implements ISchedulerConnectionKit interface to register all component tasks
+   * with the provided scheduler.
+   *
+   * @param scheduler The TaskScheduler to add tasks to
+   */
   virtual void pushTo(TaskScheduler &scheduler) override {
     scheduler.push(mNetwork);
     scheduler.push(mMQTT);
@@ -73,6 +143,12 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     }
   }
 
+  /**
+   * @brief Initialize and attach all components
+   *
+   * Implements ISchedulerConnectionKit interface to initialize all components
+   * including primitives, network, MQTT, and device controllers.
+   */
   virtual void attach() override {
     _initPrimitives();
     mNetwork.attach();
@@ -90,6 +166,14 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     mLispDevice.runStoredCode();
   }
 
+  /**
+   * @brief Register all components with the event bus
+   *
+   * Implements ICoreEventBusConnectionKit interface to register all components
+   * with the provided event bus. Opens necessary data channels and registers entities.
+   *
+   * @param eventBus The CoreEventBus to register with
+   */
   virtual void registerWithBus(CoreEventBus &eventBus) override {
     eventBus.openDataChannel(NetworkScheduler::Channel::OUT_SSID, 1);
     eventBus.openDataChannel(unLisp::Channel::OUT_LISP, 5);
@@ -113,6 +197,14 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     }
   }
 
+  /**
+   * @brief Unregister all components from the event bus
+   *
+   * Implements ICoreEventBusConnectionKit interface to unregister all components
+   * from the provided event bus. Closes data channels and unregisters entities.
+   *
+   * @param eventBus The CoreEventBus to unregister from
+   */
   virtual void unregisterFromBus(CoreEventBus &eventBus) override {
     eventBus.closeDataChannel(NetworkScheduler::Channel::OUT_SSID);
     eventBus.closeDataChannel(unLisp::Channel::OUT_LISP);
@@ -134,6 +226,14 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     }
   }
 
+  /**
+   * @brief Configure the NetworkController using a config structure
+   *
+   * Convenience method to configure the NetworkController using a single config structure.
+   * Creates and initializes the NetworkController instance if not already configured.
+   *
+   * @param config The NetworkControllerConfig structure containing all parameters
+   */
   void configureNetworkController(const NetworkControllerConfig &config) {
     configureNetworkController(config.pinBtn,
                                config.activeLevelBtn,
@@ -143,6 +243,19 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
                                config.rebootWindowMs);
   }
 
+  /**
+   * @brief Configure the NetworkController with individual parameters
+   *
+   * Creates and initializes the NetworkController instance with the specified parameters
+   * if not already configured. Also links button click events to Lisp primitives.
+   *
+   * @param pinBtn Button pin (UINT8_MAX means not used)
+   * @param activeLevelBtn Active level for button (LOW or HIGH)
+   * @param pinLed LED pin (UINT8_MAX means not used)
+   * @param activeLevelLed Active level for LED (LOW or HIGH)
+   * @param maxRebootCount Maximum number of consecutive reboots
+   * @param rebootWindowMs Time window in ms for counting reboots
+   */
   void configureNetworkController(uint8_t pinBtn = UINT8_MAX,
                                   uint8_t activeLevelBtn = LOW,
                                   uint8_t pinLed = UINT8_MAX,
@@ -162,6 +275,12 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
   }
 
  private:
+  /**
+   * @brief Private constructor for singleton pattern
+   *
+   * Initializes all components including NetworkScheduler, MQTTKit, and event listeners.
+   * Calls initialization methods for MQTT, tasks and event listeners.
+   */
   AppKit()
       : mNetwork(mCredentials),
         mMQTT(mCredentials, [this](CBORObject &info) {
@@ -184,6 +303,12 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     _initListeners();
   }
 
+  /**
+   * @brief Initialize MQTT server connection and device subscriptions
+   *
+   * Sets up the MQTT server connection and adds devices to the MQTT kit.
+   * Synchronizes device subscriptions.
+   */
   inline void _initMqtt() {
     // TODO: should I move configs to the Credentials class?
     mMQTT.setServer("mqtt.uniot.io", 1883);
@@ -193,10 +318,21 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     mLispDevice.syncSubscriptions();
   }
 
+  /**
+   * @brief Initialize system tasks
+   *
+   * Placeholder for initializing additional tasks as needed.
+   */
   inline void _initTasks() {
     // TODO: init new tasks here
   }
 
+  /**
+   * @brief Initialize Lisp primitives
+   *
+   * Registers available primitives with the Lisp interpreter based on
+   * primitive registers.
+   */
   inline void _initPrimitives() {
     if (PrimitiveExpeditor::getRegisterManager().getRegisterLength(primitive::name::dwrite)) {
       getLisp().pushPrimitive(primitive::dwrite);
@@ -215,6 +351,12 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     }
   }
 
+  /**
+   * @brief Initialize event listeners
+   *
+   * Sets up event listeners for network and MQTT events. Handles connection
+   * state changes and logs relevant information.
+   */
   inline void _initListeners() {
     mpNetworkEventListener = MakeUnique<CoreCallbackEventListener>([&](int topic, int msg) {
       if (NetworkScheduler::CONNECTION == topic) {
@@ -267,13 +409,14 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     });
   }
 
-  Credentials mCredentials;
-  NetworkScheduler mNetwork;
-  MQTTKit mMQTT;
-  TopDevice mTopDevice;
-  LispDevice mLispDevice;
+  Credentials mCredentials;                             ///< Device credentials
+  NetworkScheduler mNetwork;                            ///< Network connection manager
+  MQTTKit mMQTT;                                        ///< MQTT communication manager
+  TopDevice mTopDevice;                                 ///< Top-level device manager
+  LispDevice mLispDevice;                               ///< Lisp interpreter device interface
 
-  UniquePointer<NetworkController> mpNetworkDevice;
-  UniquePointer<CoreCallbackEventListener> mpNetworkEventListener;
+  UniquePointer<NetworkController> mpNetworkDevice;     ///< Network control interface (optional)
+  UniquePointer<CoreCallbackEventListener> mpNetworkEventListener; ///< Network event listener
 };
+/** @} */
 }  // namespace uniot

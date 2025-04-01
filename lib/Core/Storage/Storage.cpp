@@ -20,6 +20,12 @@
 
 namespace uniot
 {
+/**
+ * Static member initialization
+ *
+ * sMounted: Tracks if filesystem is mounted (initially false)
+ * sInstancesCount: Tracks number of Storage instances (initially 0)
+ */
 bool Storage::sMounted = false;
 unsigned int Storage::sInstancesCount = 0;
 } // namespace uniot

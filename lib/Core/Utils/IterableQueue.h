@@ -20,17 +20,63 @@
 
 #include "ClearQueue.h"
 
+/**
+ * @brief A queue implementation with iteration capabilities
+ * @defgroup utils_iterablequeue IterableQueue
+ * @ingroup utils
+ *
+ * IterableQueue extends ClearQueue to provide functionality for iterating through
+ * the elements in the queue without removing them. This allows for queue traversal
+ * while maintaining the queue structure intact.
+ *
+ * @tparam T The type of elements stored in the queue
+ * @{
+ */
 template <typename T>
 class IterableQueue : public ClearQueue<T> {
  public:
+  /**
+   * @brief Initialize the iterator to the beginning of the queue
+   *
+   * Sets the current position to the head of the queue for iteration.
+   */
   void begin() const;
+
+  /**
+   * @brief Check if the iterator has reached the end of the queue
+   *
+   * @retval true If the iterator has reached the end (no more elements)
+   * @retval false If there are still elements to iterate through
+   */
   bool isEnd() const;
+
+  /**
+   * @brief Move to the next element and return the current element
+   *
+   * Advances the iterator to the next position and returns the value
+   * at the previous position.
+   *
+   * @retval T& The value of the current element before advancing
+   */
   const T& next() const;
+
+  /**
+   * @brief Access the current element without moving the iterator
+   *
+   * @retval T& The value at the current iterator position
+   */
   const T& current() const;
 
  protected:
+  /**
+   * @brief Pointer to the current node during iteration
+   *
+   * This mutable member allows modification within const methods
+   * to support iteration in const contexts.
+   */
   mutable typename ClearQueue<T>::pnode mCurrent;
 };
+/** @} */
 
 template <typename T>
 void IterableQueue<T>::begin() const {
