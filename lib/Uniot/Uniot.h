@@ -36,9 +36,11 @@ class UniotCore {
     mScheduler.push("event_bus", taskHandleEventBus);
     taskHandleEventBus->attach(eventBusTaskPeriod);
 
-    auto taskStoreDate = uniot::TaskScheduler::make(uniot::Date::getInstance());
-    mScheduler.push("store_date", taskStoreDate);
-    taskStoreDate->attach(storeDateTaskPeriod);
+    if (storeDateTaskPeriod > 0) {
+      auto taskStoreDate = uniot::TaskScheduler::make(uniot::Date::getInstance());
+      mScheduler.push("store_date", taskStoreDate);
+      taskStoreDate->attach(storeDateTaskPeriod);
+    }
   }
 
   void loop() {

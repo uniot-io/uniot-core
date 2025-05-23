@@ -240,6 +240,10 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
             });
             break;
 
+          case NetworkScheduler::DISCONNECTING:
+            UNIOT_LOG_DEBUG("AppKit Subscriber, DISCONNECTING");
+            break;
+
           case NetworkScheduler::DISCONNECTED:
             UNIOT_LOG_DEBUG("AppKit Subscriber, DISCONNECTED");
             break;

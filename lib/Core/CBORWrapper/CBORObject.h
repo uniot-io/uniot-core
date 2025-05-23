@@ -69,6 +69,10 @@ class CBORObject {
     return mErr;
   }
 
+  bool hasError() {
+    return mErr.err != CN_CBOR_NO_ERROR;
+  }
+
   Array putArray(int key) {
     auto existing = cn_cbor_mapget_int(mpMapNode, key);
     if (existing && existing->type == CN_CBOR_ARRAY) {

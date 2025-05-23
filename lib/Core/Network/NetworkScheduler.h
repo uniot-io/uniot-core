@@ -26,6 +26,7 @@
     #include <ESPmDNS.h>
 #endif
 
+#include <WiFiNetworkScan.h>
 #include <Patches.h>
 #include <Common.h>
 #include <Credentials.h>
@@ -35,18 +36,15 @@
 #include <ConfigCaptivePortal.h>
 #include <WifiStorage.h>
 #include <config.min.html.gz.h>
+#include <MicroJSON.h>
 
 namespace uniot {
-  const char text_html[]           PROGMEM = "text/html";
-  const char text[]                PROGMEM = "text";
-
-//TODO: improve by public methods as needed
   class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
   {
   public:
     enum Channel { OUT_SSID = FOURCC(ssid) };
     enum Topic { CONNECTION = FOURCC(netw) };
-    enum Msg { FAILED = 0, SUCCESS, CONNECTING, DISCONNECTED, ACCESS_POINT };
+    enum Msg { FAILED = 0, SUCCESS, CONNECTING, DISCONNECTING, DISCONNECTED, ACCESS_POINT };
 
     NetworkScheduler(Credentials &credentials)
         : mpCredentials(&credentials),
@@ -58,19 +56,16 @@ namespace uniot {
     {
       mApName = "UNIOT-" + String(mpCredentials->getShortDeviceId(), HEX);
       mApName.toUpperCase();
+      mCanScan = true;
+      mLastSaveResult = -1;
 
       // default wifi persistent storage brings unexpected behavior, I turn it off
       WiFi.persistent(false);
       WiFi.setAutoConnect(false);
       WiFi.setAutoReconnect(false);
+      WiFi.setHostname(mApName.c_str());
 
-#if defined(UNIOT_MODE_AP_STA)
-      WiFi.mode(WIFI_AP_STA);
-#else
-      WiFi.mode(WIFI_STA);
-#endif
       _initTasks();
-      _initServerCallbacks();
     }
 
     virtual void pushTo(TaskScheduler &scheduler) override {
@@ -78,162 +73,166 @@ namespace uniot {
       scheduler.push("server_serve", mTaskServe);
       scheduler.push("server_stop", mTaskStop);
       scheduler.push("ap_config", mTaskConfigAp);
+      scheduler.push("ap_stop", mTaskStopAp);
       scheduler.push("sta_connect", mTaskConnectSta);
       scheduler.push("sta_connecting", mTaskConnecting);
       scheduler.push("wifi_monitor", mTaskMonitoring);
       scheduler.push("wifi_scan", mTaskScan);
-#if defined(UNIOT_MDNS)
-      scheduler.push("mdns", mTaskMDNS);
+#if defined(ESP32)
+      scheduler.push("wifi_scan_complete", mWifiScan.getTask());
 #endif
     }
 
     virtual void attach() override {
       mWifiStorage.restore();
       if(mWifiStorage.isCredentialsValid()) {
-        mTaskConnectSta->attach(500, 1);
+        mTaskConnectSta->once(500);
+      } else {
+        mTaskConfigAp->once(500);
       }
-#if defined(UNIOT_MODE_AP_STA)
-      mTaskConfigAp->attach(500, 1);
-#else
-      else {
-        mTaskConfigAp->attach(500, 1);
-      }
-#endif
     }
 
     void forget() {
       UNIOT_LOG_DEBUG("Forget credentials: %s", mWifiStorage.getSsid().c_str());
       mWifiStorage.clean();
-      mTaskConfigAp->attach(500, 1);
+      CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::DISCONNECTING);
+      mTaskConfigAp->once(500);
     }
 
     bool reconnect() {
       if(mWifiStorage.isCredentialsValid()) {
-        mTaskConnectSta->attach(500, 1);
+        CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::DISCONNECTING);
+        mTaskConnectSta->once(500);
         return true;
       }
       return false;
     }
 
   private:
+    enum ACTIONS {
+      INVALID = 0,
+      STATUS = 100,
+      SAVE,
+      SCAN,
+      ASK
+    };
+
     void _initTasks() {
       mTaskStart = TaskScheduler::make([this](SchedulerTask &self, short t) {
+        mTaskStop->detach();
         if(mConfigServer.start()) {
+          _initServerCallbacks();
           mTaskServe->attach(10);
+        } else {
+          UNIOT_LOG_WARN("Start server failed. Restarting...");
+          self.once(1000);
         }
       });
       mTaskServe = TaskScheduler::make(mConfigServer);
       mTaskStop = TaskScheduler::make([this](SchedulerTask &self, short t) {
+        static bool wsClosed = false;
+        UNIOT_LOG_DEBUG("Stop server, state: %d", wsClosed);
+        // 1: close websocket
+        // 2: stop access point
+        // 3: stop server
+        if(!wsClosed) {
+          mConfigServer.wsCloseAll();
+          wsClosed = true;
+          self.once(10000);
+          return;
+        }
         mTaskServe->detach();
         mConfigServer.stop();
         mConfigServer.reset();
+        wsClosed = false;
+        mLastNetworks = static_cast<const char *>(nullptr); // invalidate String
       });
 
       mTaskConfigAp = TaskScheduler::make([this](SchedulerTask &self, short t) {
-#if defined(UNIOT_MODE_AP_STA)
-        if(WiFi.getMode() != WIFI_AP_STA) {
-          WiFi.mode(WIFI_AP_STA);
-        }
-#else
-        WiFi.disconnect(true);
-        WiFi.softAPdisconnect(true);
-#endif
-
+        WiFi.disconnect(true, true);
+        mTaskStopAp->detach();
         if( WiFi.softAPConfig(mConfigServer.ip(), mConfigServer.ip(),  mApSubnet)
           && WiFi.softAP(mApName.c_str()))
         {
 #if defined(ESP32) && defined(ENABLE_LOWER_WIFI_TX_POWER)
           WiFi.setTxPower(WIFI_TX_POWER_LEVEL);
 #endif
-          mTaskStart->attach(500, 1);
+          mTaskStart->once(500);
           mTaskScan->once(500);
           CoreEventEmitter::sendDataToChannel(Channel::OUT_SSID, Bytes(mApName));
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::ACCESS_POINT);
         } else {
-          UNIOT_LOG_WARN("NetworkScheduler, mTaskConfigAp failed");
+          UNIOT_LOG_WARN("Start server failed");
           mTaskConfigAp->attach(500, 1);
         }
       });
-      mTaskConnectSta = TaskScheduler::make([this](SchedulerTask &self, short t) {
-#if defined(UNIOT_MODE_AP_STA)
-        WiFi.disconnect(false, true);
-        if(WiFi.getMode() != WIFI_AP_STA) {
-          WiFi.mode(WIFI_AP_STA);
-        }
-#else
-        WiFi.disconnect(true, true);
-        WiFi.softAPdisconnect(true);
-#endif
+      mTaskStopAp = TaskScheduler::make([this](SchedulerTask &self, short t) {
+        WiFi.softAPdisconnect(true); // check with 8266
+      });
 
-        WiFi.setHostname(mApName.c_str());
+      mTaskConnectSta = TaskScheduler::make([this](SchedulerTask &self, short t) {
+        WiFi.disconnect(false, true);
         bool connect = WiFi.begin(mWifiStorage.getSsid().c_str(), mWifiStorage.getPassword().c_str()) != WL_CONNECT_FAILED;
         if (connect)
         {
 #if defined(ESP32) && defined(ENABLE_LOWER_WIFI_TX_POWER)
           WiFi.setTxPower(WIFI_TX_POWER_LEVEL);
 #endif
-
-#if not defined(UNIOT_MODE_AP_STA)
-          mTaskServe->detach();
-          mTaskScan->detach();
-#endif
-          mTaskConnecting->attach(100, 100);
+          mTaskConnecting->attach(100, 50);
           CoreEventEmitter::sendDataToChannel(Channel::OUT_SSID, Bytes(mWifiStorage.getSsid()));
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::CONNECTING);
+          mCanScan = false;
+          mLastSaveResult = -1;
         }
       });
       mTaskConnecting = TaskScheduler::make([this](SchedulerTask &self, short times) {
-        auto __processFailure = [this]() {
-          const int triesBeforeGivingUp = 3;
+        auto __processFailure = [this](int triesBeforeGivingUp = 3) {
           static int tries = 0;
           if(++tries < triesBeforeGivingUp) {
             UNIOT_LOG_INFO("Tries to connect until give up is %d", triesBeforeGivingUp - tries);
             mTaskConnectSta->attach(500, 1);
           } else {
             tries = 0;
-#if not defined(UNIOT_MODE_AP_STA)
-            mTaskConfigAp->attach(500, 1);
-#endif
             CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
+            mCanScan = true;
+            mLastSaveResult = 0;
           }
         };
 
         switch(WiFi.status()){
           case WL_CONNECTED:
-          mTaskConnecting->detach();
-#if not defined(UNIOT_MODE_AP_STA)
-          mTaskStop->attach(500, 1);
-#endif
-          mTaskMonitoring->attach(2000);
+          self.detach();
+          mTaskMonitoring->attach(200);
           mWifiStorage.store();
-          mpCredentials->store(); // NOTE: it is stored each time it is connected to the network
-
-#if defined(UNIOT_MDNS)
-          // Start mDNS responder to enable UNIOT-XXXX.local domain access
-          if (MDNS.begin(mApName.c_str())) {
-            mTaskMDNS->attach(100);
-            MDNS.addService("http", "tcp", 80);
-            UNIOT_LOG_INFO("mDNS started: %s.local", mApName.c_str());
-          } else {
-            UNIOT_LOG_WARN("Failed to start mDNS");
+          if (mpCredentials->isOwnerChanged()) {
+            mpCredentials->store();
           }
-#endif
+
+          mCanScan = true;
+          mLastSaveResult = 1;
+          mTaskStop->once(30000);
+          mTaskStopAp->once(35000);
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::SUCCESS);
           break;
 
           case WL_NO_SSID_AVAIL:
           case WL_CONNECT_FAILED:
-          mTaskConnecting->detach();
+          self.detach();
           __processFailure();
           break;
-
+#if defined(ESP8266)
+          case WL_WRONG_PASSWORD:
+          self.detach();
+          __processFailure(1);
+          break;
+#endif
+          case WL_IDLE_STATUS:
           case WL_DISCONNECTED:
           if(!times) {
             __processFailure();
           }
           break;
 
-          case WL_IDLE_STATUS:
           default:
           break;
         }
@@ -241,74 +240,56 @@ namespace uniot {
       mTaskMonitoring = TaskScheduler::make([this](SchedulerTask &self, short times) {
         if(WiFi.status() != WL_CONNECTED) {
           mTaskMonitoring->detach();
-
-#if defined(UNIOT_MDNS)
-          // Stop mDNS when disconnected from WiFi
-          mTaskMDNS->detach();
-          MDNS.end();
-#endif
-
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::DISCONNECTED);
         }
       });
 
-#if defined(UNIOT_MDNS)
-      mTaskMDNS = TaskScheduler::make([this] (SchedulerTask &self, short times) {
-        MDNS.update();
-      });
-#endif
-
       mTaskScan = TaskScheduler::make([this] (SchedulerTask &self, short times) {
-        WiFi.scanNetworksAsync([this](int n) {
-          mNetworks = "[";
-          for (auto i = 0; i < n; ++i) {
-            mNetworks += '[';
-            mNetworks += '"' + WiFi.SSID(i) + '"' + ',';
-            mNetworks += WiFi.RSSI(i);
-            mNetworks += ',';
-            mNetworks += static_cast<int>(WiFi.encryptionType(i) == ENC_TYPE_NONE);
-            mNetworks += ']';
-            if (i < n - 1) {
-              mNetworks += ',';
+        static auto __broadcastNets = [this](const String &netJsonArray) {
+          String nets;
+          JSON::Object(nets)
+              .put("nets", netJsonArray, false)
+              .close();
+          mConfigServer.wsTextAll(nets);
+          delay(50);  // to allow for all clients to receive the message (relevant for ESP32)
+        };
+        if (mCanScan) {
+          mWifiScan.scanNetworksAsync([this](int n) {
+            mLastNetworks = static_cast<const char *>(nullptr); // invalidate String
+            JSON::Array jsonNets(mLastNetworks);
+            for (auto i = 0; i < n; ++i) {
+              jsonNets.appendArray()
+                  .append(WiFi.BSSIDstr(i))
+                  .append(WiFi.SSID(i))
+                  .append(WiFi.RSSI(i))
+                  .append(mWifiScan.isSecured(WiFi.encryptionType(i)))
+                  .close();
             }
-          }
-          mNetworks += ']';
-          WiFi.scanDelete();
-          UNIOT_LOG_DEBUG("Networks: %d", n);
-          mTaskScan->once(5000);
-        });
+            jsonNets.close();
+            WiFi.scanDelete();
+            __broadcastNets(mLastNetworks);
+          });
+        } else {
+          __broadcastNets(mLastNetworks);
+        }
       });
     }
 
     void _initServerCallbacks() {
-      mConfigServer.get()->onNotFound([](AsyncWebServerRequest *request) {
-        auto response = request->beginResponse(307);
-        response->addHeader("Location", "/");
-        request->send(response);
-      });
+      auto server = mConfigServer.get();
+      if (server) {
+        server->onNotFound([](AsyncWebServerRequest *request) {
+          auto response = request->beginResponse(307);
+          response->addHeader("Location", "/");
+          request->send(response);
+        });
 
-      mConfigServer.get()->on("/", [this](AsyncWebServerRequest *request) {
-        auto response = request->beginResponse_P(200, "text/html", CONFIG_MIN_HTML_GZ, CONFIG_MIN_HTML_GZ_LENGTH, nullptr);
-        response->addHeader("Content-Encoding", "gzip");
-        request->send(response);
-      });
-
-      mConfigServer.get()->on("/scan", [this](AsyncWebServerRequest *request) {
-        UNIOT_LOG_DEBUG("Networks: %s", mNetworks.c_str());
-        request->send(200, "text", mNetworks);
-      });
-
-      mConfigServer.get()->on("/config", [this](AsyncWebServerRequest *request) {
-        mWifiStorage.setCredentials(request->arg("ssid"), request->arg("pass"));
-        if(mWifiStorage.isCredentialsValid()) {
-          mTaskConnectSta->attach(500, 1);
-          mpCredentials->setOwnerId(request->arg("acc"));
-        }
-
-        auto response = request->beginResponse(307);
-        response->addHeader("Location", "/");
-        request->send(response);
-      });
+        server->on("/", [this](AsyncWebServerRequest *request) {
+          auto response = request->beginResponse(200, "text/html", CONFIG_MIN_HTML_GZ, CONFIG_MIN_HTML_GZ_LENGTH, nullptr);
+          response->addHeader("Content-Encoding", "gzip");
+          request->send(response);
+        });
+      }
     }
 
     void _handleWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
@@ -322,18 +303,64 @@ namespace uniot {
           UNIOT_LOG_INFO("WebSocket client #%u disconnected", client->id());
           break;
         case WS_EVT_DATA:
-          _handleWebSocketMessage(arg, data, len);
+          _handleWebSocketMessage(client->id(), arg, data, len);
           break;
-        case WS_EVT_PONG:
-        case WS_EVT_ERROR:
+        default:
           break;
       }
     }
 
-    void _handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
-      AwsFrameInfo *info = (AwsFrameInfo *)arg;
-      if (info->opcode == WS_TEXT) {
-        String msg = Bytes(data, len).toString();
+    void _handleWebSocketMessage(uint32_t clientId, void *arg, uint8_t *data, size_t len) {
+      auto *info = (AwsFrameInfo *)arg;
+      if (info->opcode == WS_BINARY) {
+        CBORObject msg(Bytes(data, len));
+        if (!msg.hasError()) {
+          auto action = msg.getInt("action");
+          if (action != ACTIONS::INVALID) {
+            switch (action) {
+              case ACTIONS::STATUS: {
+                String status;
+                JSON::Object(status)
+                    .put("id", mpCredentials->getDeviceId())
+                    .put("acc", mpCredentials->getOwnerId())
+                    .put("nets", mLastNetworks.length() ? mLastNetworks : "[]", false)
+                    .put("homeNet", WiFi.isConnected() ? WiFi.SSID() : "")
+                    .close();
+                mConfigServer.wsTextAll(status);
+                break;
+              }
+              case ACTIONS::SAVE: {
+                mWifiStorage.setCredentials(msg.getString("ssid"), msg.getString("pass"));
+                if(mWifiStorage.isCredentialsValid()) {
+                  mTaskConnectSta->once(500);
+                  mpCredentials->setOwnerId(msg.getString("acc"));
+                  UNIOT_LOG_DEBUG("Is owner changed: %d", mpCredentials->isOwnerChanged());
+                }
+                break;
+              }
+              case ACTIONS::SCAN: {
+                mTaskScan->once(1000);
+                break;
+              }
+              case ACTIONS::ASK: {
+                if (mLastSaveResult > -1) {
+                  String success;
+                  JSON::Object(success)
+                    .put("success", mLastSaveResult)
+                    .close();
+                  mConfigServer.wsText(clientId, success);
+                }
+                break;
+              }
+              default:
+                break;
+            }
+          } else {
+            UNIOT_LOG_WARN("WebSocket message is not a valid action");
+          }
+        } else {
+          UNIOT_LOG_WARN("WebSocket message is not a valid CBOR");
+        }
       }
     }
 
@@ -344,18 +371,24 @@ namespace uniot {
     IPAddress mApSubnet;
     ConfigCaptivePortal mConfigServer;
 
+    String mLastNetworks;
+    int8_t mLastSaveResult;
+    bool mCanScan;
+
     TaskScheduler::TaskPtr mTaskStart;
     TaskScheduler::TaskPtr mTaskServe;
     TaskScheduler::TaskPtr mTaskStop;
     TaskScheduler::TaskPtr mTaskConfigAp;
+    TaskScheduler::TaskPtr mTaskStopAp;
     TaskScheduler::TaskPtr mTaskConnectSta;
     TaskScheduler::TaskPtr mTaskConnecting;
     TaskScheduler::TaskPtr mTaskMonitoring;
     TaskScheduler::TaskPtr mTaskScan;
-    String mNetworks;
 
-#if defined(UNIOT_MDNS)
-    TaskScheduler::TaskPtr mTaskMDNS;
+#if defined(ESP32)
+    ESP32WifiScan mWifiScan;
+#elif defined(ESP8266)
+    ESP8266WifiScan mWifiScan;
 #endif
   };
-}
+} // namespace uniot

@@ -20,7 +20,6 @@
 
 #include <Common.h>
 #include <DNSServer.h>
-
 #include <ESPAsyncWebServer.h>
 #include <IExecutor.h>
 
@@ -30,15 +29,26 @@
 #define DOMAIN_NAME "*"
 
 namespace uniot {
+class DetailedAsyncWebServer : public AsyncWebServer {
+ public:
+  DetailedAsyncWebServer(uint16_t port) : AsyncWebServer(port) {}
+
+  uint8_t status() {
+    return _server.status();
+  }
+};
+
 class ConfigCaptivePortal : public IExecutor {
  public:
   ConfigCaptivePortal(const IPAddress& apIp, AwsEventHandler wsHandler = nullptr)
       : mIsStarted(false),
         mApIp(apIp),
         mpDnsServer(new DNSServer()),
-        mpWebServer(new AsyncWebServer(HTTP_PORT)),
+        mpWebServer(new DetailedAsyncWebServer(HTTP_PORT)),
         mpWebSocket(new AsyncWebSocket(WS_URL)),
-        mWebSocketHandler(wsHandler) {}
+        mWebSocketHandler(wsHandler) {
+    mpWebServer->addHandler(mpWebSocket.get());
+  }
 
   bool start() {
     if (!mIsStarted) {
@@ -46,10 +56,15 @@ class ConfigCaptivePortal : public IExecutor {
       mpDnsServer->setErrorReplyCode(DNSReplyCode::ServerFailure);
       if (mpDnsServer->start(DNS_PORT, DOMAIN_NAME, mApIp)) {
         if (mWebSocketHandler) {
+          mpWebSocket->enable(true);
           mpWebSocket->onEvent(mWebSocketHandler);
-          mpWebServer->addHandler(mpWebSocket.get());
         }
         mpWebServer->begin();
+        auto status = mpWebServer->status();
+        if (status == 0) {
+          mpWebServer->end();
+          return false;
+        }
         return mIsStarted = true;
       }
       return false;
@@ -63,6 +78,7 @@ class ConfigCaptivePortal : public IExecutor {
       // TODO: fix, pull request
       mpDnsServer->stop();
       mpWebServer->end();
+      // mpWebServer->removeHandler(mpWebSocket.get());
       mpWebSocket->closeAll();
       mpWebSocket->cleanupClients();
       mIsStarted = false;
@@ -80,14 +96,38 @@ class ConfigCaptivePortal : public IExecutor {
     return mpWebServer.get();
   }
 
+  void wsTextAll(const String& message) {
+    if (mpWebSocket) {
+      mpWebSocket->textAll(message);
+    }
+  }
+
+  void wsText(uint32_t clientId, const String& message) {
+    if (mpWebSocket) {
+      mpWebSocket->text(clientId, message);
+    }
+  }
+
+  void wsCloseAll() {
+    if (mpWebSocket) {
+      mpWebSocket->enable(false);
+      mpWebSocket->closeAll();
+      mpWebSocket->cleanupClients();
+    }
+  }
+
   inline const IPAddress& ip() const {
     return mApIp;
   }
 
   virtual void execute(short _) override {
     if (mIsStarted) {
-      mpDnsServer->processNextRequest();
-      mpWebSocket->cleanupClients();
+      if (mpDnsServer) {
+        mpDnsServer->processNextRequest();
+      }
+      if (mpWebSocket) {
+        mpWebSocket->cleanupClients();
+      }
     }
   }
 
@@ -96,7 +136,7 @@ class ConfigCaptivePortal : public IExecutor {
 
   IPAddress mApIp;
   UniquePointer<DNSServer> mpDnsServer;
-  UniquePointer<AsyncWebServer> mpWebServer;
+  UniquePointer<DetailedAsyncWebServer> mpWebServer;
   UniquePointer<AsyncWebSocket> mpWebSocket;
   AwsEventHandler mWebSocketHandler;
 };
