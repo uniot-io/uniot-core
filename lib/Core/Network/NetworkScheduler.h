@@ -57,6 +57,7 @@ namespace uniot {
       mApName = "UNIOT-" + String(mpCredentials->getShortDeviceId(), HEX);
       mApName.toUpperCase();
       mCanScan = true;
+      mApEnabled = false;
       mLastSaveResult = -1;
 
       // default wifi persistent storage brings unexpected behavior, I turn it off
@@ -94,6 +95,10 @@ namespace uniot {
     }
 
     void config() {
+      if (_tryToRecoverAp()) {
+        UNIOT_LOG_DEBUG("Config already in progress. AP recovered");
+        return;
+      }
       mTaskConfigAp->once(100);
     }
 
@@ -108,6 +113,11 @@ namespace uniot {
       if(mWifiStorage.isCredentialsValid()) {
         CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::DISCONNECTING);
         mTaskConnectSta->once(500);
+
+        if (_tryToRecoverAp()) {
+          UNIOT_LOG_DEBUG("Reconnecting while AP is enabled. AP recovered");
+        }
+
         return true;
       }
       return false;
@@ -127,6 +137,7 @@ namespace uniot {
         mTaskStop->detach();
         if(mConfigServer.start()) {
           _initServerCallbacks();
+          mConfigServer.wsEnable(true); // Ensure that WS are enabled after disabling them in "Step 1 of Stopping Configuration" during the AP recovery process
           mTaskServe->attach(10);
         } else {
           UNIOT_LOG_WARN("Start server failed. Restarting...");
@@ -143,12 +154,11 @@ namespace uniot {
         if(!wsClosed) {
           mConfigServer.wsCloseAll();
           wsClosed = true;
-          self.once(10000);
+          self.once(10000); // Stopping Configuration. Step 3. Carefully change the deferrals.
           return;
         }
         mTaskServe->detach();
         mConfigServer.stop();
-        mConfigServer.reset();
         wsClosed = false;
         mLastNetworks = static_cast<const char *>(nullptr); // invalidate String
       });
@@ -164,7 +174,8 @@ namespace uniot {
 #endif
           mTaskStart->once(500);
           mTaskScan->once(500);
-          mTaskAvailabilityCheck->attach(5000);
+          mTaskAvailabilityCheck->attach(10000);
+          mApEnabled = true;
           CoreEventEmitter::sendDataToChannel(Channel::OUT_SSID, Bytes(mApName));
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::ACCESS_POINT);
         } else {
@@ -173,6 +184,7 @@ namespace uniot {
         }
       });
       mTaskStopAp = TaskScheduler::make([this](SchedulerTask &self, short t) {
+        mApEnabled = false;
         WiFi.softAPdisconnect(true); // check with 8266
       });
 
@@ -189,6 +201,11 @@ namespace uniot {
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::CONNECTING);
           mCanScan = false;
           mLastSaveResult = -1;
+        } else {
+          mTaskConnecting->detach();
+          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
+          mCanScan = true;
+          mLastSaveResult = 0;
         }
       });
       mTaskConnecting = TaskScheduler::make([this](SchedulerTask &self, short times) {
@@ -199,6 +216,7 @@ namespace uniot {
             mTaskConnectSta->attach(500, 1);
           } else {
             tries = 0;
+            mWifiStorage.restore();
             CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
             mCanScan = true;
             mLastSaveResult = 0;
@@ -216,8 +234,8 @@ namespace uniot {
 
           mCanScan = true;
           mLastSaveResult = 1;
-          mTaskStop->once(30000);
-          mTaskStopAp->once(35000);
+          mTaskStop->once(30000); // Stopping Configuration. Step 1. Carefully change the deferrals.
+          mTaskStopAp->once(35000); // Stopping Configuration. Step 2. Carefully change the deferrals.
           mTaskAvailabilityCheck->detach();
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::SUCCESS);
           break;
@@ -235,12 +253,14 @@ namespace uniot {
 #endif
           case WL_IDLE_STATUS:
           case WL_DISCONNECTED:
+          case WL_CONNECTION_LOST:
           if(!times) {
             __processFailure();
           }
           break;
 
           default:
+          UNIOT_LOG_WARN("Unexpected WiFi status: %d", WiFi.status());
           break;
         }
       });
@@ -282,12 +302,20 @@ namespace uniot {
       });
 
       mTaskAvailabilityCheck = TaskScheduler::make([this](SchedulerTask &self, short times) {
+        static int scanInProgressFuse = 0;
+        if (scanInProgressFuse-- > 0) {
+          UNIOT_LOG_INFO("Availability check skipped, scan in progress");
+          return;
+        }
+
         if (mCanScan &&
             !mConfigServer.wsClientsActive() &&
             mWifiStorage.isCredentialsValid()) {
           UNIOT_LOG_INFO("Checking availability of the network [%s]", mWifiStorage.getSsid().c_str());
+          scanInProgressFuse = 3;
 
           mWifiScan.scanNetworksAsync([&](int n) {
+            scanInProgressFuse = 0;
             if (self.isAttached() &&
                 mCanScan &&
                 !mConfigServer.wsClientsActive() &&
@@ -312,9 +340,10 @@ namespace uniot {
       auto server = mConfigServer.get();
       if (server) {
         server->onNotFound([](AsyncWebServerRequest *request) {
-          auto response = request->beginResponse(307);
-          response->addHeader("Location", "/");
-          request->send(response);
+          // auto response = request->beginResponse(307);
+          // response->addHeader("Location", "/");
+          // request->send(response);
+          request->redirect("http://uniot.local/");
         });
 
         server->on("/", [this](AsyncWebServerRequest *request) {
@@ -397,6 +426,18 @@ namespace uniot {
       }
     }
 
+    bool _tryToRecoverAp() {
+      if (mApEnabled) {
+        // mTaskStop->detach();
+        mTaskStart->once(100);
+        mTaskStopAp->detach();
+        mConfigServer.wsEnable(true);
+        mTaskAvailabilityCheck->attach(10000);
+        return true;
+      }
+      return false;
+    }
+
     Credentials *mpCredentials;
     WifiStorage mWifiStorage;
 
@@ -407,6 +448,7 @@ namespace uniot {
     String mLastNetworks;
     int8_t mLastSaveResult;
     bool mCanScan;
+    bool mApEnabled;
 
     TaskScheduler::TaskPtr mTaskStart;
     TaskScheduler::TaskPtr mTaskServe;

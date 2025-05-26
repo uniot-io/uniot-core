@@ -22,11 +22,17 @@
 #include <DNSServer.h>
 #include <ESPAsyncWebServer.h>
 #include <IExecutor.h>
+#ifdef ESP8266
+#include <ESP8266mDNS.h>
+#else
+#include <ESPmDNS.h>
+#endif
 
 #define DNS_PORT 53
 #define HTTP_PORT 80
 #define WS_URL "/ws"
 #define DOMAIN_NAME "*"
+#define MDNS_HOSTNAME "uniot"
 
 namespace uniot {
 class DetailedAsyncWebServer : public AsyncWebServer {
@@ -42,6 +48,7 @@ class ConfigCaptivePortal : public IExecutor {
  public:
   ConfigCaptivePortal(const IPAddress& apIp, AwsEventHandler wsHandler = nullptr)
       : mIsStarted(false),
+        mMdnsStarted(false),
         mApIp(apIp),
         mpDnsServer(new DNSServer()),
         mpWebServer(new DetailedAsyncWebServer(HTTP_PORT)),
@@ -53,7 +60,7 @@ class ConfigCaptivePortal : public IExecutor {
 
   bool start() {
     if (!mIsStarted) {
-      mpDnsServer->setTTL(300);
+      mpDnsServer->setTTL(30);
       mpDnsServer->setErrorReplyCode(DNSReplyCode::ServerFailure);
       if (mpDnsServer->start(DNS_PORT, DOMAIN_NAME, mApIp)) {
         if (mWebSocketHandler) {
@@ -69,6 +76,12 @@ class ConfigCaptivePortal : public IExecutor {
           mpWebServer->end();
           return false;
         }
+
+        if (MDNS.begin(MDNS_HOSTNAME)) {
+          MDNS.addService("http", "tcp", HTTP_PORT);
+          mMdnsStarted = true;
+        }
+
         return mIsStarted = true;
       }
       return false;
@@ -78,22 +91,20 @@ class ConfigCaptivePortal : public IExecutor {
 
   void stop() {
     if (mIsStarted) {
+      if (mMdnsStarted) {
+        MDNS.end();
+        mMdnsStarted = false;
+      }
       // DNSServer has problem with memory deallocation when stop() called
       // TODO: fix, pull request
       mpDnsServer->stop();
+      mpDnsServer.reset(new DNSServer());
       mpWebServer->end();
       // mpWebServer->removeHandler(mpWebSocket.get());
       mpWebSocket->closeAll();
       mpWebSocket->cleanupClients();
       mIsStarted = false;
     }
-  }
-
-  void reset() {
-    mpDnsServer.reset(new DNSServer());
-    // mpWebServer.reset(new AsyncWebServer(HTTP_PORT));
-    // mpWebSocket.reset(new AsyncWebSocket(WS_URL));
-    mIsStarted = false;
   }
 
   AsyncWebServer* get() {
@@ -120,6 +131,12 @@ class ConfigCaptivePortal : public IExecutor {
     }
   }
 
+  void wsEnable(bool enable) {
+    if (mpWebSocket) {
+      mpWebSocket->enable(enable);
+    }
+  }
+
   bool wsClientsActive(unsigned long window = 30000) const {
     auto timeSinceLastSeen = millis() - mWsClientLastSeen;
     return (mpWebSocket && mpWebSocket->count() > 0 && timeSinceLastSeen < window);
@@ -137,11 +154,17 @@ class ConfigCaptivePortal : public IExecutor {
       if (mpWebSocket) {
         mpWebSocket->cleanupClients();
       }
+#ifdef ESP8266
+      if (mMdnsStarted) {
+        MDNS.update();
+      }
+#endif
     }
   }
 
  private:
   bool mIsStarted;
+  bool mMdnsStarted;
 
   IPAddress mApIp;
   UniquePointer<DNSServer> mpDnsServer;
