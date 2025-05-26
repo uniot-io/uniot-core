@@ -94,7 +94,9 @@ namespace uniot {
     }
 
     void config() {
-      mTaskConfigAp->once(100);
+      if(!mTaskConfigAp->isAttached() || !mTaskStopAp->isAttached()) {
+        mTaskConfigAp->once(100);
+      }
     }
 
     void forget() {
@@ -311,8 +313,23 @@ namespace uniot {
     void _initServerCallbacks() {
       auto server = mConfigServer.get();
       if (server) {
+        server->on("/hotspot-detect.html", HTTP_GET, [](AsyncWebServerRequest *request){
+          request->send(200, "text/html", "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>");
+        });
+        server->on("/library/test/success.html", HTTP_GET, [](AsyncWebServerRequest *request){
+          request->send(200, "text/html", "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>");
+        });
+        server->on("/generate_204", HTTP_GET, [](AsyncWebServerRequest *request){
+          request->send(200, "text/plain", "No Content");
+        });
+        server->on("/ncsi.txt", HTTP_GET, [](AsyncWebServerRequest *request){
+          request->send(200, "text/plain", "Microsoft NCSI");
+        });
+        server->on("/connecttest.txt", HTTP_GET, [](AsyncWebServerRequest *request){
+          request->send(200, "text/plain", "Microsoft Connect Test");
+        });
         server->onNotFound([](AsyncWebServerRequest *request) {
-          auto response = request->beginResponse(307);
+          auto response = request->beginResponse(307, "text/plain", "OK");
           response->addHeader("Location", "/");
           request->send(response);
         });
