@@ -54,7 +54,7 @@ class ConfigCaptivePortal : public IExecutor {
   bool start() {
     if (!mIsStarted) {
       mpDnsServer->setTTL(300);
-      mpDnsServer->setErrorReplyCode(DNSReplyCode::ServerFailure);
+      mpDnsServer->setErrorReplyCode(DNSReplyCode::NoError);
       if (mpDnsServer->start(DNS_PORT, DOMAIN_NAME, mApIp)) {
         if (mWebSocketHandler) {
           mpWebSocket->enable(true);
