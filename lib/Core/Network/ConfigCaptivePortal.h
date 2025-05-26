@@ -46,7 +46,8 @@ class ConfigCaptivePortal : public IExecutor {
         mpDnsServer(new DNSServer()),
         mpWebServer(new DetailedAsyncWebServer(HTTP_PORT)),
         mpWebSocket(new AsyncWebSocket(WS_URL)),
-        mWebSocketHandler(wsHandler) {
+        mWebSocketHandler(wsHandler),
+        mWsClientLastSeen(0) {
     mpWebServer->addHandler(mpWebSocket.get());
   }
 
@@ -57,7 +58,10 @@ class ConfigCaptivePortal : public IExecutor {
       if (mpDnsServer->start(DNS_PORT, DOMAIN_NAME, mApIp)) {
         if (mWebSocketHandler) {
           mpWebSocket->enable(true);
-          mpWebSocket->onEvent(mWebSocketHandler);
+          mpWebSocket->onEvent([this](AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {
+            mWebSocketHandler(server, client, type, arg, data, len);
+            mWsClientLastSeen = millis();
+          });
         }
         mpWebServer->begin();
         auto status = mpWebServer->status();
@@ -116,6 +120,11 @@ class ConfigCaptivePortal : public IExecutor {
     }
   }
 
+  bool wsClientsActive(unsigned long window = 30000) const {
+    auto timeSinceLastSeen = millis() - mWsClientLastSeen;
+    return (mpWebSocket && mpWebSocket->count() > 0 && timeSinceLastSeen < window);
+  }
+
   inline const IPAddress& ip() const {
     return mApIp;
   }
@@ -139,5 +148,6 @@ class ConfigCaptivePortal : public IExecutor {
   UniquePointer<DetailedAsyncWebServer> mpWebServer;
   UniquePointer<AsyncWebSocket> mpWebSocket;
   AwsEventHandler mWebSocketHandler;
+  unsigned long mWsClientLastSeen;
 };
 }  // namespace uniot

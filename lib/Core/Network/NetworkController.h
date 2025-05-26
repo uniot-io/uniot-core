@@ -111,9 +111,14 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
             mpNetwork->reconnect();
           }
           break;
+        case NetworkScheduler::AVAILABLE:
+          mpNetwork->reconnect();
+          break;
         case NetworkScheduler::FAILED:
-        default:
           statusAlarm();
+          mpNetwork->config();
+          break;
+        default:
           break;
       }
     }

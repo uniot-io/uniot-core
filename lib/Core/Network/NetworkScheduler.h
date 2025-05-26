@@ -44,7 +44,7 @@ namespace uniot {
   public:
     enum Channel { OUT_SSID = FOURCC(ssid) };
     enum Topic { CONNECTION = FOURCC(netw) };
-    enum Msg { FAILED = 0, SUCCESS, CONNECTING, DISCONNECTING, DISCONNECTED, ACCESS_POINT };
+    enum Msg { FAILED = 0, SUCCESS, CONNECTING, DISCONNECTING, DISCONNECTED, ACCESS_POINT, AVAILABLE };
 
     NetworkScheduler(Credentials &credentials)
         : mpCredentials(&credentials),
@@ -78,6 +78,7 @@ namespace uniot {
       scheduler.push("sta_connecting", mTaskConnecting);
       scheduler.push("wifi_monitor", mTaskMonitoring);
       scheduler.push("wifi_scan", mTaskScan);
+      scheduler.push("wifi_check", mTaskAvailabilityCheck);
 #if defined(ESP32)
       scheduler.push("wifi_scan_complete", mWifiScan.getTask());
 #endif
@@ -90,6 +91,10 @@ namespace uniot {
       } else {
         mTaskConfigAp->once(500);
       }
+    }
+
+    void config() {
+      mTaskConfigAp->once(100);
     }
 
     void forget() {
@@ -159,6 +164,7 @@ namespace uniot {
 #endif
           mTaskStart->once(500);
           mTaskScan->once(500);
+          mTaskAvailabilityCheck->attach(5000);
           CoreEventEmitter::sendDataToChannel(Channel::OUT_SSID, Bytes(mApName));
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::ACCESS_POINT);
         } else {
@@ -212,6 +218,7 @@ namespace uniot {
           mLastSaveResult = 1;
           mTaskStop->once(30000);
           mTaskStopAp->once(35000);
+          mTaskAvailabilityCheck->detach();
           CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::SUCCESS);
           break;
 
@@ -271,6 +278,32 @@ namespace uniot {
           });
         } else {
           __broadcastNets(mLastNetworks);
+        }
+      });
+
+      mTaskAvailabilityCheck = TaskScheduler::make([this](SchedulerTask &self, short times) {
+        if (mCanScan &&
+            !mConfigServer.wsClientsActive() &&
+            mWifiStorage.isCredentialsValid()) {
+          UNIOT_LOG_INFO("Checking availability of the network [%s]", mWifiStorage.getSsid().c_str());
+
+          mWifiScan.scanNetworksAsync([&](int n) {
+            if (self.isAttached() &&
+                mCanScan &&
+                !mConfigServer.wsClientsActive() &&
+                mWifiStorage.isCredentialsValid()) {
+              for (auto i = 0; i < n; ++i) {
+                if (WiFi.SSID(i) == mWifiStorage.getSsid()) {
+                  UNIOT_LOG_INFO("Network [%s] is available", WiFi.SSID(i).c_str());
+                  CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::AVAILABLE);
+                  break;
+                }
+              }
+            } else {
+              UNIOT_LOG_INFO("Scan done, skipping availability check");
+            }
+            WiFi.scanDelete();
+          });
         }
       });
     }
@@ -384,6 +417,7 @@ namespace uniot {
     TaskScheduler::TaskPtr mTaskConnecting;
     TaskScheduler::TaskPtr mTaskMonitoring;
     TaskScheduler::TaskPtr mTaskScan;
+    TaskScheduler::TaskPtr mTaskAvailabilityCheck;
 
 #if defined(ESP32)
     ESP32WifiScan mWifiScan;
