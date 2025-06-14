@@ -24,14 +24,28 @@
 #include <MQTTDevice.h>
 #include <unLisp.h>
 
+#include <functional>
+
 namespace uniot {
 
 class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListener {
  public:
+  struct LispEvent {
+    struct Sender {
+      String type;
+      String id;
+    } sender;
+    String eventID;
+    int32_t value;
+    uint64_t timestamp;
+  };
+  using LispEventInterceptor = std::function<bool(const LispEvent &event)>;
+
   LispDevice()
       : MQTTDevice(),
         CBORStorage("lisp.cbor"),
         CoreEventListener(),
+        mEventInterceptor(nullptr),
         mChecksum(0),
         mPersist(false),
         mFailedWithError(false) {
@@ -47,6 +61,17 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
 
   unLisp &getLisp() {
     return unLisp::getInstance();
+  }
+
+  void setEventInterceptor(LispEventInterceptor interceptor) {
+    mEventInterceptor = interceptor;
+  }
+
+  void publishLispEvent(const String &eventID, int32_t value) {
+    CBORObject event;
+    event.put("eventID", eventID.c_str());
+    event.put("value", value);
+    _populateAndPublishEvent(event.build());
   }
 
   void runStoredCode() {
@@ -104,7 +129,7 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
       if (msg == unLisp::Msg::OUT_MSG_ADDED) {
         CoreEventListener::receiveDataFromChannel(unLisp::Channel::OUT_LISP, [](unsigned int id, bool empty, Bytes data) {
           // NOTE: it is currently only used for debugging purposes
-          UNIOT_LOG_TRACE_IF(!empty, "lisp: %s", data.toString().c_str());
+          // UNIOT_LOG_TRACE_IF(!empty, "lisp: %s", data.toString().c_str());
         });
         return;
       }
@@ -120,17 +145,10 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
       return;
     }
     if (topic == unLisp::Topic::OUT_LISP_EVENT) {
-      if(msg == unLisp::Msg::OUT_NEW_EVENT) {
+      if (msg == unLisp::Msg::OUT_NEW_EVENT) {
         CoreEventListener::receiveDataFromChannel(unLisp::Channel::OUT_EVENT, [this](unsigned int id, bool empty, Bytes data) {
           if (!empty) {
-            CBORObject event(data);
-            event.put("timestamp", static_cast<int64_t>(Date::now()))
-                .putMap("sender")
-                .put("type", "device")
-                .put("id", MQTTDevice::getDeviceId().c_str());
-            auto eventData = event.build();
-            auto eventID = event.getString("eventID");
-            MQTTDevice::publishGroup("all", "event/" + eventID, eventData);
+            _populateAndPublishEvent(data);
           }
         });
       }
@@ -140,7 +158,7 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
 
   virtual void handle(const String &topic, const Bytes &payload) override {
     if (MQTTDevice::isTopicMatch(mTopicScript, topic)) {
-      MQTTDevice::publishEmptyDevice("debug/err"); // clear previous errors
+      MQTTDevice::publishEmptyDevice("debug/err");  // clear previous errors
       handleScript(payload);
       return;
     }
@@ -180,18 +198,65 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
     // let's free some memory
     object().clean();
     // NOTE: you may need getLasCode() somewhere else, but it has already cleaned here
-    getLisp().cleanLastCode(); // Is it safe?
+    getLisp().cleanLastCode();  // Is it safe?
   }
 
   void handleEvent(const Bytes &payload) {
     if (payload.size() > 0) {
-      // TODO: implement event validation
+      CBORObject event(payload);
+      auto eventID = event.getString("eventID");
+      auto valueStr = event.getValueAsString("value");
+
+      if (eventID.isEmpty()) {
+        UNIOT_LOG_WARN("received event with empty eventID, ignoring");
+        return;
+      }
+
+      if (valueStr.isEmpty()) {
+        UNIOT_LOG_WARN("received event '%s' with empty value, ignoring", eventID.c_str());
+        return;
+      }
+
+      auto value = valueStr.toInt();
+      auto isNumber = value || valueStr == "0";
+
+      if (!isNumber) {
+        UNIOT_LOG_WARN("received event '%s' with non-numeric value '%s', ignoring", eventID.c_str(), valueStr.c_str());
+        return;
+      }
+
+      auto sender = event.getMap("sender");
+      LispEvent lispEvent;
+      lispEvent.eventID = eventID;
+      lispEvent.value = value;
+      lispEvent.timestamp = event.getInt("timestamp");
+      lispEvent.sender.type = sender.getString("type");
+      lispEvent.sender.id = sender.getString("id");
+
+      if (mEventInterceptor && !mEventInterceptor(lispEvent)) {
+        // The event was not accepted by the interceptor
+        return;
+      }
+
       CoreEventListener::sendDataToChannel(unLisp::Channel::IN_EVENT, payload);
       CoreEventListener::emitEvent(unLisp::Topic::IN_LISP_EVENT, unLisp::Msg::IN_NEW_EVENT);
     }
   }
 
  private:
+  void _populateAndPublishEvent(const Bytes &eventData) {
+    CBORObject event(eventData);
+    event.put("timestamp", static_cast<int64_t>(Date::now()))
+        .putMap("sender")
+        .put("type", "device")
+        .put("id", MQTTDevice::getDeviceId().c_str());
+    auto eventDataBuilt = event.build();
+    auto eventID = event.getString("eventID");
+    MQTTDevice::publishGroup("all", "event/" + eventID, eventDataBuilt, true);
+    // NOTE: Do we need to have a separate primitive to publish not retained events?
+  }
+
+  LispEventInterceptor mEventInterceptor;
   uint32_t mChecksum;
   bool mPersist;
   bool mFailedWithError;

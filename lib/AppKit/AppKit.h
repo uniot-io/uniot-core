@@ -63,6 +63,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     scheduler.push(mNetwork);
     scheduler.push(mMQTT);
     scheduler.push("lisp_task", getLisp().getTask());
+    scheduler.push("lisp_cleanup", getLisp().getCleanupTask());
 
     mTopDevice.setScheduler(scheduler);
 
@@ -87,6 +88,8 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
 #elif defined(ESP32)
     analogWriteResolution(10);
 #endif
+
+    getLisp().getCleanupTask()->attach(15000);
     mLispDevice.runStoredCode();
   }
 
@@ -159,6 +162,14 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     if (ctrlBtn) {
       PrimitiveExpeditor::getRegisterManager().link(primitive::name::bclicked, ctrlBtn, FOURCC(ctrl));
     }
+  }
+
+  void setLispEventInterceptor(LispDevice::LispEventInterceptor interceptor) {
+    mLispDevice.setEventInterceptor(interceptor);
+  }
+
+  void publishLispEvent(const String &eventID, int32_t value) {
+    mLispDevice.publishLispEvent(eventID, value);
   }
 
  private:
