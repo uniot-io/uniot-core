@@ -133,6 +133,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     scheduler.push(mNetwork);
     scheduler.push(mMQTT);
     scheduler.push("lisp_task", getLisp().getTask());
+    scheduler.push("lisp_cleanup", getLisp().getCleanupTask());
 
     mTopDevice.setScheduler(scheduler);
 
@@ -163,6 +164,8 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
 #elif defined(ESP32)
     analogWriteResolution(10);
 #endif
+
+    getLisp().getCleanupTask()->attach(15000);
     mLispDevice.runStoredCode();
   }
 
@@ -274,6 +277,14 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     }
   }
 
+  void setLispEventInterceptor(LispDevice::LispEventInterceptor interceptor) {
+    mLispDevice.setEventInterceptor(interceptor);
+  }
+
+  void publishLispEvent(const String &eventID, int32_t value) {
+    mLispDevice.publishLispEvent(eventID, value);
+  }
+
  private:
   /**
    * @brief Private constructor for singleton pattern
@@ -383,8 +394,16 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
             });
             break;
 
+          case NetworkScheduler::DISCONNECTING:
+            UNIOT_LOG_DEBUG("AppKit Subscriber, DISCONNECTING");
+            break;
+
           case NetworkScheduler::DISCONNECTED:
             UNIOT_LOG_DEBUG("AppKit Subscriber, DISCONNECTED");
+            break;
+
+          case NetworkScheduler::AVAILABLE:
+            UNIOT_LOG_DEBUG("AppKit Subscriber, AVAILABLE");
             break;
 
           case NetworkScheduler::FAILED:
@@ -398,7 +417,13 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
         switch (msg) {
           case MQTTKit::SUCCESS:
             UNIOT_LOG_DEBUG("AppKit Subscriber, MQTT SUCCESS");
-            mMQTT.renewSubscriptions();
+            if (mCredentials.isOwnerChanged()) {
+              UNIOT_LOG_INFO("Owner changed, renewing subscriptions");
+              mMQTT.renewSubscriptions();
+              mCredentials.resetOwnerChanged();
+            } else {
+              UNIOT_LOG_INFO("Owner not changed, do not renew subscriptions");
+            }
             break;
           case MQTTKit::FAILED:
           default:

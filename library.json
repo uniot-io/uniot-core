@@ -70,7 +70,11 @@
     },
     {
       "name": "uniot-crypto",
-      "version": "https://github.com/uniot-io/uniot-crypto.git#0.2.1"
+      "version": "https://github.com/uniot-io/uniot-crypto.git#0.2.2"
+    },
+    {
+      "name": "uniot-esp-async-web-server",
+      "version": "https://github.com/uniot-io/uniot-esp-async-web-server.git#3.7.7"
     }
   ],
   "homepage": "https://uniot.io",

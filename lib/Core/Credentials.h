@@ -66,7 +66,7 @@ class Credentials : public CBORStorage, public ICOSESigner {
    * On first instantiation, it generates a new Ed25519 key pair for the device.
    * On subsequent instantiations, it loads existing credentials from persistent storage.
    */
-  Credentials() : CBORStorage("credentials.cbor") {
+  Credentials() : CBORStorage("credentials.cbor"), mOnwerChanged(false) {
     mCreatorId = UNIOT_CREATOR_ID;
     mDeviceId = _calcDeviceId();
     Credentials::restore();
@@ -116,6 +116,9 @@ class Credentials : public CBORStorage, public ICOSESigner {
    * @param id The new owner ID to set.
    */
   void setOwnerId(const String &id) {
+    if (mOwnerId != id) {
+      mOnwerChanged = true;
+    }
     mOwnerId = id;
   }
 
@@ -126,6 +129,14 @@ class Credentials : public CBORStorage, public ICOSESigner {
    */
   const String &getOwnerId() const {
     return mOwnerId;
+  }
+
+  bool isOwnerChanged() const {
+    return mOnwerChanged;
+  }
+
+  void resetOwnerChanged() {
+    mOnwerChanged = false;
   }
 
   /**
@@ -259,6 +270,8 @@ class Credentials : public CBORStorage, public ICOSESigner {
   Bytes mPrivateKey;    ///< Ed25519 private key (32 bytes)
   Bytes mPublicKeyRaw;  ///< Raw binary representation of the Ed25519 public key
   String mPublicKey;    ///< Hexadecimal string representation of the public key
+
+  bool mOnwerChanged;
 };
 /** @} */
 }  // namespace uniot

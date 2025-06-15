@@ -27,7 +27,7 @@ template <class T_topic, class T_msg, class T_data>
 void EventEmitter<T_topic, T_msg, T_data>::emitEvent(T_topic topic, T_msg msg) {
   this->mEventBusQueue.forEach([&](EventBus<T_topic, T_msg, T_data> *eventBus) {
     eventBus->emitEvent(topic, msg);
-    yield();
+    // yield(); // Causes a crash on the esp8266 when called in the wifi scanning callback
   });
 }
 }  // namespace uniot

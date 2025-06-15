@@ -55,6 +55,143 @@
 namespace uniot {
 using namespace lisp;
 
+class IncomingEventManager {
+ public:
+  struct IncomingEvent {
+    int32_t value;
+    int8_t errorCode;
+
+    IncomingEvent() : value(0), errorCode(0) {}
+    IncomingEvent(int32_t v, int8_t err = 0) : value(v), errorCode(err) {}
+  };
+
+  void pushEvent(const Bytes &eventData) {
+    CBORObject eventObj(eventData);
+    auto eventID = eventObj.getString("eventID");
+    auto valueStr = eventObj.getValueAsString("value");
+
+    if (eventID.isEmpty() || valueStr.isEmpty()) {
+      return;  // Invalid event
+    }
+
+    auto value = valueStr.toInt();
+    auto isNumber = value || valueStr == "0";
+    if (!isNumber) {
+      return;  // Invalid event
+    }
+
+    bool isNewEvent = !mIncomingEvents.exist(eventID);
+    if (isNewEvent) {
+      auto eventQueue = std::make_shared<EventQueue>();
+      mIncomingEvents.put(eventID, eventQueue);
+      UNIOT_LOG_DEBUG("created new event queue for '%s'", eventID.c_str());
+    }
+
+    auto eventQueue = mIncomingEvents.get(eventID);
+    eventQueue->lastAccessed = millis();
+
+    size_t queueSizeBefore = eventQueue->queue.size();
+    eventQueue->queue.pushLimited(IncomingEvent(value));
+    size_t queueSizeAfter = eventQueue->queue.size();
+
+    if (queueSizeAfter > queueSizeBefore) {
+      UNIOT_LOG_TRACE("pushed event '%s' with value '%d', queue size: %d", eventID.c_str(), value, queueSizeAfter);
+    } else {
+      UNIOT_LOG_WARN("event queue for '%s' is full (limit: %d), oldest event was dropped", eventID.c_str(), EVENTS_LIMIT);
+    }
+  }
+
+  bool isEventAvailable(const String &eventID) {
+    if (!mIncomingEvents.exist(eventID)) {
+      return false;
+    }
+
+    auto eventQueue = mIncomingEvents.get(eventID);
+    eventQueue->isUsedInScript = true;
+    eventQueue->lastAccessed = millis();
+
+    return eventQueue->queue.size() > 0;
+  }
+
+  IncomingEvent popEvent(const String &eventID) {
+    const IncomingEvent emptyEvent(0, -1);
+
+    if (!mIncomingEvents.exist(eventID)) {
+      UNIOT_LOG_WARN("attempted to pop non-existent event '%s'", eventID.c_str());
+      return emptyEvent;
+    }
+
+    auto eventQueue = mIncomingEvents.get(eventID);
+    eventQueue->isUsedInScript = true;
+    eventQueue->lastAccessed = millis();
+
+    if (eventQueue->queue.size() == 0) {
+      UNIOT_LOG_WARN("attempted to pop from empty event queue '%s'", eventID.c_str());
+      return emptyEvent;
+    }
+
+    return eventQueue->queue.popLimited(emptyEvent);
+  }
+
+  void cleanupUnusedEvents() {
+    unsigned long currentTime = millis();
+    ClearQueue<String> keysToRemove;
+    size_t totalEvents = 0;
+    size_t unusedEvents = 0;
+    size_t expiredEvents = 0;
+    size_t totalQueuedItems = 0;
+
+    mIncomingEvents.forEach([&](const Pair<String, SharedPointer<EventQueue>> &entry) {
+      totalEvents++;
+      auto eventQueue = entry.second;
+      totalQueuedItems += eventQueue->queue.size();
+      unsigned long timeSinceLastAccess = currentTime - eventQueue->lastAccessed;
+
+      if (!eventQueue->isUsedInScript) {
+        unusedEvents++;
+        if (timeSinceLastAccess > EVENT_TTL_MS) {
+          expiredEvents++;
+          keysToRemove.push(entry.first);
+          UNIOT_LOG_DEBUG("marking event '%s' for removal (unused, last accessed %lu ms ago)",
+                          entry.first.c_str(), timeSinceLastAccess);
+        }
+      }
+    });
+
+    // Remove expired events
+    keysToRemove.forEach([this](const String &key) {
+      mIncomingEvents.remove(key);
+    });
+
+    if (expiredEvents > 0) {
+      UNIOT_LOG_INFO("cleaned up %d expired events (total: %d, unused: %d, queued items: %d)",
+                     expiredEvents, totalEvents, unusedEvents, totalQueuedItems);
+    } else if (totalEvents > 0) {
+      UNIOT_LOG_TRACE("no events to cleanup (total: %d, unused: %d, queued items: %d)", totalEvents, unusedEvents, totalQueuedItems);
+    }
+  }
+
+  void clean() {
+    mIncomingEvents.clean();
+    UNIOT_LOG_DEBUG("cleared all incoming events");
+  }
+
+ private:
+  struct EventQueue {
+    LimitedQueue<IncomingEvent> queue;
+    unsigned long lastAccessed;
+    bool isUsedInScript;
+
+    EventQueue() : lastAccessed(millis()), isUsedInScript(false) {
+      queue.limit(EVENTS_LIMIT);
+    }
+  };
+
+  Map<String, SharedPointer<EventQueue>> mIncomingEvents;
+  static constexpr size_t EVENTS_LIMIT = 2;
+  static constexpr unsigned long EVENT_TTL_MS = 30000;  // 30 seconds TTL
+};
+
 /**
  * @brief A singleton class that wraps UniotLisp interpreter for the Uniot Core.
  * @defgroup unlisp unLisp
@@ -80,33 +217,33 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    * @brief Communication channels for data exchange between Lisp and the host application
    */
   enum Channel {
-    OUT_LISP = FOURCC(lout),       ///< Channel for standard Lisp output
-    OUT_LISP_LOG = FOURCC(llog),   ///< Channel for Lisp log messages
-    OUT_LISP_ERR = FOURCC(lerr),   ///< Channel for Lisp error messages
-    OUT_EVENT = FOURCC(evou),      ///< Channel for outgoing events from Lisp to the application
-    IN_EVENT = FOURCC(evin),       ///< Channel for incoming events from the application to Lisp
+    OUT_LISP = FOURCC(lout),      ///< Channel for standard Lisp output
+    OUT_LISP_LOG = FOURCC(llog),  ///< Channel for Lisp log messages
+    OUT_LISP_ERR = FOURCC(lerr),  ///< Channel for Lisp error messages
+    OUT_EVENT = FOURCC(evou),     ///< Channel for outgoing events from Lisp to the application
+    IN_EVENT = FOURCC(evin),      ///< Channel for incoming events from the application to Lisp
   };
 
   /**
    * @brief Topics for event-based communication
    */
   enum Topic {
-    OUT_LISP_MSG = FOURCC(lisp),     ///< Topic for Lisp output messages
-    OUT_LISP_REQUEST = FOURCC(lspr), ///< Topic for Lisp requests to the application
-    OUT_LISP_EVENT = FOURCC(levo),   ///< Topic for outgoing events from Lisp
-    IN_LISP_EVENT = FOURCC(levi)     ///< Topic for incoming events to Lisp
+    OUT_LISP_MSG = FOURCC(lisp),      ///< Topic for Lisp output messages
+    OUT_LISP_REQUEST = FOURCC(lspr),  ///< Topic for Lisp requests to the application
+    OUT_LISP_EVENT = FOURCC(levo),    ///< Topic for outgoing events from Lisp
+    IN_LISP_EVENT = FOURCC(levi)      ///< Topic for incoming events to Lisp
   };
 
   /**
    * @brief Message types used in event communication
    */
   enum Msg {
-    OUT_MSG_ADDED,        ///< Standard output message was added
-    OUT_MSG_LOG,          ///< Log message was added
-    OUT_MSG_ERROR,        ///< Error message was added
-    OUT_REFRESH_EVENTS,   ///< Request to refresh the event queue
-    OUT_NEW_EVENT,        ///< New outgoing event
-    IN_NEW_EVENT          ///< New incoming event
+    OUT_MSG_ADDED,       ///< Standard output message was added
+    OUT_MSG_LOG,         ///< Log message was added
+    OUT_MSG_ERROR,       ///< Error message was added
+    OUT_REFRESH_EVENTS,  ///< Request to refresh the event queue
+    OUT_NEW_EVENT,       ///< New outgoing event
+    IN_NEW_EVENT         ///< New incoming event
   };
 
   /**
@@ -115,6 +252,10 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    */
   TaskScheduler::TaskPtr getTask() {
     return mTaskLispEval;
+  }
+
+  TaskScheduler::TaskPtr getCleanupTask() {
+    return mTaskEventCleanup;
   }
 
   /**
@@ -302,6 +443,11 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
 
       // UNIOT_LOG_DEBUG("lisp machine running, mem used: %d", lisp_mem_used());
     });
+
+    mTaskEventCleanup = TaskScheduler::make([this](SchedulerTask &self, short t) {
+      mEventManager.cleanupUnusedEvents();
+      yield();
+    });
   }
 
   /**
@@ -357,7 +503,7 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    * @brief Clear the incoming events queue and request event refresh
    */
   void _refreshIncomingEvents() {
-    mIncomingEvents.clean();
+    mEventManager.clean();
     this->emitEvent(Topic::OUT_LISP_REQUEST, Msg::OUT_REFRESH_EVENTS);
   }
 
@@ -367,21 +513,8 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    * @param eventData Event data in CBOR format
    */
   void _pushIncomingEvent(const Bytes &eventData) {
-    constexpr size_t EVENTS_LIMIT = 5;
-
-    CBORObject event(eventData);
-    auto eventID = event.getString("eventID");
-    auto value = event.getValueAsString("value");  // NOTE: this is only used here to verify the correctness of the event
-
-    if (!eventID.isEmpty() && !value.isEmpty()) {
-      if (!mIncomingEvents.exist(eventID)) {
-        mIncomingEvents.put(eventID, std::make_shared<LimitedQueue<Bytes>>());
-        mIncomingEvents.get(eventID)->limit(EVENTS_LIMIT);
-      }
-      mIncomingEvents.get(eventID)->pushLimited(eventData);
-    }
-
-    // TODO: Find a way to remove events that are not consumed
+    // mEventManager.cleanupUnusedEvents();
+    mEventManager.pushEvent(eventData);
   }
 
   /**
@@ -392,21 +525,18 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    * @retval false The event is not available
    */
   bool _isIncomingEventAvailable(const String &eventID) {
-    return mIncomingEvents.exist(eventID) && mIncomingEvents.get(eventID)->size();
+    return mEventManager.isEventAvailable(eventID);
   }
 
   /**
-   * @brief Get and remove the next event with the given ID
+   * @brief Check if an event with the given ID is available
    *
-   * @param eventID The ID of the event to retrieve
-   * @retval Bytes The event data
-   * @retval {} No event available
+   * @param eventID The ID of the event to check
+   * @retval true The event is available
+   * @retval false The event is not available
    */
-  Bytes _popIncomingEvent(const String &eventID) {
-    if (_isIncomingEventAvailable(eventID)) {
-      return mIncomingEvents.get(eventID)->popLimited({});
-    }
-    return {};
+  IncomingEventManager::IncomingEvent _popIncomingEvent(const String &eventID) {
+    return mEventManager.popEvent(eventID);
   }
 
   /**
@@ -495,16 +625,11 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
     expeditor.assertDescribedArgs();
 
     auto eventId = expeditor.getArgSymbol(0);
-    auto eventData = _popIncomingEvent(eventId);
-    CBORObject event(eventData);
-    auto value = event.getValueAsString("value");
+    auto event = _popIncomingEvent(eventId);
 
-    auto number = value.toInt();
-    auto isNumber = number || value == "0";
+    UNIOT_LOG_WARN_IF(event.errorCode, "error popping event '%s': %d", event.errorCode);
 
-    UNIOT_LOG_WARN_IF(!isNumber, "event value is not a number");
-
-    return expeditor.makeInt(number);
+    return expeditor.makeInt(event.value);
   }
 
   /**
@@ -532,8 +657,9 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
   }
 
   // Private member variables
-  Bytes mLastCode;   ///< Storage for the last executed Lisp code
+  Bytes mLastCode;                       ///< Storage for the last executed Lisp code
   TaskScheduler::TaskPtr mTaskLispEval;  ///< Task for scheduled Lisp evaluation
+  TaskScheduler::TaskPtr mTaskEventCleanup;
   ClearQueue<Pair<String, Primitive *>> mUserPrimitives;  ///< Queue of user-defined primitives
 
   /**
@@ -544,10 +670,10 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
   const Primitive *mPrimitivePopEvent = [](Root root, VarObject env, VarObject list) { return getInstance()._primPopEvent(root, env, list); };
   const Primitive *mPrimitivePushEvent = [](Root root, VarObject env, VarObject list) { return getInstance()._primPushEvent(root, env, list); };
 
-  void *mLispEnvConstructor[3];  ///< Storage for Lisp environment constructor
-  Root mLispRoot;                ///< Lisp root object
-  VarObject mLispEnv;            ///< Lisp environment object
-  Map<String, SharedPointer<LimitedQueue<Bytes>>> mIncomingEvents;  ///< Map of event queues by event ID
+  void *mLispEnvConstructor[3];        ///< Storage for Lisp environment constructor
+  Root mLispRoot;                      ///< Lisp root object
+  VarObject mLispEnv;                  ///< Lisp environment object
+  IncomingEventManager mEventManager;  ///< Map of event queues by event ID
 };
 /** @} */
 }  // namespace uniot

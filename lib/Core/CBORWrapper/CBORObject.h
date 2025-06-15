@@ -107,6 +107,10 @@ class CBORObject {
     return mErr;
   }
 
+  bool hasError() {
+    return mErr.err != CN_CBOR_NO_ERROR;
+  }
+
   /**
    * @brief Create or get an array at a specific integer key
    * @param key The integer key

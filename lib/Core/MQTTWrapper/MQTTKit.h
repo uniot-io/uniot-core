@@ -234,7 +234,9 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
           Date::getInstance().forceSync();
           break;
         case NetworkScheduler::ACCESS_POINT:
+        case NetworkScheduler::AVAILABLE:
         case NetworkScheduler::CONNECTING:
+        case NetworkScheduler::DISCONNECTING:
         case NetworkScheduler::DISCONNECTED:
         case NetworkScheduler::FAILED:
         default:

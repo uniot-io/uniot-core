@@ -21,6 +21,7 @@
 #include <Common.h>
 #include <Logger.h>
 #include <WString.h>
+#include <stdio.h>
 
 #include <functional>
 #include <type_traits>
