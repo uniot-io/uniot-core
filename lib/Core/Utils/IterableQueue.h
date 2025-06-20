@@ -67,6 +67,18 @@ class IterableQueue : public ClearQueue<T> {
    */
   const T& current() const;
 
+  /**
+   * @brief Remove the current element from the queue
+   *
+   * Removes the element at the current iterator position and advances
+   * the iterator to the next element. If the current element is the last
+   * element, the iterator will point to the end.
+   *
+   * @retval true The element was successfully removed
+   * @retval false The iterator was at the end or queue was empty
+   */
+  bool deleteCurrent();
+
  protected:
   /**
    * @brief Pointer to the current node during iteration
@@ -98,4 +110,38 @@ const T& IterableQueue<T>::next() const {
 template <typename T>
 const T& IterableQueue<T>::current() const {
   return mCurrent->value;
+}
+
+template <typename T>
+bool IterableQueue<T>::deleteCurrent() {
+  if (!mCurrent) {
+    return false;
+  }
+
+  if (mCurrent == ClearQueue<T>::mHead) {
+    ClearQueue<T>::hardPop();
+    mCurrent = ClearQueue<T>::mHead;
+    return true;
+  }
+
+  typename ClearQueue<T>::pnode prev = ClearQueue<T>::mHead;
+  while (prev && prev->next != mCurrent) {
+    prev = prev->next;
+  }
+
+  if (!prev) {
+    return false;
+  }
+
+  auto nextNode = mCurrent->next;
+  prev->next = nextNode;
+
+  if (!nextNode) {
+    ClearQueue<T>::mTail = prev;
+  }
+
+  delete mCurrent;
+  mCurrent = nextNode;
+
+  return true;
 }

@@ -94,7 +94,5 @@ class ObjectRegisterRecord : public IWithType {
    */
   static ClearQueue<ObjectRegisterRecord *> sRegisteredLinks;
 };
-
-ClearQueue<ObjectRegisterRecord *> ObjectRegisterRecord::sRegisteredLinks;
 /** @} */
 }  // namespace uniot

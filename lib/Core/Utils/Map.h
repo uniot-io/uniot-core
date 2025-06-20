@@ -122,9 +122,9 @@ class Map : public IterableQueue<Pair<T_Key, T_Value>> {
   bool remove(const T_Key& key) {
     IterableQueue<MapItem>::begin();
     while (!IterableQueue<MapItem>::isEnd()) {
-      auto& item = IterableQueue<MapItem>::current();
+      const auto& item = IterableQueue<MapItem>::current();
       if (item.first == key) {
-        return IterableQueue<MapItem>::removeOne(item);
+        return IterableQueue<MapItem>::deleteCurrent();
       }
       IterableQueue<MapItem>::next();
     }

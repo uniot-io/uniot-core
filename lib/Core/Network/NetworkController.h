@@ -27,7 +27,7 @@
 namespace uniot {
 class NetworkController : public ISchedulerConnectionKit, public CoreEventListener, public CBORStorage {
  public:
-  enum Topic { NETWORK_LED = FOURCC(nled) };
+  enum Topic { WIFI_STATUS_LED = FOURCC(nled) };
 
   NetworkController(NetworkScheduler &network,
                     uint8_t pinBtn = UINT8_MAX,
@@ -166,7 +166,7 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
     mpTaskSignalLed = TaskScheduler::make([&](SchedulerTask &self, short t) {
       static bool signalLevel = true;
       signalLevel = (!signalLevel && t);
-      CoreEventListener::emitEvent(Topic::NETWORK_LED, signalLevel);
+      CoreEventListener::emitEvent(Topic::WIFI_STATUS_LED, signalLevel);
 
       if (_hasLed()) {
         digitalWrite(mPinLed, signalLevel ? mActiveLevelLed : !mActiveLevelLed);

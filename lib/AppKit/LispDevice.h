@@ -27,6 +27,18 @@
 #include <functional>
 
 namespace uniot {
+struct LispEvent {
+  struct Sender {
+    String type;
+    String id;
+  } sender;
+  String eventID;
+  int32_t value;
+  uint64_t timestamp;
+};
+
+using LispEventInterceptor = std::function<bool(const LispEvent &event)>;
+
 /**
  * @brief A device class that integrates MQTT connectivity with unLisp scripting capabilities
  * @defgroup app-kit-lisp-device Lisp Device
@@ -39,17 +51,6 @@ namespace uniot {
  */
 class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListener {
  public:
-  struct LispEvent {
-    struct Sender {
-      String type;
-      String id;
-    } sender;
-    String eventID;
-    int32_t value;
-    uint64_t timestamp;
-  };
-  using LispEventInterceptor = std::function<bool(const LispEvent &event)>;
-
   /**
    * @brief Constructs a LispDevice instance
    *
@@ -335,8 +336,8 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
   bool mPersist;          ///< Flag indicating if the current script should persist across reboots
   bool mFailedWithError;  ///< Flag indicating if the last script execution failed with an error
 
-  String mTopicScript;    ///< MQTT topic for receiving script messages
-  String mTopicEvents;    ///< MQTT topic for receiving event messages
+  String mTopicScript;  ///< MQTT topic for receiving script messages
+  String mTopicEvents;  ///< MQTT topic for receiving event messages
 };
 /** @} */
 }  // namespace uniot

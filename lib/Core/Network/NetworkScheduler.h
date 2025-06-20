@@ -123,6 +123,15 @@ namespace uniot {
       return false;
     }
 
+    bool setCredentials(const String &ssid, const String &password) {
+      if (!ssid.isEmpty()) {
+        mWifiStorage.setCredentials(ssid, password);
+        mWifiStorage.store();
+        return true;
+      }
+      return false;
+    }
+
   private:
     enum ACTIONS {
       INVALID = 0,

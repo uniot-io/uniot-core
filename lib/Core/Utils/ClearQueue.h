@@ -148,6 +148,16 @@ class ClearQueue {
   inline bool isEmpty() const;
 
   /**
+   * @brief Calculate the number of elements in the queue by traversal
+   *
+   * This method traverses the entire queue to count elements.
+   * Useful for debugging or when you need an accurate count.
+   *
+   * @retval size_t The actual number of elements in the queue
+   */
+  size_t calcSize() const;
+
+  /**
    * @brief Removes all elements from the queue
    */
   void clean();
@@ -289,6 +299,15 @@ T *ClearQueue<T>::find(const T &value) const {
 template <typename T>
 inline bool ClearQueue<T>::isEmpty() const {
   return mHead == nullptr;
+}
+
+template <typename T>
+size_t ClearQueue<T>::calcSize() const {
+  size_t count = 0;
+  for (pnode cur = mHead; cur != nullptr; cur = cur->next) {
+    count++;
+  }
+  return count;
 }
 
 template <typename T>

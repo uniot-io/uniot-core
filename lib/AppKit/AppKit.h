@@ -89,12 +89,13 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
    * including pin assignments and reboot behavior settings.
    */
   struct NetworkControllerConfig {
-    uint8_t pinBtn = UINT8_MAX;        ///< Button pin (UINT8_MAX means not used)
-    uint8_t activeLevelBtn = LOW;      ///< Active level for button (LOW or HIGH)
-    uint8_t pinLed = UINT8_MAX;        ///< LED pin (UINT8_MAX means not used)
-    uint8_t activeLevelLed = HIGH;     ///< Active level for LED (LOW or HIGH)
-    uint8_t maxRebootCount = 3;        ///< Maximum number of consecutive reboots
-    uint32_t rebootWindowMs = 10000;   ///< Time window in ms for counting reboots
+    uint8_t pinBtn = UINT8_MAX;       ///< Button pin (UINT8_MAX means not used)
+    uint8_t activeLevelBtn = LOW;     ///< Active level for button (LOW or HIGH)
+    uint8_t pinLed = UINT8_MAX;       ///< LED pin (UINT8_MAX means not used)
+    uint8_t activeLevelLed = HIGH;    ///< Active level for LED (LOW or HIGH)
+    uint8_t maxRebootCount = 3;       ///< Maximum number of consecutive reboots
+    uint32_t rebootWindowMs = 10000;  ///< Time window in ms for counting reboots
+    bool registerLispBtn = true;      ///< Whether to register the button with the Lisp interpreter
   };
 
   /**
@@ -119,6 +120,10 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
    */
   const Credentials &getCredentials() {
     return mCredentials;
+  }
+
+  bool setWiFiCredentials(const String &ssid, const String &password) {
+    return mNetwork.setCredentials(ssid, password);
   }
 
   /**
@@ -243,7 +248,8 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
                                config.pinLed,
                                config.activeLevelLed,
                                config.maxRebootCount,
-                               config.rebootWindowMs);
+                               config.rebootWindowMs,
+                               config.registerLispBtn);
   }
 
   /**
@@ -264,7 +270,8 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
                                   uint8_t pinLed = UINT8_MAX,
                                   uint8_t activeLevelLed = HIGH,
                                   uint8_t maxRebootCount = 3,
-                                  uint32_t rebootWindowMs = 10000) {
+                                  uint32_t rebootWindowMs = 10000,
+                                  bool registerLispBtn = true) {
     if (mpNetworkDevice) {
       UNIOT_LOG_WARN("Network Controller already configured");
       return;
@@ -272,12 +279,12 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
 
     mpNetworkDevice = MakeUnique<NetworkController>(mNetwork, pinBtn, activeLevelBtn, pinLed, activeLevelLed, maxRebootCount, rebootWindowMs);
     auto ctrlBtn = mpNetworkDevice->getButton();
-    if (ctrlBtn) {
+    if (ctrlBtn && registerLispBtn) {
       PrimitiveExpeditor::getRegisterManager().link(primitive::name::bclicked, ctrlBtn, FOURCC(ctrl));
     }
   }
 
-  void setLispEventInterceptor(LispDevice::LispEventInterceptor interceptor) {
+  void setLispEventInterceptor(LispEventInterceptor interceptor) {
     mLispDevice.setEventInterceptor(interceptor);
   }
 
@@ -435,14 +442,14 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     });
   }
 
-  Credentials mCredentials;                             ///< Device credentials
-  NetworkScheduler mNetwork;                            ///< Network connection manager
-  MQTTKit mMQTT;                                        ///< MQTT communication manager
-  TopDevice mTopDevice;                                 ///< Top-level device manager
-  LispDevice mLispDevice;                               ///< Lisp interpreter device interface
+  Credentials mCredentials;   ///< Device credentials
+  NetworkScheduler mNetwork;  ///< Network connection manager
+  MQTTKit mMQTT;              ///< MQTT communication manager
+  TopDevice mTopDevice;       ///< Top-level device manager
+  LispDevice mLispDevice;     ///< Lisp interpreter device interface
 
-  UniquePointer<NetworkController> mpNetworkDevice;     ///< Network control interface (optional)
-  UniquePointer<CoreCallbackEventListener> mpNetworkEventListener; ///< Network event listener
+  UniquePointer<NetworkController> mpNetworkDevice;                 ///< Network control interface (optional)
+  UniquePointer<CoreCallbackEventListener> mpNetworkEventListener;  ///< Network event listener
 };
 /** @} */
 }  // namespace uniot

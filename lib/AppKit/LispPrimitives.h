@@ -18,10 +18,10 @@
 
 #pragma once
 
-#include "Button.h"
-#include "DefaultPrimitives.h"
-#include "LispHelper.h"
-#include "PrimitiveExpeditor.h"
+#include <Button.h>
+#include <DefaultPrimitives.h>
+#include <LispHelper.h>
+#include <PrimitiveExpeditor.h>
 
 /**
  * @namespace uniot::primitive
@@ -44,23 +44,7 @@ namespace uniot::primitive {
  * @param list List of arguments (pin number and state)
  * @retval Object Boolean value representing the set state
  */
-Object dwrite(Root root, VarObject env, VarObject list) {
-  auto expeditor = PrimitiveExpeditor::describe(name::dwrite, Lisp::Bool, 2, Lisp::Int, Lisp::BoolInt)
-                       .init(root, env, list);
-  expeditor.assertDescribedArgs();
-  auto pin = expeditor.getArgInt(0);
-  auto state = expeditor.getArgBool(1);
-
-  uint8_t gpio = 0;
-  if (pin >= 0 && expeditor.getAssignedRegister().getGpio(pin, gpio)) {
-    digitalWrite(gpio, state);
-  } else {
-    expeditor.terminate("pin is out of range");
-  }
-
-  return expeditor.makeBool(state);
-}
-
+Object dwrite(Root root, VarObject env, VarObject list);
 /**
  * @brief Digital read primitive function for reading pin input state.
  *
@@ -74,22 +58,7 @@ Object dwrite(Root root, VarObject env, VarObject list) {
  * @param list List of arguments (pin number)
  * @retval Object Boolean value representing the read state
  */
-Object dread(Root root, VarObject env, VarObject list) {
-  auto expeditor = PrimitiveExpeditor::describe(name::dread, Lisp::Bool, 1, Lisp::Int)
-                       .init(root, env, list);
-  expeditor.assertDescribedArgs();
-  auto pin = expeditor.getArgInt(0);
-  int state = 0;
-
-  uint8_t gpio = 0;
-  if (pin >= 0 && expeditor.getAssignedRegister().getGpio(pin, gpio)) {
-    state = digitalRead(gpio);
-  } else {
-    expeditor.terminate("pin is out of range");
-  }
-
-  return expeditor.makeBool(state);
-}
+Object dread(Root root, VarObject env, VarObject list);
 
 /**
  * @brief Analog write primitive function for setting PWM output.
@@ -104,22 +73,7 @@ Object dread(Root root, VarObject env, VarObject list) {
  * @param list List of arguments (pin number and value)
  * @retval Object Integer value representing the set PWM value
  */
-Object awrite(Root root, VarObject env, VarObject list) {
-  auto expeditor = PrimitiveExpeditor::describe(name::awrite, Lisp::Int, 2, Lisp::Int, Lisp::Int)
-                       .init(root, env, list);
-  expeditor.assertDescribedArgs();
-  auto pin = expeditor.getArgInt(0);
-  auto value = expeditor.getArgInt(1);
-
-  uint8_t gpio = 0;
-  if (pin >= 0 && expeditor.getAssignedRegister().getGpio(pin, gpio)) {
-    analogWrite(gpio, value);
-  } else {
-    expeditor.terminate("pin is out of range");
-  }
-
-  return expeditor.makeInt(value);
-}
+Object awrite(Root root, VarObject env, VarObject list);
 
 /**
  * @brief Analog read primitive function for reading analog input.
@@ -134,22 +88,7 @@ Object awrite(Root root, VarObject env, VarObject list) {
  * @param list List of arguments (pin number)
  * @retval Object Integer value representing the read analog value
  */
-Object aread(Root root, VarObject env, VarObject list) {
-  auto expeditor = PrimitiveExpeditor::describe(name::aread, Lisp::Int, 1, Lisp::Int)
-                       .init(root, env, list);
-  expeditor.assertDescribedArgs();
-  auto pin = expeditor.getArgInt(0);
-  int value = 0;
-
-  uint8_t gpio = 0;
-  if (pin >= 0 && expeditor.getAssignedRegister().getGpio(pin, gpio)) {
-    value = analogRead(gpio);
-  } else {
-    expeditor.terminate("pin is out of range");
-  }
-
-  return expeditor.makeInt(value);
-}
+Object aread(Root root, VarObject env, VarObject list);
 
 /**
  * @brief Button clicked primitive function for checking button click status.
@@ -164,22 +103,6 @@ Object aread(Root root, VarObject env, VarObject list) {
  * @param list List of arguments (button ID)
  * @retval Object Boolean value indicating if button was clicked
  */
-Object bclicked(Root root, VarObject env, VarObject list) {
-  auto expeditor = PrimitiveExpeditor::describe(name::bclicked, Lisp::Bool, 1, Lisp::Int)
-                       .init(root, env, list);
-  expeditor.assertDescribedArgs();
-  auto btnId = expeditor.getArgInt(0);
-  bool value = false;
-
-  auto btn = expeditor.getAssignedRegister().getObject<Button>(btnId);
-
-  if (btn) {
-    value = btn->resetClick();
-  } else {
-    expeditor.terminate("wrong button id");
-  }
-
-  return expeditor.makeBool(value);
-}
+Object bclicked(Root root, VarObject env, VarObject list);
 /** @} */
 }  // namespace uniot::primitive

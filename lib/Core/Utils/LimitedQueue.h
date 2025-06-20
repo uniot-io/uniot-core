@@ -130,13 +130,8 @@ class LimitedQueue : public ClearQueue<T> {
    *
    * @retval size_t The actual number of elements in the queue
    */
-  size_t calcSize() {
-    mSize = 0;
-    typename ClearQueue<T>::pnode cur = ClearQueue<T>::mHead;
-    while (cur != nullptr) {
-      cur = cur->next;
-      mSize++;
-    }
+  size_t calcSize() const {
+    mSize = ClearQueue<T>::calcSize();
     return mSize;
   }
 
