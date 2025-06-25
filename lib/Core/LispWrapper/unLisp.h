@@ -41,6 +41,7 @@
 #include <Common.h>
 #include <EventListener.h>
 #include <LimitedQueue.h>
+#include <LispEvents.h>
 #include <LispHelper.h>
 #include <Logger.h>
 #include <PrimitiveExpeditor.h>
@@ -214,39 +215,6 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
 
  public:
   /**
-   * @brief Communication channels for data exchange between Lisp and the host application
-   */
-  enum Channel {
-    OUT_LISP = FOURCC(lout),      ///< Channel for standard Lisp output
-    OUT_LISP_LOG = FOURCC(llog),  ///< Channel for Lisp log messages
-    OUT_LISP_ERR = FOURCC(lerr),  ///< Channel for Lisp error messages
-    OUT_EVENT = FOURCC(evou),     ///< Channel for outgoing events from Lisp to the application
-    IN_EVENT = FOURCC(evin),      ///< Channel for incoming events from the application to Lisp
-  };
-
-  /**
-   * @brief Topics for event-based communication
-   */
-  enum Topic {
-    OUT_LISP_MSG = FOURCC(lisp),      ///< Topic for Lisp output messages
-    OUT_LISP_REQUEST = FOURCC(lspr),  ///< Topic for Lisp requests to the application
-    OUT_LISP_EVENT = FOURCC(levo),    ///< Topic for outgoing events from Lisp
-    IN_LISP_EVENT = FOURCC(levi)      ///< Topic for incoming events to Lisp
-  };
-
-  /**
-   * @brief Message types used in event communication
-   */
-  enum Msg {
-    OUT_MSG_ADDED,       ///< Standard output message was added
-    OUT_MSG_LOG,         ///< Log message was added
-    OUT_MSG_ERROR,       ///< Error message was added
-    OUT_REFRESH_EVENTS,  ///< Request to refresh the event queue
-    OUT_NEW_EVENT,       ///< New outgoing event
-    IN_NEW_EVENT         ///< New incoming event
-  };
-
-  /**
    * @brief Get the task associated with Lisp evaluation
    * @retval TaskScheduler::TaskPtr The task pointer for the Lisp evaluation
    */
@@ -374,9 +342,9 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    * @param msg The specific message type
    */
   virtual void onEventReceived(unsigned int topic, int msg) override {
-    if (topic == unLisp::Topic::IN_LISP_EVENT) {
-      if (msg == unLisp::Msg::IN_NEW_EVENT) {
-        CoreEventListener::receiveDataFromChannel(unLisp::Channel::IN_EVENT, [&](unsigned int id, bool empty, Bytes data) {
+    if (topic == events::lisp::Topic::IN_LISP_EVENT) {
+      if (msg == events::lisp::Msg::IN_NEW_EVENT) {
+        CoreEventListener::receiveDataFromChannel(events::lisp::Channel::IN_EVENT, [&](unsigned int id, bool empty, Bytes data) {
           _pushIncomingEvent(data);
         });
         return;
@@ -393,13 +361,13 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    * the evaluation task for the Lisp machine.
    */
   unLisp() {
-    CoreEventListener::listenToEvent(unLisp::Topic::IN_LISP_EVENT);
+    CoreEventListener::listenToEvent(events::lisp::Topic::IN_LISP_EVENT);
 
     auto fnPrintOut = [](const char *msg, int size) {
       if (size > 0) {
         auto &instance = unLisp::getInstance();
-        instance.sendDataToChannel(unLisp::Channel::OUT_LISP, Bytes((uint8_t *)msg, size).terminate());
-        instance.emitEvent(Topic::OUT_LISP_MSG, Msg::OUT_MSG_ADDED);
+        instance.sendDataToChannel(events::lisp::Channel::OUT_LISP, Bytes((uint8_t *)msg, size).terminate());
+        instance.emitEvent(events::lisp::Topic::OUT_LISP_MSG, events::lisp::Msg::OUT_MSG_ADDED);
       }
       yield();
     };
@@ -407,16 +375,16 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
     auto fnPrintLog = [](const char *msg, int size) {
       if (size > 0) {
         auto &instance = unLisp::getInstance();
-        instance.sendDataToChannel(unLisp::Channel::OUT_LISP_LOG, Bytes((uint8_t *)msg, size).terminate());
-        instance.emitEvent(Topic::OUT_LISP_MSG, Msg::OUT_MSG_LOG);
+        instance.sendDataToChannel(events::lisp::Channel::OUT_LISP_LOG, Bytes((uint8_t *)msg, size).terminate());
+        instance.emitEvent(events::lisp::Topic::OUT_LISP_MSG, events::lisp::Msg::OUT_MSG_LOG);
       }
       yield();
     };
 
     auto fnPrintErr = [](const char *msg, int size) {
       auto &instance = unLisp::getInstance();
-      instance.sendDataToChannel(unLisp::Channel::OUT_LISP_ERR, Bytes((uint8_t *)msg, size).terminate());
-      instance.emitEvent(Topic::OUT_LISP_MSG, OUT_MSG_ERROR);
+      instance.sendDataToChannel(events::lisp::Channel::OUT_LISP_ERR, Bytes((uint8_t *)msg, size).terminate());
+      instance.emitEvent(events::lisp::Topic::OUT_LISP_MSG, events::lisp::Msg::OUT_MSG_ERROR);
 
       instance.mTaskLispEval->detach();
       instance._destroyMachine();
@@ -504,7 +472,7 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    */
   void _refreshIncomingEvents() {
     mEventManager.clean();
-    this->emitEvent(Topic::OUT_LISP_REQUEST, Msg::OUT_REFRESH_EVENTS);
+    this->emitEvent(events::lisp::Topic::OUT_LISP_REQUEST, events::lisp::Msg::OUT_REFRESH_EVENTS);
   }
 
   /**
@@ -552,8 +520,8 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
     event.put("eventID", eventID.c_str());
     event.put("value", value);
 
-    auto sent = this->sendDataToChannel(unLisp::Channel::OUT_EVENT, event.build());
-    this->emitEvent(Topic::OUT_LISP_EVENT, Msg::OUT_NEW_EVENT);
+    auto sent = this->sendDataToChannel(events::lisp::Channel::OUT_EVENT, event.build());
+    this->emitEvent(events::lisp::Topic::OUT_LISP_EVENT, events::lisp::Msg::OUT_NEW_EVENT);
     return sent;
   }
 

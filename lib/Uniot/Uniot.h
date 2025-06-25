@@ -259,11 +259,11 @@ class UniotCore {
 
     return addSystemListener(
       [callback = std::move(callback)](unsigned int topic, int message) {
-        if (topic == uniot::NetworkController::WIFI_STATUS_LED) {
+        if (topic == uniot::events::network::WIFI_STATUS_LED) {
           callback(message != 0);
         }
       },
-      uniot::NetworkController::WIFI_STATUS_LED);
+      uniot::events::network::WIFI_STATUS_LED);
   }
 
   void begin(uint32_t eventBusTaskPeriod = 10) {

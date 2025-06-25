@@ -22,23 +22,22 @@
 #include <CBORStorage.h>
 #include <EventListener.h>
 #include <ISchedulerConnectionKit.h>
+#include <NetworkEvents.h>
 #include <NetworkScheduler.h>
 
 namespace uniot {
 class NetworkController : public ISchedulerConnectionKit, public CoreEventListener, public CBORStorage {
  public:
-  enum Topic { WIFI_STATUS_LED = FOURCC(nled) };
-
   NetworkController(NetworkScheduler &network,
-                    uint8_t pinBtn = UINT8_MAX,
-                    uint8_t activeLevelBtn = LOW,
-                    uint8_t pinLed = UINT8_MAX,
-                    uint8_t activeLevelLed = HIGH,
-                    uint8_t maxRebootCount = 3,
-                    uint32_t rebootWindowMs = 10000)
+    uint8_t pinBtn = UINT8_MAX,
+    uint8_t activeLevelBtn = LOW,
+    uint8_t pinLed = UINT8_MAX,
+    uint8_t activeLevelLed = HIGH,
+    uint8_t maxRebootCount = 3,
+    uint32_t rebootWindowMs = 10000)
       : CBORStorage("ctrl.cbor"),
         mpNetwork(&network),
-        mNetworkLastState(NetworkScheduler::SUCCESS),
+        mNetworkLastState(events::network::Msg::SUCCESS),
         mClickCounter(0),
         mPinLed(pinLed),
         mActiveLevelLed(activeLevelLed),
@@ -69,11 +68,11 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
     }
     _initTasks();
     _checkAndHandleReboot();
-    CoreEventListener::listenToEvent(NetworkScheduler::Topic::CONNECTION);
+    CoreEventListener::listenToEvent(events::network::Topic::CONNECTION);
   }
 
   virtual ~NetworkController() {
-    CoreEventListener::stopListeningToEvent(NetworkScheduler::Topic::CONNECTION);
+    CoreEventListener::stopListeningToEvent(events::network::Topic::CONNECTION);
     mpNetwork = nullptr;
   }
 
@@ -91,30 +90,30 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
   }
 
   virtual void onEventReceived(unsigned int topic, int msg) override {
-    if (NetworkScheduler::CONNECTION == topic) {
+    if (events::network::Topic::CONNECTION == topic) {
       int lastState = _resetNetworkLastState(msg);
       switch (msg) {
-        case NetworkScheduler::ACCESS_POINT:
-          if (lastState != NetworkScheduler::FAILED) {
+        case events::network::Msg::ACCESS_POINT:
+          if (lastState != events::network::Msg::FAILED) {
             statusWaiting();
           }
           break;
-        case NetworkScheduler::SUCCESS:
+        case events::network::Msg::SUCCESS:
           statusIdle();
           break;
-        case NetworkScheduler::CONNECTING:
+        case events::network::Msg::CONNECTING:
           statusBusy();
           break;
-        case NetworkScheduler::DISCONNECTED:
-          if (lastState != NetworkScheduler::CONNECTING) {
+        case events::network::Msg::DISCONNECTED:
+          if (lastState != events::network::Msg::CONNECTING) {
             // If previous state was CONNECTING, most likely there was a manual reconnect request
             mpNetwork->reconnect();
           }
           break;
-        case NetworkScheduler::AVAILABLE:
+        case events::network::Msg::AVAILABLE:
           mpNetwork->reconnect();
           break;
-        case NetworkScheduler::FAILED:
+        case events::network::Msg::FAILED:
           statusAlarm();
           mpNetwork->config();
           break;
@@ -166,7 +165,7 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
     mpTaskSignalLed = TaskScheduler::make([&](SchedulerTask &self, short t) {
       static bool signalLevel = true;
       signalLevel = (!signalLevel && t);
-      CoreEventListener::emitEvent(Topic::WIFI_STATUS_LED, signalLevel);
+      CoreEventListener::emitEvent(events::network::Topic::WIFI_STATUS_LED, signalLevel);
 
       if (_hasLed()) {
         digitalWrite(mPinLed, signalLevel ? mActiveLevelLed : !mActiveLevelLed);

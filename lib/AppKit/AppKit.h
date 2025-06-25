@@ -183,20 +183,20 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
    * @param eventBus The CoreEventBus to register with
    */
   virtual void registerWithBus(CoreEventBus &eventBus) override {
-    eventBus.openDataChannel(NetworkScheduler::Channel::OUT_SSID, 1);
-    eventBus.openDataChannel(unLisp::Channel::OUT_LISP, 5);
-    eventBus.openDataChannel(unLisp::Channel::OUT_LISP_LOG, 10);
-    eventBus.openDataChannel(unLisp::Channel::OUT_LISP_ERR, 1);
-    eventBus.openDataChannel(unLisp::Channel::OUT_EVENT, 10);
-    eventBus.openDataChannel(unLisp::Channel::IN_EVENT, 20);
+    eventBus.openDataChannel(events::network::Channel::OUT_SSID, 1);
+    eventBus.openDataChannel(events::lisp::Channel::OUT_LISP, 5);
+    eventBus.openDataChannel(events::lisp::Channel::OUT_LISP_LOG, 10);
+    eventBus.openDataChannel(events::lisp::Channel::OUT_LISP_ERR, 1);
+    eventBus.openDataChannel(events::lisp::Channel::OUT_EVENT, 10);
+    eventBus.openDataChannel(events::lisp::Channel::IN_EVENT, 20);
     eventBus.registerEntity(&Date::getInstance());
     eventBus.registerEntity(&mNetwork);
     eventBus.registerEntity(&mMQTT);
     eventBus.registerEntity(&getLisp());
     eventBus.registerEntity(&mLispDevice);
     eventBus.registerEntity(mpNetworkEventListener
-                                ->listenToEvent(NetworkScheduler::Topic::CONNECTION)
-                                ->listenToEvent(MQTTKit::Topic::CONNECTION));
+                                ->listenToEvent(events::network::Topic::CONNECTION)
+                                ->listenToEvent(events::mqtt::Topic::CONNECTION));
 
     if (mpNetworkDevice) {
       eventBus.registerEntity(mpNetworkDevice.get());
@@ -214,20 +214,20 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
    * @param eventBus The CoreEventBus to unregister from
    */
   virtual void unregisterFromBus(CoreEventBus &eventBus) override {
-    eventBus.closeDataChannel(NetworkScheduler::Channel::OUT_SSID);
-    eventBus.closeDataChannel(unLisp::Channel::OUT_LISP);
-    eventBus.closeDataChannel(unLisp::Channel::OUT_LISP_LOG);
-    eventBus.closeDataChannel(unLisp::Channel::OUT_LISP_ERR);
-    eventBus.closeDataChannel(unLisp::Channel::OUT_EVENT);
-    eventBus.closeDataChannel(unLisp::Channel::IN_EVENT);
+    eventBus.closeDataChannel(events::network::Channel::OUT_SSID);
+    eventBus.closeDataChannel(events::lisp::Channel::OUT_LISP);
+    eventBus.closeDataChannel(events::lisp::Channel::OUT_LISP_LOG);
+    eventBus.closeDataChannel(events::lisp::Channel::OUT_LISP_ERR);
+    eventBus.closeDataChannel(events::lisp::Channel::OUT_EVENT);
+    eventBus.closeDataChannel(events::lisp::Channel::IN_EVENT);
     eventBus.unregisterEntity(&Date::getInstance());
     eventBus.unregisterEntity(&mNetwork);
     eventBus.unregisterEntity(&mMQTT);
     eventBus.unregisterEntity(&getLisp());
     eventBus.unregisterEntity(&mLispDevice);
     eventBus.unregisterEntity(mpNetworkEventListener
-                                  ->stopListeningToEvent(NetworkScheduler::Topic::CONNECTION)
-                                  ->stopListeningToEvent(MQTTKit::Topic::CONNECTION));
+                                  ->stopListeningToEvent(events::network::Topic::CONNECTION)
+                                  ->stopListeningToEvent(events::mqtt::Topic::CONNECTION));
 
     if (mpNetworkDevice) {
       eventBus.unregisterEntity(mpNetworkDevice.get());
@@ -378,51 +378,51 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
    */
   inline void _initListeners() {
     mpNetworkEventListener = MakeUnique<CoreCallbackEventListener>([&](int topic, int msg) {
-      if (NetworkScheduler::CONNECTION == topic) {
+      if (events::network::Topic::CONNECTION == topic) {
         switch (msg) {
-          case NetworkScheduler::SUCCESS:
+          case events::network::Msg::SUCCESS:
             UNIOT_LOG_DEBUG("AppKit Subscriber, SUCCESS, ip: %s", WiFi.localIP().toString().c_str());
             break;
-          case NetworkScheduler::ACCESS_POINT:
+          case events::network::Msg::ACCESS_POINT:
             UNIOT_LOG_DEBUG("AppKit Subscriber, ACCESS_POINT");
-            mpNetworkEventListener->receiveDataFromChannel(NetworkScheduler::Channel::OUT_SSID, [this](unsigned int id, bool empty, Bytes data) {
+            mpNetworkEventListener->receiveDataFromChannel(events::network::Channel::OUT_SSID, [this](unsigned int id, bool empty, Bytes data) {
               if (!empty) {
                 UNIOT_LOG_DEBUG("SSID: %s", data.terminate().c_str());
               }
             });
             break;
 
-          case NetworkScheduler::CONNECTING:
+          case events::network::Msg::CONNECTING:
             UNIOT_LOG_DEBUG("AppKit Subscriber, CONNECTING");
-            mpNetworkEventListener->receiveDataFromChannel(NetworkScheduler::Channel::OUT_SSID, [this](unsigned int id, bool empty, Bytes data) {
+            mpNetworkEventListener->receiveDataFromChannel(events::network::Channel::OUT_SSID, [this](unsigned int id, bool empty, Bytes data) {
               if (!empty) {
                 UNIOT_LOG_DEBUG("SSID: %s", data.terminate().c_str());
               }
             });
             break;
 
-          case NetworkScheduler::DISCONNECTING:
+          case events::network::Msg::DISCONNECTING:
             UNIOT_LOG_DEBUG("AppKit Subscriber, DISCONNECTING");
             break;
 
-          case NetworkScheduler::DISCONNECTED:
+          case events::network::Msg::DISCONNECTED:
             UNIOT_LOG_DEBUG("AppKit Subscriber, DISCONNECTED");
             break;
 
-          case NetworkScheduler::AVAILABLE:
+          case events::network::Msg::AVAILABLE:
             UNIOT_LOG_DEBUG("AppKit Subscriber, AVAILABLE");
             break;
 
-          case NetworkScheduler::FAILED:
+          case events::network::Msg::FAILED:
           default:
             UNIOT_LOG_DEBUG("AppKit Subscriber, FAILED");
             break;
         }
         return;
       }
-      if (MQTTKit::CONNECTION == topic) {
+      if (events::mqtt::Topic::CONNECTION == topic) {
         switch (msg) {
-          case MQTTKit::SUCCESS:
+          case events::mqtt::Msg::SUCCESS:
             UNIOT_LOG_DEBUG("AppKit Subscriber, MQTT SUCCESS");
             if (mCredentials.isOwnerChanged()) {
               UNIOT_LOG_INFO("Owner changed, renewing subscriptions");
@@ -432,7 +432,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
               UNIOT_LOG_INFO("Owner not changed, do not renew subscriptions");
             }
             break;
-          case MQTTKit::FAILED:
+          case events::mqtt::Msg::FAILED:
           default:
             UNIOT_LOG_DEBUG("AppKit Subscriber, MQTT FAILED");
             break;

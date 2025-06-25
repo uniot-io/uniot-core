@@ -26,6 +26,7 @@
     #include <ESPmDNS.h>
 #endif
 
+#include <NetworkEvents.h>
 #include <WiFiNetworkScan.h>
 #include <Patches.h>
 #include <Common.h>
@@ -42,10 +43,6 @@ namespace uniot {
   class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
   {
   public:
-    enum Channel { OUT_SSID = FOURCC(ssid) };
-    enum Topic { CONNECTION = FOURCC(netw) };
-    enum Msg { FAILED = 0, SUCCESS, CONNECTING, DISCONNECTING, DISCONNECTED, ACCESS_POINT, AVAILABLE };
-
     NetworkScheduler(Credentials &credentials)
         : mpCredentials(&credentials),
           mApSubnet(255, 255, 255, 0),
@@ -105,13 +102,13 @@ namespace uniot {
     void forget() {
       UNIOT_LOG_DEBUG("Forget credentials: %s", mWifiStorage.getSsid().c_str());
       mWifiStorage.clean();
-      CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::DISCONNECTING);
+      CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::DISCONNECTING);
       mTaskConfigAp->once(500);
     }
 
     bool reconnect() {
       if(mWifiStorage.isCredentialsValid()) {
-        CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::DISCONNECTING);
+        CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::DISCONNECTING);
         mTaskConnectSta->once(500);
 
         if (_tryToRecoverAp()) {
@@ -185,8 +182,8 @@ namespace uniot {
           mTaskScan->once(500);
           mTaskAvailabilityCheck->attach(10000);
           mApEnabled = true;
-          CoreEventEmitter::sendDataToChannel(Channel::OUT_SSID, Bytes(mApName));
-          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::ACCESS_POINT);
+          CoreEventEmitter::sendDataToChannel(events::network::Channel::OUT_SSID, Bytes(mApName));
+          CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::ACCESS_POINT);
         } else {
           UNIOT_LOG_WARN("Start server failed");
           mTaskConfigAp->attach(500, 1);
@@ -206,13 +203,13 @@ namespace uniot {
           WiFi.setTxPower(WIFI_TX_POWER_LEVEL);
 #endif
           mTaskConnecting->attach(100, 50);
-          CoreEventEmitter::sendDataToChannel(Channel::OUT_SSID, Bytes(mWifiStorage.getSsid()));
-          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::CONNECTING);
+          CoreEventEmitter::sendDataToChannel(events::network::Channel::OUT_SSID, Bytes(mWifiStorage.getSsid()));
+          CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::CONNECTING);
           mCanScan = false;
           mLastSaveResult = -1;
         } else {
           mTaskConnecting->detach();
-          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
+          CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::FAILED);
           mCanScan = true;
           mLastSaveResult = 0;
         }
@@ -226,7 +223,7 @@ namespace uniot {
           } else {
             tries = 0;
             mWifiStorage.restore();
-            CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
+            CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::FAILED);
             mCanScan = true;
             mLastSaveResult = 0;
           }
@@ -246,7 +243,7 @@ namespace uniot {
           mTaskStop->once(30000); // Stopping Configuration. Step 1. Carefully change the deferrals.
           mTaskStopAp->once(35000); // Stopping Configuration. Step 2. Carefully change the deferrals.
           mTaskAvailabilityCheck->detach();
-          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::SUCCESS);
+          CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::SUCCESS);
           break;
 
           case WL_NO_SSID_AVAIL:
@@ -276,7 +273,7 @@ namespace uniot {
       mTaskMonitoring = TaskScheduler::make([this](SchedulerTask &self, short times) {
         if(WiFi.status() != WL_CONNECTED) {
           mTaskMonitoring->detach();
-          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::DISCONNECTED);
+          CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::DISCONNECTED);
         }
       });
 
@@ -332,7 +329,7 @@ namespace uniot {
               for (auto i = 0; i < n; ++i) {
                 if (WiFi.SSID(i) == mWifiStorage.getSsid()) {
                   UNIOT_LOG_INFO("Network [%s] is available", WiFi.SSID(i).c_str());
-                  CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::AVAILABLE);
+                  CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::AVAILABLE);
                   break;
                 }
               }
