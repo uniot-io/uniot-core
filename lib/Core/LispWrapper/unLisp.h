@@ -50,7 +50,13 @@
 #include <libminilisp.h>
 
 #ifndef UNIOT_LISP_HEAP
-#define UNIOT_LISP_HEAP 8000
+#if defined(ESP32)
+#define UNIOT_LISP_HEAP 20480  // 20 KB for ESP32
+#elif defined(ESP8266)
+#define UNIOT_LISP_HEAP 8192  // 8 KB for ESP8266
+#else
+#define UNIOT_LISP_HEAP 4096  // 4 KB for other platforms
+#endif
 #endif
 
 namespace uniot {
@@ -154,7 +160,7 @@ class IncomingEventManager {
           expiredEvents++;
           keysToRemove.push(entry.first);
           UNIOT_LOG_DEBUG("marking event '%s' for removal (unused, last accessed %lu ms ago)",
-                          entry.first.c_str(), timeSinceLastAccess);
+            entry.first.c_str(), timeSinceLastAccess);
         }
       }
     });
@@ -166,7 +172,7 @@ class IncomingEventManager {
 
     if (expiredEvents > 0) {
       UNIOT_LOG_INFO("cleaned up %d expired events (total: %d, unused: %d, queued items: %d)",
-                     expiredEvents, totalEvents, unusedEvents, totalQueuedItems);
+        expiredEvents, totalEvents, unusedEvents, totalQueuedItems);
     } else if (totalEvents > 0) {
       UNIOT_LOG_TRACE("no events to cleanup (total: %d, unused: %d, queued items: %d)", totalEvents, unusedEvents, totalQueuedItems);
     }
@@ -310,9 +316,9 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
     mUserPrimitives.forEach([&](Pair<const String &, Primitive *> holder) {
       auto description = PrimitiveExpeditor::extractDescription(holder.second);
       obj.putArray(holder.first.c_str())
-          .append(description.returnType)
-          .appendArray()
-          .append(description.argsCount, reinterpret_cast<const uint8_t *>(description.argsTypes));
+        .append(description.returnType)
+        .appendArray()
+        .append(description.argsCount, reinterpret_cast<const uint8_t *>(description.argsTypes));
     });
   }
 
@@ -538,7 +544,7 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    */
   inline Object _primTask(Root root, VarObject env, VarObject list) {
     auto expeditor = PrimitiveExpeditor::describe("task", Lisp::Bool, 3, Lisp::Int, Lisp::Int, Lisp::Cell)
-                         .init(root, env, list);
+                       .init(root, env, list);
     expeditor.assertDescribedArgs();
 
     auto times = expeditor.getArgInt(0);
@@ -566,7 +572,7 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    */
   inline Object _primIsEventAvailable(Root root, VarObject env, VarObject list) {
     auto expeditor = PrimitiveExpeditor::describe("is_event", Lisp::Bool, 1, Lisp::Symbol)
-                         .init(root, env, list);
+                       .init(root, env, list);
     expeditor.assertDescribedArgs();
 
     auto eventId = expeditor.getArgSymbol(0);
@@ -589,7 +595,7 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    */
   inline Object _primPopEvent(Root root, VarObject env, VarObject list) {
     auto expeditor = PrimitiveExpeditor::describe("pop_event", Lisp::Bool, 1, Lisp::Symbol)
-                         .init(root, env, list);
+                       .init(root, env, list);
     expeditor.assertDescribedArgs();
 
     auto eventId = expeditor.getArgSymbol(0);
@@ -613,7 +619,7 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    */
   inline Object _primPushEvent(Root root, VarObject env, VarObject list) {
     auto expeditor = PrimitiveExpeditor::describe("push_event", Lisp::Bool, 2, Lisp::Symbol, Lisp::BoolInt)
-                         .init(root, env, list);
+                       .init(root, env, list);
     expeditor.assertDescribedArgs();
 
     auto eventId = expeditor.getArgSymbol(0);
