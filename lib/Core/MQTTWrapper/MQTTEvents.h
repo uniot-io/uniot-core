@@ -1,6 +1,6 @@
 /*
  * This is a part of the Uniot project.
- * Copyright (C) 2016-2024 Uniot <contact@uniot.io>
+ * Copyright (C) 2016-2025 Uniot <contact@uniot.io>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,22 +20,59 @@
 
 #include <Common.h>
 
-namespace uniot::events::mqtt {
 /**
- * @enum Topic
- * @brief Event topics this class can emit
+ * @file MQTTEvents.h
+ * @brief MQTT event definitions for the Uniot event system
+ * @defgroup mqtt_events MQTT Events
+ * @ingroup mqtt
+ * @{
+ *
+ * This file defines the event topics and messages used throughout the Uniot
+ * MQTT subsystem. These events enable communication between MQTT clients,
+ * connection managers, and other system components that need to respond to
+ * MQTT connectivity changes.
+ *
+ * The event system uses FOURCC (Four Character Code) identifiers for efficient
+ * event routing and minimal memory footprint. MQTT events are organized into:
+ * - Topics: Event categories (e.g., connection events)
+ * - Messages: Specific event types within topics (e.g., success, failure)
+ *
+ * Example usage:
+ * @code
+ * // Emit an MQTT connection success event
+ * eventEmitter.emitEvent(events::mqtt::Topic::CONNECTION,
+ *                       events::mqtt::Msg::SUCCESS);
+ *
+ * // Listen for MQTT connection events
+ * eventListener.listenToEvent(events::mqtt::Topic::CONNECTION);
+ * @endcode
+ */
+
+namespace uniot::events::mqtt {
+
+/**
+ * @brief MQTT event topics
+ *
+ * Defines the main categories of MQTT events that can be emitted throughout
+ * the system. Topics group related events together and use FOURCC identifiers
+ * for efficient event handling and type safety.
  */
 enum Topic {
-  CONNECTION = FOURCC(mqtt) /**< MQTT connection topic (value from FOURCC("mqtt")) */
+  CONNECTION = FOURCC(mqtt)  ///< MQTT connection state changes and operations
 };
 
 /**
- * @enum Msg
- * @brief Message types for the CONNECTION topic
+ * @brief MQTT event messages
+ *
+ * Defines specific event messages that can be sent within MQTT topics.
+ * These messages represent different states and outcomes of MQTT operations,
+ * particularly connection establishment and failure scenarios.
  */
 enum Msg {
-  FAILED = 0, /**< Connection failed */
-  SUCCESS = 1 /**< Connection successful */
+  FAILED = 0,  ///< MQTT connection failed or was lost
+  SUCCESS = 1  ///< MQTT connection established successfully
 };
 
-}  // namespace uniot::events::lisp
+}  // namespace uniot::events::mqtt
+
+/** @} */
