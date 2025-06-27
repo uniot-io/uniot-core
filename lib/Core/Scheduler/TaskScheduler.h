@@ -38,10 +38,10 @@
 #include "ESP32Task.h"
 #endif
 
-#include <ClearQueue.h>
 #include <Common.h>
 #include <IExecutor.h>
 #include <ISchedulerConnectionKit.h>
+#include <IterableQueue.h>
 
 #include <functional>
 #include <memory>
@@ -72,7 +72,7 @@ class SchedulerTask : public Task {
    * @param task Reference to the executing task
    * @param times Number of repetitions left (-1 for infinite)
    */
-  using SchedulerTaskCallback = std::function<void(SchedulerTask &, short)>; // TODO: add ms to callback
+  using SchedulerTaskCallback = std::function<void(SchedulerTask &, short)>;  // TODO: add ms to callback
 
   /**
    * @brief Shared pointer type for task callbacks
@@ -103,7 +103,7 @@ class SchedulerTask : public Task {
    * @param ms Millisecond interval between executions
    * @param times Number of times to execute (0 or negative for infinite)
    */
-  void attach(uint32_t ms, short times = 0) { // TODO: auto detach
+  void attach(uint32_t ms, short times = 0) {  // TODO: auto detach
     mRepeatTimes = times > 0 ? times : -1;
     Task::attach<volatile bool *>(ms, mRepeatTimes != 1, [](volatile bool *can) { *can = true; }, &mCanDoHardWork);
   }
@@ -146,10 +146,10 @@ class SchedulerTask : public Task {
   }
 
  private:
-  uint64_t mTotalElapsedMs;     ///< Total elapsed execution time in ms
-  short mRepeatTimes;           ///< Remaining repetitions (-1 for infinite)
-  volatile bool mCanDoHardWork; ///< Flag indicating the task is ready to execute
-  spSchedulerTaskCallback mspCallback; ///< Callback to execute
+  uint64_t mTotalElapsedMs;             ///< Total elapsed execution time in ms
+  short mRepeatTimes;                   ///< Remaining repetitions (-1 for infinite)
+  volatile bool mCanDoHardWork;         ///< Flag indicating the task is ready to execute
+  spSchedulerTaskCallback mspCallback;  ///< Callback to execute
 };
 /** @} */
 
@@ -234,10 +234,23 @@ class TaskScheduler {
    */
   inline void loop() {
     auto startMs = millis();
-    mTasks.forEach([&](Pair<const char *, TaskPtr> task) {
+    mTasks.begin();
+    while (!mTasks.isEnd()) {
+      const auto &task = mTasks.current();
       task.second->loop();
+
+      // Remove anonymous tasks only if they are detached (finished)
+      if (!task.first && !task.second->isAttached()) {
+        // auto wasSize = mTasks.calcSize();
+        mTasks.deleteCurrent();
+        // auto newSize = mTasks.calcSize();
+        // UNIOT_LOG_DEBUG("Anonymous task removed, size: %d -> %d", wasSize, newSize);
+      } else {
+        mTasks.next();
+      }
+
       yield();
-    });
+    }
     mTotalElapsedMs += millis() - startMs;
   }
 
@@ -247,10 +260,27 @@ class TaskScheduler {
    * @param callback Function that receives information about each task
    */
   void exportTasksInfo(TaskInfoCallback callback) const {
-    if (callback) {
-      mTasks.forEach([&](Pair<const char *, TaskPtr> task) {
+    if (!callback) {
+      return;
+    }
+
+    uint64_t totalAnonymousElapsedMs = 0;
+    uint8_t anonymousTaskCount = 0;
+
+    mTasks.forEach([&](const Pair<const char *, TaskPtr> &task) {
+      if (task.first) {
         callback(task.first, task.second->isAttached(), task.second->getTotalElapsedMs());
-      });
+      } else {
+        totalAnonymousElapsedMs += task.second->getTotalElapsedMs();
+        anonymousTaskCount++;
+      }
+    });
+
+    if (anonymousTaskCount > 0) {
+      constexpr size_t BUFFER_SIZE = 20;
+      static char anonymousTaskName[BUFFER_SIZE];
+      snprintf(anonymousTaskName, BUFFER_SIZE, "__anonymous[%d]", anonymousTaskCount);
+      callback(anonymousTaskName, true, totalAnonymousElapsedMs);
     }
   }
 
@@ -264,8 +294,8 @@ class TaskScheduler {
   }
 
  private:
-  uint64_t mTotalElapsedMs; ///< Total elapsed scheduler execution time in ms
-  ClearQueue<Pair<const char *, TaskPtr>> mTasks; ///< Collection of managed tasks
+  uint64_t mTotalElapsedMs;                           ///< Total elapsed scheduler execution time in ms
+  IterableQueue<Pair<const char *, TaskPtr>> mTasks;  ///< Collection of managed tasks
   /** @} */
 };
 

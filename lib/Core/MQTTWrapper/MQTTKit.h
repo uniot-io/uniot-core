@@ -49,7 +49,9 @@
 #include <Common.h>
 #include <Date.h>
 #include <EventListener.h>
+#include <NetworkEvents.h>
 #include <NetworkScheduler.h>
+#include <MQTTEvents.h>
 #include <PubSubClient.h>
 #include <TaskScheduler.h>
 
@@ -76,23 +78,6 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
   friend class MQTTDevice;
 
  public:
-  /**
-   * @enum Topic
-   * @brief Event topics this class can emit
-   */
-  enum Topic {
-    CONNECTION = FOURCC(mqtt) /**< MQTT connection topic (value from FOURCC("mqtt")) */
-  };
-
-  /**
-   * @enum Msg
-   * @brief Message types for the CONNECTION topic
-   */
-  enum Msg {
-    FAILED = 0,       /**< Connection failed */
-    SUCCESS = 1       /**< Connection successful */
-  };
-
   /**
    * @brief Constructs an MQTTKit instance
    * @param credentials The credentials to use for MQTT authentication
@@ -123,8 +108,8 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
       });
     });
     _initTasks();
-    CoreEventListener::listenToEvent(NetworkScheduler::Topic::CONNECTION);
-    CoreEventListener::listenToEvent(Date::Topic::TIME);
+    CoreEventListener::listenToEvent(events::network::Topic::CONNECTION);
+    CoreEventListener::listenToEvent(events::date::Topic::TIME);
 
     // mWiFiClient.allowSelfSignedCerts();
     // mWiFiClient.setInsecure();
@@ -134,8 +119,8 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
    * @brief Destructor - cleans up event listeners
    */
   ~MQTTKit() {
-    CoreEventListener::stopListeningToEvent(NetworkScheduler::Topic::CONNECTION);
-    CoreEventListener::stopListeningToEvent(Date::Topic::TIME);
+    CoreEventListener::stopListeningToEvent(events::network::Topic::CONNECTION);
+    CoreEventListener::stopListeningToEvent(events::date::Topic::TIME);
     // TODO: implement, remove all devices
   }
 
@@ -227,18 +212,18 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
    * @implements CoreEventListener
    */
   virtual void onEventReceived(unsigned int topic, int msg) override {
-    if (NetworkScheduler::CONNECTION == topic) {
+    if (events::network::Topic::CONNECTION == topic) {
       switch (msg) {
-        case NetworkScheduler::SUCCESS:
+        case events::network::Msg::SUCCESS:
           mNetworkConnected = true;
           Date::getInstance().forceSync();
           break;
-        case NetworkScheduler::ACCESS_POINT:
-        case NetworkScheduler::AVAILABLE:
-        case NetworkScheduler::CONNECTING:
-        case NetworkScheduler::DISCONNECTING:
-        case NetworkScheduler::DISCONNECTED:
-        case NetworkScheduler::FAILED:
+        case events::network::Msg::ACCESS_POINT:
+        case events::network::Msg::AVAILABLE:
+        case events::network::Msg::CONNECTING:
+        case events::network::Msg::DISCONNECTING:
+        case events::network::Msg::DISCONNECTED:
+        case events::network::Msg::FAILED:
         default:
           mNetworkConnected = false;
           mTaskMQTT->detach();
@@ -246,9 +231,9 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
       }
       return;
     }
-    if (Date::TIME == topic) {
+    if (events::date::Topic::TIME == topic) {
       switch (msg) {
-        case Date::SYNCED:
+        case events::date::Msg::SYNCED:
           if (!mTaskMQTT->isAttached()) {
             mTaskMQTT->attach(10);
           }
@@ -316,9 +301,9 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
               mPubSubClient.subscribe(topic.c_str());
             });
           });
-          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::SUCCESS);
+          CoreEventEmitter::emitEvent(events::mqtt::Topic::CONNECTION, events::mqtt::Msg::SUCCESS);
         } else {
-          CoreEventEmitter::emitEvent(Topic::CONNECTION, Msg::FAILED);
+          CoreEventEmitter::emitEvent(events::mqtt::Topic::CONNECTION, events::mqtt::Msg::FAILED);
         }
       }
       mPubSubClient.loop();

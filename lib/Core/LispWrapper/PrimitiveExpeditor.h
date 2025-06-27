@@ -518,11 +518,5 @@ class PrimitiveExpeditor {
     }
   };
 };
-
-RegisterManager PrimitiveExpeditor::sRegister;
-
-jmp_buf PrimitiveExpeditor::sDescriptionJumper;
-PrimitiveExpeditor::PrimitiveDescription PrimitiveExpeditor::sLastDescription;
-bool PrimitiveExpeditor::DescriptionModeGuard::sDescriptionMode;
 /** @} */
 }  // namespace uniot

@@ -1,7 +1,6 @@
-#include <AppKit.h>
-#include <Date.h>
-#include <Logger.h>
 #include <Uniot.h>
+
+#include "primitives.h"
 
 #if defined(ESP8266)
 #define PIN_LDR A0
@@ -22,43 +21,36 @@
 
 using namespace uniot;
 
-auto taskPrintHeap = TaskScheduler::make([](SchedulerTask& self, short t) {
+auto taskPrintHeap = Uniot.createTask("print_heap", [](SchedulerTask& self, short t) {
   Serial.println(ESP.getFreeHeap());
 });
 
-auto taskPrintTime = TaskScheduler::make([](SchedulerTask& self, short t) {
+auto taskPrintTime = Uniot.createTask("print_time", [](SchedulerTask& self, short t) {
   Serial.println(Date::getFormattedTime());
 });
 
 void setup() {
-  Uniot.begin();
-  auto& MainAppKit = AppKit::getInstance();
+  Serial.begin(115200);
+  Uniot.configWiFiResetButton(PIN_BUTTON, BTN_PIN_LEVEL);
+  Uniot.configWiFiResetOnReboot(5);
+
 #if defined(ESP8266)
-  MainAppKit.configureNetworkController({.pinBtn = PIN_BUTTON, .activeLevelBtn = BTN_PIN_LEVEL, .pinLed = PIN_RED, .activeLevelLed = LED_PIN_LEVEL, .maxRebootCount = 255});
-  PrimitiveExpeditor::getRegisterManager().setDigitalOutput(PIN_RED, PIN_GREEN, PIN_BLUE);
-  PrimitiveExpeditor::getRegisterManager().setDigitalInput(0, PIN_BUTTON);
-  PrimitiveExpeditor::getRegisterManager().setAnalogOutput(PIN_RED, PIN_GREEN, PIN_BLUE);
-  PrimitiveExpeditor::getRegisterManager().setAnalogInput(PIN_LDR);
+  Uniot.configWiFiStatusLed(PIN_RED, LED_PIN_LEVEL);
+  Uniot.registerLispDigitalOutput(PIN_RED, PIN_GREEN, PIN_BLUE);
+  Uniot.registerLispDigitalInput(0, PIN_BUTTON);
+  Uniot.registerLispAnalogOutput(PIN_RED, PIN_GREEN, PIN_BLUE);
+  Uniot.registerLispAnalogInput(PIN_LDR);
 #elif defined(ESP32)
-  MainAppKit.configureNetworkController({.pinBtn = PIN_BUTTON, .activeLevelBtn = BTN_PIN_LEVEL, .pinLed = PIN_LED, .activeLevelLed = LED_PIN_LEVEL, .maxRebootCount = 255});
-  PrimitiveExpeditor::getRegisterManager().setDigitalOutput(PIN_LED, PIN_VIBRO);
-  PrimitiveExpeditor::getRegisterManager().setDigitalInput(PIN_BUTTON);
+  Uniot.configWiFiStatusLed(PIN_LED, LED_PIN_LEVEL);
+  Uniot.registerLispDigitalOutput(PIN_LED, PIN_VIBRO);
+  Uniot.registerLispDigitalInput(PIN_BUTTON);
 #endif
-
-  Uniot.getEventBus().registerKit(MainAppKit);
-
-  Uniot.getScheduler()
-      .push(MainAppKit)
-      .push("print_time", taskPrintTime)
-      .push("print_heap", taskPrintHeap);
 
   taskPrintHeap->attach(500);
   taskPrintTime->attach(500);
 
-  MainAppKit.attach();
-
-  UNIOT_LOG_INFO("%s: %s", "DEVICE_ID", MainAppKit.getCredentials().getDeviceId().c_str());
-  UNIOT_LOG_INFO("%s: %s", "OWNER_ID", MainAppKit.getCredentials().getOwnerId().c_str());
+  Uniot.addLispPrimitive(filter_events);
+  Uniot.begin();
 }
 
 void loop() {

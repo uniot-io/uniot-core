@@ -40,6 +40,7 @@
 #include <esp_sntp.h>
 #endif
 
+#include <DateEvents.h>
 #include <CBORStorage.h>
 #include <EventEmitter.h>
 #include <IExecutor.h>
@@ -65,16 +66,6 @@ class Date : public IExecutor, public CBORStorage, public Singleton<Date>, publi
   friend class Singleton<Date>;
 
  public:
-  /**
-   * @brief Event topics related to date and time
-   */
-  enum Topic { TIME = FOURCC(date) };
-
-  /**
-   * @brief Message types for date-related events
-   */
-  enum Msg { SYNCED = 0 };
-
   /**
    * @brief Returns the current Unix timestamp
    *
@@ -191,7 +182,7 @@ class Date : public IExecutor, public CBORStorage, public Singleton<Date>, publi
    */
   void _timeSyncCallback() {
     execute(0);
-    CoreEventEmitter::emitEvent(Topic::TIME, Msg::SYNCED);
+    CoreEventEmitter::emitEvent(uniot::events::date::Topic::TIME, uniot::events::date::Msg::SYNCED);
   }
 
   /**

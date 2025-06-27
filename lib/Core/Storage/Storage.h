@@ -32,12 +32,15 @@
 #pragma once
 
 // doc: https://arduino-esp8266.readthedocs.io/en/latest/filesystem.html
-#if UNIOT_USE_LITTLEFS == 1
+#if UNIOT_USE_NVSFS == 1
+#include <NVSFS.h>
+#define FileFS NVSFS
+#elif UNIOT_USE_LITTLEFS == 1
 #include <LittleFS.h>
 #define FileFS LittleFS
 #else
-#include <SPIFFS.h>
 #include <FS.h>
+#include <SPIFFS.h>
 #define FileFS SPIFFS
 #endif
 
@@ -69,7 +72,11 @@ class Storage {
    * @param path The file path to use for storage (limited to 31 characters)
    */
   Storage(const String &path) {
-    setPath("/" + path);
+    String normalizedPath = path;
+    if (!normalizedPath.startsWith("/")) {
+      normalizedPath = "/" + normalizedPath;
+    }
+    setPath(normalizedPath);
 
     sInstancesCount++;
 
@@ -161,7 +168,11 @@ class Storage {
       UNIOT_LOG_WARN("Failed to open %s. It is ok on first start", mPath.c_str());
       return false;
     }
-    mData = _readSmallFile(file); // TODO: cleanup before read?
+#ifdef UNIOT_USE_NVSFS
+    mData = file.getBytes();  // NVSFS provides a convenient way to get bytes directly
+#else
+    mData = _readSmallFile(file);  // TODO: cleanup before read?
+#endif
     file.close();
     return true;
   }
@@ -222,6 +233,8 @@ class Storage {
    * @param file An open File object to read from
    * @retval data The data read from the file
    */
+
+#ifndef UNIOT_USE_NVSFS
   Bytes _readSmallFile(File &file) {
     auto toRead = file.size() - file.position();
     char *buf = (char *)malloc(toRead);
@@ -230,6 +243,7 @@ class Storage {
     free(buf);
     return data;
   }
+#endif
 
   /**
    * @brief Tracks whether the filesystem is currently mounted
