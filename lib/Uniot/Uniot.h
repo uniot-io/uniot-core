@@ -163,9 +163,21 @@ class UniotCore {
    * are validated and stored persistently for use across device reboots.
    */
   void configWiFiCredentials(const String& ssid, const String& password = "") {
-    _createNetworkControllerConfig();
     auto success = getAppKit().setWiFiCredentials(ssid, password);
     UNIOT_LOG_ERROR_IF(!success, "Failed to set WiFi credentials");
+  }
+
+  /**
+   * @brief Configure user identification
+   * @param user User identifier string for device association
+   *
+   * Sets the user ID for device identification and association purposes.
+   * This identifier is used for device management and tracking within
+   * the Uniot ecosystem.
+   */
+  void configUser(const String& user) {
+    auto success = getAppKit().setUserId(user);
+    UNIOT_LOG_ERROR_IF(!success, "Failed to set user ID");
   }
 
   /**
