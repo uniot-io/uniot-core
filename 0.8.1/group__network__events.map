@@ -1,0 +1,11 @@
+<map id="Network Events" name="Network Events">
+<area shape="rect" id="Node000005" href="$group__captive__portal.html" title=" " alt="" coords="293,5,407,31"/>
+<area shape="rect" id="Node000002" href="$group__date__events.html" title=" " alt="" coords="299,64,401,89"/>
+<area shape="rect" id="Node000009" href="$group__json.html" title="Lightweight JSON generation utilities for Uniot devices." alt="" coords="323,113,377,139"/>
+<area shape="rect" id="Node000003" href="$group__lisp__events.html" title=" " alt="" coords="302,172,398,197"/>
+<area shape="rect" id="Node000004" href="$group__mqtt__events.html" title=" " alt="" coords="296,228,404,253"/>
+<area shape="rect" id="Node000006" href="$group__network__controller.html" title=" " alt="" coords="277,277,423,303"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,203,131,228"/>
+<area shape="rect" id="Node000007" href="$group__network__scheduler.html" title=" " alt="" coords="277,327,423,352"/>
+<area shape="rect" id="Node000008" href="$group__wifi__scan.html" title=" " alt="" coords="264,376,436,401"/>
+</map>

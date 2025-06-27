@@ -1,7 +1,5 @@
 var searchData=
 [
-  ['schedulertaskcallback_0',['SchedulerTaskCallback',['../classuniot_1_1_scheduler_task.html#aa56c294060ac3df24b54e1bb9fd2656f',1,'uniot::SchedulerTask']]],
-  ['sharedpointer_1',['SharedPointer',['../group__common.html#ga5349de5c3b0f3ee0d72fc97cbc58adf5',1,'uniot']]],
-  ['spschedulertaskcallback_2',['spSchedulerTaskCallback',['../classuniot_1_1_scheduler_task.html#a858e5cb7a1e174dcc00a666541de23af',1,'uniot::SchedulerTask']]],
-  ['synctimecallback_3',['SyncTimeCallback',['../classuniot_1_1_simple_n_t_p.html#a01b569e7399d676b64beee6b32409d08',1,'uniot::SimpleNTP']]]
+  ['recordptr_0',['RecordPtr',['../group__registers__object__register.html#gaf895a0d329e916dcc178e8459d867d82',1,'uniot']]],
+  ['root_1',['Root',['../group__uniot-lisp-helper.html#gaa541392a7ed173d3fc500299991b6521',1,'uniot::lisp']]]
 ];

@@ -1,0 +1,317 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <meta name="generator" content="Doxygen 1.13.2" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Uniot Core: uniot::events::lisp Namespace Reference</title>
+    <link href="tabs.css" rel="stylesheet" type="text/css" />
+    <link rel="icon" type="image/svg+xml" href="logo.png" />
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="dynsections.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-darkmode-toggle.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-fragment-copy-button.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-paragraph-link.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-interactive-toc.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-tabs.js"></script>
+    <script type="text/javascript" src="version-dropdown.js"></script>
+    <script type="text/javascript">
+        DoxygenAwesomeFragmentCopyButton.init()
+        DoxygenAwesomeDarkModeToggle.init()
+        DoxygenAwesomeParagraphLink.init()
+        DoxygenAwesomeInteractiveToc.init()
+        DoxygenAwesomeTabs.init()
+    </script>
+    <link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+    <link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+    <link href="doxygen.css" rel="stylesheet" type="text/css" />
+    <link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only-darkmode-toggle.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-uniot.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+    <!-- https://tholman.com/github-corners/ -->
+    <a href="https://github.com/uniot-io/uniot-core" class="github-corner" title="View source on GitHub" target="_blank"
+        rel="noopener noreferrer">
+        <svg viewBox="0 0 250 250" width="40" height="40"
+            style="position: absolute; top: 0; border: 0; right: 0; z-index: 99;" aria-hidden="true">
+            <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+            <path
+                d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+                fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+            <path
+                d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+                fill="currentColor" class="octo-body"></path>
+        </svg></a>
+    <style>
+        .github-corner:hover .octo-arm {
+            animation: octocat-wave 560ms ease-in-out
+        }
+        @keyframes octocat-wave {
+            0%,
+            100% {
+                transform: rotate(0)
+            }
+            20%,
+            60% {
+                transform: rotate(-25deg)
+            }
+            40%,
+            80% {
+                transform: rotate(10deg)
+            }
+        }
+        @media (max-width:500px) {
+            .github-corner:hover .octo-arm {
+                animation: none
+            }
+            .github-corner .octo-arm {
+                animation: octocat-wave 560ms ease-in-out
+            }
+        }
+    </style>
+    <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+        <div id="titlearea">
+            <table cellspacing="0" cellpadding="0">
+                <tbody>
+                    <tr>
+                        <td id="projectlogo"><img alt="Logo" src="logo.png" /></td>
+                    </tr>
+                    <tr>
+                        <td id="projectalign">
+                            <div id="projectname">
+                                Uniot Core
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="projectalign_number" id="projectalign">
+                            <span id="projectnumber">0.8.1</span>
+                        </td>
+                    </tr>
+                    <!-- <tr>
+                        <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Search" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+                    </tr> -->
+                </tbody>
+            </table>
+        </div>
+        <!-- end header part -->
+<!-- Generated by Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','Search',true);
+  $(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('namespaceuniot_1_1events_1_1lisp.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Loading...</div>
+<div class="SRStatus" id="Searching">Searching...</div>
+<div class="SRStatus" id="NoMatches">No Matches</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#enum-members">Enumerations</a>  </div>
+  <div class="headertitle"><div class="title">uniot::events::lisp Namespace Reference<div class="ingroups"><a class="el" href="group__lisp__events.html">Lisp Events</a></div></div></div>
+</div><!--header-->
+<div class="contents">
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:afbe04a0b1a959b4f7a37c91cba8f191c" id="r_afbe04a0b1a959b4f7a37c91cba8f191c"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afbe04a0b1a959b4f7a37c91cba8f191c">Channel</a> { <br />
+&#160;&#160;<a class="el" href="#afbe04a0b1a959b4f7a37c91cba8f191ca4ce3f9e4e3d7cc0a82072f4e955f9164">OUT_LISP</a> = FOURCC(lout)
+, <a class="el" href="#afbe04a0b1a959b4f7a37c91cba8f191ca117814107fca41ef10a0895e81f0b7cb">OUT_LISP_LOG</a> = FOURCC(llog)
+, <a class="el" href="#afbe04a0b1a959b4f7a37c91cba8f191ca9c2c2b19676c7cba3f21d598901ae4c7">OUT_LISP_ERR</a> = FOURCC(lerr)
+, <a class="el" href="#afbe04a0b1a959b4f7a37c91cba8f191cadbeec59ee0fb9882ab683749ba20c1d1">OUT_EVENT</a> = FOURCC(evou)
+, <br />
+&#160;&#160;<a class="el" href="#afbe04a0b1a959b4f7a37c91cba8f191ca4a6bf470f6bf8ec1428bb279813ffd56">IN_EVENT</a> = FOURCC(evin)
+<br />
+ }</td></tr>
+<tr class="memdesc:afbe04a0b1a959b4f7a37c91cba8f191c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Communication channels for data exchange between Lisp and the host application.  <a href="#afbe04a0b1a959b4f7a37c91cba8f191c">More...</a><br /></td></tr>
+<tr class="separator:afbe04a0b1a959b4f7a37c91cba8f191c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ceddddd197c65d2e31f8b9f366f0357" id="r_a6ceddddd197c65d2e31f8b9f366f0357"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6ceddddd197c65d2e31f8b9f366f0357">Topic</a> { <a class="el" href="#a6ceddddd197c65d2e31f8b9f366f0357a2b19672530810e1aac3506b14a6ff5ce">OUT_LISP_MSG</a> = FOURCC(lisp)
+, <a class="el" href="#a6ceddddd197c65d2e31f8b9f366f0357a045f92b77f51c7c17adab23c184f1b76">OUT_LISP_REQUEST</a> = FOURCC(lspr)
+, <a class="el" href="#a6ceddddd197c65d2e31f8b9f366f0357afc5a33cb73e4793684ff8cd85cfc8223">OUT_LISP_EVENT</a> = FOURCC(levo)
+, <a class="el" href="#a6ceddddd197c65d2e31f8b9f366f0357ae13c9a2860ce8eec8807be4429444e10">IN_LISP_EVENT</a> = FOURCC(levi)
+ }</td></tr>
+<tr class="memdesc:a6ceddddd197c65d2e31f8b9f366f0357"><td class="mdescLeft">&#160;</td><td class="mdescRight">Topics for event-based communication.  <a href="#a6ceddddd197c65d2e31f8b9f366f0357">More...</a><br /></td></tr>
+<tr class="separator:a6ceddddd197c65d2e31f8b9f366f0357"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addea89f97a2510d1827ad9209c5baf3e" id="r_addea89f97a2510d1827ad9209c5baf3e"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#addea89f97a2510d1827ad9209c5baf3e">Msg</a> { <br />
+&#160;&#160;<a class="el" href="#addea89f97a2510d1827ad9209c5baf3ea281bb162adeec6038ebe06514fff3977">OUT_MSG_ADDED</a>
+, <a class="el" href="#addea89f97a2510d1827ad9209c5baf3ea80885f96cca84f9decb5c88377ec8baf">OUT_MSG_LOG</a>
+, <a class="el" href="#addea89f97a2510d1827ad9209c5baf3eaeb434fc594c2dffc1669a53275d972e8">OUT_MSG_ERROR</a>
+, <a class="el" href="#addea89f97a2510d1827ad9209c5baf3eab812ec256372648890740722311454b8">OUT_REFRESH_EVENTS</a>
+, <br />
+&#160;&#160;<a class="el" href="#addea89f97a2510d1827ad9209c5baf3ea8cf1767020e1261a767f30cde7b356ec">OUT_NEW_EVENT</a>
+, <a class="el" href="#addea89f97a2510d1827ad9209c5baf3ea073c765f4c78caf2f105a4df946fe977">IN_NEW_EVENT</a>
+<br />
+ }</td></tr>
+<tr class="memdesc:addea89f97a2510d1827ad9209c5baf3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Message types used in event communication.  <a href="#addea89f97a2510d1827ad9209c5baf3e">More...</a><br /></td></tr>
+<tr class="separator:addea89f97a2510d1827ad9209c5baf3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a id="afbe04a0b1a959b4f7a37c91cba8f191c" name="afbe04a0b1a959b4f7a37c91cba8f191c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afbe04a0b1a959b4f7a37c91cba8f191c">&#9670;&#160;</a></span>Channel</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="#afbe04a0b1a959b4f7a37c91cba8f191c">uniot::events::lisp::Channel</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Communication channels for data exchange between <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> and the host application. </p>
+<p>Defines data transmission channels that enable different types of information flow between the embedded <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> interpreter and the host application. Channels use FOURCC identifiers for efficient routing and type safety. </p>
+<table class="fieldtable">
+<tr><th colspan="3">Enumerator</th></tr><tr><td class="fieldname"><a id="afbe04a0b1a959b4f7a37c91cba8f191ca4ce3f9e4e3d7cc0a82072f4e955f9164" name="afbe04a0b1a959b4f7a37c91cba8f191ca4ce3f9e4e3d7cc0a82072f4e955f9164"></a>OUT_LISP&#160;</td><td class="fieldinit">FOURCC(lout)&#160;</td><td class="fielddoc"><p><a class="el" href="#afbe04a0b1a959b4f7a37c91cba8f191c" title="Communication channels for data exchange between Lisp and the host application.">Channel</a> for standard <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> output (stdout equivalent) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="afbe04a0b1a959b4f7a37c91cba8f191ca117814107fca41ef10a0895e81f0b7cb" name="afbe04a0b1a959b4f7a37c91cba8f191ca117814107fca41ef10a0895e81f0b7cb"></a>OUT_LISP_LOG&#160;</td><td class="fieldinit">FOURCC(llog)&#160;</td><td class="fielddoc"><p><a class="el" href="#afbe04a0b1a959b4f7a37c91cba8f191c" title="Communication channels for data exchange between Lisp and the host application.">Channel</a> for <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> log messages and debug information. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="afbe04a0b1a959b4f7a37c91cba8f191ca9c2c2b19676c7cba3f21d598901ae4c7" name="afbe04a0b1a959b4f7a37c91cba8f191ca9c2c2b19676c7cba3f21d598901ae4c7"></a>OUT_LISP_ERR&#160;</td><td class="fieldinit">FOURCC(lerr)&#160;</td><td class="fielddoc"><p><a class="el" href="#afbe04a0b1a959b4f7a37c91cba8f191c" title="Communication channels for data exchange between Lisp and the host application.">Channel</a> for <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> error messages and exceptions. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="afbe04a0b1a959b4f7a37c91cba8f191cadbeec59ee0fb9882ab683749ba20c1d1" name="afbe04a0b1a959b4f7a37c91cba8f191cadbeec59ee0fb9882ab683749ba20c1d1"></a>OUT_EVENT&#160;</td><td class="fieldinit">FOURCC(evou)&#160;</td><td class="fielddoc"><p><a class="el" href="#afbe04a0b1a959b4f7a37c91cba8f191c" title="Communication channels for data exchange between Lisp and the host application.">Channel</a> for outgoing events from <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> to the application. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="afbe04a0b1a959b4f7a37c91cba8f191ca4a6bf470f6bf8ec1428bb279813ffd56" name="afbe04a0b1a959b4f7a37c91cba8f191ca4a6bf470f6bf8ec1428bb279813ffd56"></a>IN_EVENT&#160;</td><td class="fieldinit">FOURCC(evin)&#160;</td><td class="fielddoc"><p><a class="el" href="#afbe04a0b1a959b4f7a37c91cba8f191c" title="Communication channels for data exchange between Lisp and the host application.">Channel</a> for incoming events from the application to <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a>. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a id="addea89f97a2510d1827ad9209c5baf3e" name="addea89f97a2510d1827ad9209c5baf3e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#addea89f97a2510d1827ad9209c5baf3e">&#9670;&#160;</a></span>Msg</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="#addea89f97a2510d1827ad9209c5baf3e">uniot::events::lisp::Msg</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Message types used in event communication. </p>
+<p>Defines specific event messages that can be sent within <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> topics. These messages represent different types of interactions and state changes in the <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> interpreter and its communication with the host application. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="addea89f97a2510d1827ad9209c5baf3ea281bb162adeec6038ebe06514fff3977" name="addea89f97a2510d1827ad9209c5baf3ea281bb162adeec6038ebe06514fff3977"></a>OUT_MSG_ADDED&#160;</td><td class="fielddoc"><p>Standard output message was added to the output buffer. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="addea89f97a2510d1827ad9209c5baf3ea80885f96cca84f9decb5c88377ec8baf" name="addea89f97a2510d1827ad9209c5baf3ea80885f96cca84f9decb5c88377ec8baf"></a>OUT_MSG_LOG&#160;</td><td class="fielddoc"><p>Log message was generated by the <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> interpreter. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="addea89f97a2510d1827ad9209c5baf3eaeb434fc594c2dffc1669a53275d972e8" name="addea89f97a2510d1827ad9209c5baf3eaeb434fc594c2dffc1669a53275d972e8"></a>OUT_MSG_ERROR&#160;</td><td class="fielddoc"><p>Error message was generated due to <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> execution failure. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="addea89f97a2510d1827ad9209c5baf3eab812ec256372648890740722311454b8" name="addea89f97a2510d1827ad9209c5baf3eab812ec256372648890740722311454b8"></a>OUT_REFRESH_EVENTS&#160;</td><td class="fielddoc"><p>Request to refresh the event queue and process pending events. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="addea89f97a2510d1827ad9209c5baf3ea8cf1767020e1261a767f30cde7b356ec" name="addea89f97a2510d1827ad9209c5baf3ea8cf1767020e1261a767f30cde7b356ec"></a>OUT_NEW_EVENT&#160;</td><td class="fielddoc"><p>New outgoing event generated by <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> for the application. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="addea89f97a2510d1827ad9209c5baf3ea073c765f4c78caf2f105a4df946fe977" name="addea89f97a2510d1827ad9209c5baf3ea073c765f4c78caf2f105a4df946fe977"></a>IN_NEW_EVENT&#160;</td><td class="fielddoc"><p>New incoming event received from application for <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> processing. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a id="a6ceddddd197c65d2e31f8b9f366f0357" name="a6ceddddd197c65d2e31f8b9f366f0357"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ceddddd197c65d2e31f8b9f366f0357">&#9670;&#160;</a></span>Topic</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="#a6ceddddd197c65d2e31f8b9f366f0357">uniot::events::lisp::Topic</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Topics for event-based communication. </p>
+<p>Defines the main categories of events that facilitate communication between the <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> interpreter and the host application. Topics group related events together and use FOURCC identifiers for efficient event handling. </p>
+<table class="fieldtable">
+<tr><th colspan="3">Enumerator</th></tr><tr><td class="fieldname"><a id="a6ceddddd197c65d2e31f8b9f366f0357a2b19672530810e1aac3506b14a6ff5ce" name="a6ceddddd197c65d2e31f8b9f366f0357a2b19672530810e1aac3506b14a6ff5ce"></a>OUT_LISP_MSG&#160;</td><td class="fieldinit">FOURCC(lisp)&#160;</td><td class="fielddoc"><p><a class="el" href="#a6ceddddd197c65d2e31f8b9f366f0357" title="Topics for event-based communication.">Topic</a> for <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> output messages and notifications. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a6ceddddd197c65d2e31f8b9f366f0357a045f92b77f51c7c17adab23c184f1b76" name="a6ceddddd197c65d2e31f8b9f366f0357a045f92b77f51c7c17adab23c184f1b76"></a>OUT_LISP_REQUEST&#160;</td><td class="fieldinit">FOURCC(lspr)&#160;</td><td class="fielddoc"><p><a class="el" href="#a6ceddddd197c65d2e31f8b9f366f0357" title="Topics for event-based communication.">Topic</a> for <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> requests to the application services. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a6ceddddd197c65d2e31f8b9f366f0357afc5a33cb73e4793684ff8cd85cfc8223" name="a6ceddddd197c65d2e31f8b9f366f0357afc5a33cb73e4793684ff8cd85cfc8223"></a>OUT_LISP_EVENT&#160;</td><td class="fieldinit">FOURCC(levo)&#160;</td><td class="fielddoc"><p><a class="el" href="#a6ceddddd197c65d2e31f8b9f366f0357" title="Topics for event-based communication.">Topic</a> for outgoing events from <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a> to application. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a6ceddddd197c65d2e31f8b9f366f0357ae13c9a2860ce8eec8807be4429444e10" name="a6ceddddd197c65d2e31f8b9f366f0357ae13c9a2860ce8eec8807be4429444e10"></a>IN_LISP_EVENT&#160;</td><td class="fieldinit">FOURCC(levi)&#160;</td><td class="fielddoc"><p><a class="el" href="#a6ceddddd197c65d2e31f8b9f366f0357" title="Topics for event-based communication.">Topic</a> for incoming events from application to <a class="el" href="classuniot_1_1_lisp.html" title="Utility class for working with Lisp objects in C++.">Lisp</a>. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="namespaceuniot.html">uniot</a></li><li class="navelem"><a class="el" href="namespaceuniot_1_1events.html">events</a></li><li class="navelem"><a class="el" href="namespaceuniot_1_1events_1_1lisp.html">lisp</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>

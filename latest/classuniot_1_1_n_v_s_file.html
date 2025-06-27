@@ -1,0 +1,462 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <meta name="generator" content="Doxygen 1.13.2" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Uniot Core: uniot::NVSFile Class Reference</title>
+    <link href="tabs.css" rel="stylesheet" type="text/css" />
+    <link rel="icon" type="image/svg+xml" href="logo.png" />
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="dynsections.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-darkmode-toggle.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-fragment-copy-button.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-paragraph-link.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-interactive-toc.js"></script>
+    <script type="text/javascript" src="doxygen-awesome-tabs.js"></script>
+    <script type="text/javascript" src="version-dropdown.js"></script>
+    <script type="text/javascript">
+        DoxygenAwesomeFragmentCopyButton.init()
+        DoxygenAwesomeDarkModeToggle.init()
+        DoxygenAwesomeParagraphLink.init()
+        DoxygenAwesomeInteractiveToc.init()
+        DoxygenAwesomeTabs.init()
+    </script>
+    <link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+    <link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+    <link href="doxygen.css" rel="stylesheet" type="text/css" />
+    <link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only-darkmode-toggle.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-uniot.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+    <!-- https://tholman.com/github-corners/ -->
+    <a href="https://github.com/uniot-io/uniot-core" class="github-corner" title="View source on GitHub" target="_blank"
+        rel="noopener noreferrer">
+        <svg viewBox="0 0 250 250" width="40" height="40"
+            style="position: absolute; top: 0; border: 0; right: 0; z-index: 99;" aria-hidden="true">
+            <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+            <path
+                d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+                fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+            <path
+                d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+                fill="currentColor" class="octo-body"></path>
+        </svg></a>
+    <style>
+        .github-corner:hover .octo-arm {
+            animation: octocat-wave 560ms ease-in-out
+        }
+        @keyframes octocat-wave {
+            0%,
+            100% {
+                transform: rotate(0)
+            }
+            20%,
+            60% {
+                transform: rotate(-25deg)
+            }
+            40%,
+            80% {
+                transform: rotate(10deg)
+            }
+        }
+        @media (max-width:500px) {
+            .github-corner:hover .octo-arm {
+                animation: none
+            }
+            .github-corner .octo-arm {
+                animation: octocat-wave 560ms ease-in-out
+            }
+        }
+    </style>
+    <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+        <div id="titlearea">
+            <table cellspacing="0" cellpadding="0">
+                <tbody>
+                    <tr>
+                        <td id="projectlogo"><img alt="Logo" src="logo.png" /></td>
+                    </tr>
+                    <tr>
+                        <td id="projectalign">
+                            <div id="projectname">
+                                Uniot Core
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="projectalign_number" id="projectalign">
+                            <span id="projectnumber">0.8.1</span>
+                        </td>
+                    </tr>
+                    <!-- <tr>
+                        <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="Search" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+                    </tr> -->
+                </tbody>
+            </table>
+        </div>
+        <!-- end header part -->
+<!-- Generated by Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','Search',true);
+  $(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('classuniot_1_1_n_v_s_file.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Loading...</div>
+<div class="SRStatus" id="Searching">Searching...</div>
+<div class="SRStatus" id="NoMatches">No Matches</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="classuniot_1_1_n_v_s_file-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">uniot::NVSFile Class Reference<div class="ingroups"><a class="el" href="group__fs__storage.html">File System Storage</a> &raquo; <a class="el" href="group__nvsfs__storage.html">NVSFS Storage</a> &raquo; <a class="el" href="group__nvsfs__file.html">NVSFile</a></div></div></div>
+</div><!--header-->
+<div class="contents">
+
+<p><code>#include &lt;<a class="el" href="_n_v_s_f_s_8h_source.html">NVSFS.h</a>&gt;</code></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:afb5693a44e3e048b2fba90b1a0f9afc6" id="r_afb5693a44e3e048b2fba90b1a0f9afc6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afb5693a44e3e048b2fba90b1a0f9afc6">NVSFile</a> (const String &amp;path, const String &amp;mode, Preferences &amp;prefs)</td></tr>
+<tr class="memdesc:afb5693a44e3e048b2fba90b1a0f9afc6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs an <a class="el" href="classuniot_1_1_n_v_s_file.html">NVSFile</a> object for a specific path and mode.  <br /></td></tr>
+<tr class="separator:afb5693a44e3e048b2fba90b1a0f9afc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1df3559afedc941d58052418f22fd163" id="r_a1df3559afedc941d58052418f22fd163"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1df3559afedc941d58052418f22fd163">operator bool</a> () const</td></tr>
+<tr class="memdesc:a1df3559afedc941d58052418f22fd163"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the file is valid and ready for operations.  <br /></td></tr>
+<tr class="separator:a1df3559afedc941d58052418f22fd163"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0b7596deb763447c5e3a22d0b18d92c2" id="r_a0b7596deb763447c5e3a22d0b18d92c2"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0b7596deb763447c5e3a22d0b18d92c2">write</a> (const uint8_t *data, size_t size)</td></tr>
+<tr class="memdesc:a0b7596deb763447c5e3a22d0b18d92c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write data to the file buffer.  <br /></td></tr>
+<tr class="separator:a0b7596deb763447c5e3a22d0b18d92c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7f00a2f944196b6b0882042de0c798f" id="r_aa7f00a2f944196b6b0882042de0c798f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_bytes.html">Bytes</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa7f00a2f944196b6b0882042de0c798f">getBytes</a> ()</td></tr>
+<tr class="memdesc:aa7f00a2f944196b6b0882042de0c798f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the entire file content as <a class="el" href="class_bytes.html">Bytes</a> object.  <br /></td></tr>
+<tr class="separator:aa7f00a2f944196b6b0882042de0c798f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add0577f26ca995e6d63f6df5907c257b" id="r_add0577f26ca995e6d63f6df5907c257b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#add0577f26ca995e6d63f6df5907c257b">close</a> ()</td></tr>
+<tr class="memdesc:add0577f26ca995e6d63f6df5907c257b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Close the file and commit any pending write operations.  <br /></td></tr>
+<tr class="separator:add0577f26ca995e6d63f6df5907c257b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:aa1f4ded293bf1c0836594a3ead43e4ee" id="r_aa1f4ded293bf1c0836594a3ead43e4ee"><td class="memItemLeft" align="right" valign="top">static String&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa1f4ded293bf1c0836594a3ead43e4ee">normalizePath</a> (const String &amp;path)</td></tr>
+<tr class="memdesc:aa1f4ded293bf1c0836594a3ead43e4ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Normalize a file path to a valid NVS key.  <br /></td></tr>
+<tr class="separator:aa1f4ded293bf1c0836594a3ead43e4ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="afb5693a44e3e048b2fba90b1a0f9afc6" name="afb5693a44e3e048b2fba90b1a0f9afc6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afb5693a44e3e048b2fba90b1a0f9afc6">&#9670;&#160;</a></span>NVSFile()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uniot::NVSFile::NVSFile </td>
+          <td>(</td>
+          <td class="paramtype">const String &amp;</td>          <td class="paramname"><span class="paramname"><em>path</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const String &amp;</td>          <td class="paramname"><span class="paramname"><em>mode</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Preferences &amp;</td>          <td class="paramname"><span class="paramname"><em>prefs</em></span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constructs an <a class="el" href="classuniot_1_1_n_v_s_file.html">NVSFile</a> object for a specific path and mode. </p>
+<p>Creates an <a class="el" href="classuniot_1_1_n_v_s_file.html">NVSFile</a> instance for reading from or writing to NVS storage. The file path is automatically normalized to a valid NVS key by removing leading slashes and truncating to 15 characters.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">path</td><td>The file path (will be converted to NVS key) </td></tr>
+    <tr><td class="paramname">mode</td><td>File access mode ("r" for read, "w" for write) </td></tr>
+    <tr><td class="paramname">prefs</td><td>Reference to the Preferences object for NVS operations</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>For read mode, data is immediately loaded from NVS into memory. For write mode, data is buffered and written to NVS only when <a class="el" href="#add0577f26ca995e6d63f6df5907c257b" title="Close the file and commit any pending write operations.">close()</a> is called. </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="add0577f26ca995e6d63f6df5907c257b" name="add0577f26ca995e6d63f6df5907c257b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#add0577f26ca995e6d63f6df5907c257b">&#9670;&#160;</a></span>close()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void uniot::NVSFile::close </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Close the file and commit any pending write operations. </p>
+<p>For write mode files, this method commits the buffered data to NVS. If the buffer is empty, the corresponding NVS key is removed. For read mode files, this simply marks the file as invalid.</p>
+<p>After calling <a class="el" href="#add0577f26ca995e6d63f6df5907c257b" title="Close the file and commit any pending write operations.">close()</a>, the file object becomes invalid and cannot be used for further operations.</p>
+<dl class="section note"><dt>Note</dt><dd>This method should always be called when finished with a file to ensure data is properly saved to NVS. </dd></dl>
+
+</div>
+</div>
+<a id="aa7f00a2f944196b6b0882042de0c798f" name="aa7f00a2f944196b6b0882042de0c798f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa7f00a2f944196b6b0882042de0c798f">&#9670;&#160;</a></span>getBytes()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_bytes.html">Bytes</a> uniot::NVSFile::getBytes </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the entire file content as <a class="el" href="class_bytes.html">Bytes</a> object. </p>
+<p>Returns a copy of the file's content. In read mode, this is the data loaded from NVS. In write mode, this would be the buffered data.</p>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname"><a class="el" href="class_bytes.html">Bytes</a></td><td>File content as <a class="el" href="class_bytes.html">Bytes</a> object </td></tr>
+    <tr><td class="paramname">Empty</td><td><a class="el" href="class_bytes.html">Bytes</a> object if file is invalid or not in read mode</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>This method is specific to the NVS implementation and not part of the standard file system interface. </dd></dl>
+
+</div>
+</div>
+<a id="aa1f4ded293bf1c0836594a3ead43e4ee" name="aa1f4ded293bf1c0836594a3ead43e4ee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa1f4ded293bf1c0836594a3ead43e4ee">&#9670;&#160;</a></span>normalizePath()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static String uniot::NVSFile::normalizePath </td>
+          <td>(</td>
+          <td class="paramtype">const String &amp;</td>          <td class="paramname"><span class="paramname"><em>path</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel static">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Normalize a file path to a valid NVS key. </p>
+<p>Converts a file system path to a valid NVS key by:</p><ul>
+<li>Removing leading forward slash "/"</li>
+<li>Truncating to 15 characters maximum (NVS limitation)</li>
+<li>Logging a warning if truncation occurs</li>
+</ul>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">path</td><td>The original file path </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Normalized NVS key string</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This is a static utility method that can be used independently of any <a class="el" href="classuniot_1_1_n_v_s_file.html">NVSFile</a> instance. </dd></dl>
+
+</div>
+</div>
+<a id="a1df3559afedc941d58052418f22fd163" name="a1df3559afedc941d58052418f22fd163"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1df3559afedc941d58052418f22fd163">&#9670;&#160;</a></span>operator bool()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uniot::NVSFile::operator bool </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Check if the file is valid and ready for operations. </p>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">true</td><td>File is valid and can be used for read/write operations </td></tr>
+    <tr><td class="paramname">false</td><td>File is invalid (wrong mode, NVS error, etc.) </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a0b7596deb763447c5e3a22d0b18d92c2" name="a0b7596deb763447c5e3a22d0b18d92c2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0b7596deb763447c5e3a22d0b18d92c2">&#9670;&#160;</a></span>write()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t uniot::NVSFile::write </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *</td>          <td class="paramname"><span class="paramname"><em>data</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t</td>          <td class="paramname"><span class="paramname"><em>size</em></span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Write data to the file buffer. </p>
+<p>In write mode, stores the provided data in an internal buffer. The data is not actually written to NVS until <a class="el" href="#add0577f26ca995e6d63f6df5907c257b" title="Close the file and commit any pending write operations.">close()</a> is called. Each call to <a class="el" href="#a0b7596deb763447c5e3a22d0b18d92c2" title="Write data to the file buffer.">write()</a> replaces the entire buffer content.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">data</td><td>Pointer to the data to write </td></tr>
+    <tr><td class="paramname">size</td><td>Number of bytes to write </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">size</td><td>Number of bytes written (same as input size on success) </td></tr>
+    <tr><td class="paramname">0</td><td>Failed to write (invalid file or not in write mode)</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section warning"><dt>Warning</dt><dd>Current implementation replaces the entire buffer on each write. Append functionality is not yet implemented. </dd></dl>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li><a class="el" href="_n_v_s_f_s_8h_source.html">NVSFS.h</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="namespaceuniot.html">uniot</a></li><li class="navelem"><a class="el" href="classuniot_1_1_n_v_s_file.html">NVSFile</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>

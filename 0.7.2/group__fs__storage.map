@@ -1,7 +1,0 @@
-<map id="File System Storage" name="File System Storage">
-<area shape="rect" id="Node000001" title="File system storage management for Uniot devices." alt="" coords="5,80,157,105"/>
-<area shape="rect" id="Node000004" href="$group__fs__storage__base.html" title="Manages data persistence to file system on ESP8266/ESP32 devices." alt="" coords="226,5,298,31"/>
-<area shape="rect" id="Node000002" href="$group__fs__storage__cbor.html" title="Storage implementation for CBOR formatted data." alt="" coords="205,55,319,80"/>
-<area shape="rect" id="Node000003" href="$group__fs__storage__crash.html" title="Handles crash data storage and retrieval for ESP8266." alt="" coords="205,104,319,129"/>
-<area shape="rect" id="Node000005" href="$group__fs__storage__wifi.html" title="Storage class for WiFi credentials." alt="" coords="210,153,314,179"/>
-</map>

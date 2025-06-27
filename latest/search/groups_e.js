@@ -1,10 +1,8 @@
 var searchData=
 [
-  ['patch_0',['WiFi Transmission Power Patch',['../group__wifi__tx__power.html',1,'']]],
-  ['patches_1',['Patches',['../group__patches.html',1,'']]],
-  ['path_2',['MQTT Path',['../group__mqtt__path.html',1,'']]],
-  ['power_20patch_3',['WiFi Transmission Power Patch',['../group__wifi__tx__power.html',1,'']]],
-  ['primitives_4',['Primitives',['../group__uniot-lisp-primitives-default.html',1,'Default Primitives'],['../group__app-kit-primitives.html',1,'Primitives'],['../group__uniot-lisp-primitives.html',1,'Primitives']]],
-  ['processes_5',['Table of Processes',['../group__app-kit-top-device.html',1,'']]],
-  ['proxy_6',['Register Manager Proxy',['../group__registers__proxy.html',1,'']]]
+  ['object_20register_0',['Object Register',['../group__registers__object__register.html',1,'']]],
+  ['object_20register_20record_1',['Object Register Record',['../group__registers__object__register__record.html',1,'']]],
+  ['object_20representation_2',['CBOR (Concise Binary Object Representation)',['../group__utils__cbor__wrapper.html',1,'']]],
+  ['object_20signing_20and_20encryption_3',['COSE (CBOR Object Signing and Encryption)',['../group__utils__cose.html',1,'']]],
+  ['of_20processes_4',['Table of Processes',['../group__app-kit-top-device.html',1,'']]]
 ];
