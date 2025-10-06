@@ -32,7 +32,7 @@ auto taskPrintTime = Uniot.createTask("print_time", [](SchedulerTask& self, shor
 void setup() {
   Serial.begin(115200);
   Uniot.configWiFiResetButton(PIN_BUTTON, BTN_PIN_LEVEL);
-  Uniot.configWiFiResetOnReboot(5);
+  Uniot.configWiFiResetOnReboot(100);
 
 #if defined(ESP8266)
   Uniot.configWiFiStatusLed(PIN_RED, LED_PIN_LEVEL);

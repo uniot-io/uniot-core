@@ -319,7 +319,7 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
   Bytes _buildCOSEMessage(const Bytes &payload, bool sign = false) {
     COSEMessage obj;
     obj.setPayload(payload);
-    auto kid = mpCredentials->keyId();  // NOTE: dynamic data must be within the scope of the obj.build() function
+    auto kid = mpCredentials->keyId();  // FIXME: dynamic data must be within the scope of the obj.build() function
     if (sign) {
       obj.sign(*mpCredentials);
       obj.setUnprotectedKid(kid);
@@ -374,7 +374,7 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
    * @retval id The client ID string
    */
   String _getClientId() {
-    return "device:" + mpCredentials->getDeviceId();  // TODO: owner
+    return _getUserLogin();
   }
 
   /**
@@ -382,7 +382,7 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
    * @retval publicKey The public key string
    */
   String _getUserLogin() {
-    return mpCredentials->getPublicKey();
+    return "device:" + mpCredentials->getOwnerId() + "@" + mpCredentials->getDeviceId();
   }
 
   /**
@@ -394,18 +394,17 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
    * @retval password The signed password object
    */
   Bytes _getUserPassword() {
-    CBORObject password;
-    auto protectedData = password.putMap("protected");
-    protectedData.put("device", mpCredentials->getDeviceId().c_str());
-    protectedData.put("owner", mpCredentials->getOwnerId().c_str());
-    protectedData.put("creator", mpCredentials->getCreatorId().c_str());
-    protectedData.put("timestamp", static_cast<int64_t>(Date::now()));
-    auto unprotectedData = password.putMap("unprotected");
-    unprotectedData.put("alg", "EdDSA");
+    CBORObject claims;
+    claims.put("device", mpCredentials->getDeviceId().c_str());
+    claims.put("owner", mpCredentials->getOwnerId().c_str());
+    claims.put("creator", mpCredentials->getCreatorId().c_str());
+    claims.put("timestamp", static_cast<int64_t>(Date::now()));
 
-    auto signature = mpCredentials->sign(protectedData.build());
-    password.put("signature", signature.raw(), signature.size());
-
+    COSEMessage password;
+    auto kid = mpCredentials->keyId();  // FIXME: dynamic data must be within the scope of the obj.build() function
+    password.setUnprotectedKid(kid);
+    password.setPayload(claims.build());
+    password.sign(*mpCredentials);
     return password.build();
   }
 

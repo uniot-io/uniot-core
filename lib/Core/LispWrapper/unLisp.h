@@ -600,9 +600,7 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
 
     auto eventId = expeditor.getArgSymbol(0);
     auto event = _popIncomingEvent(eventId);
-
-    UNIOT_LOG_WARN_IF(event.errorCode, "error popping event '%s': %d", event.errorCode);
-
+    UNIOT_LOG_WARN_IF(event.errorCode, "error popping event '%s': %d", eventId, event.errorCode);
     return expeditor.makeInt(event.value);
   }
 
