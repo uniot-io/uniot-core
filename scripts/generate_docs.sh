@@ -84,9 +84,51 @@ echo "Generating versions.json from git tags..."
 cd "$REPO_ROOT"
 # Get all tags sorted in descending order (assumes tags are version numbers)
 TAGS=$(git tag --sort=-version:refname)
+
+# Filter versions to include only 0.8.1 and above
+filter_versions() {
+  local min_version="0.8.1"
+
+  while IFS= read -r tag; do
+    # Skip empty lines
+    [[ -z "$tag" ]] && continue
+
+    # Remove 'v' prefix if present for comparison
+    version=${tag#v}
+
+    # Split version into parts (major.minor.patch)
+    IFS='.' read -ra VERSION_PARTS <<< "$version"
+    IFS='.' read -ra MIN_PARTS <<< "$min_version"
+
+    # Ensure we have at least 3 parts, pad with zeros if needed
+    while [ ${#VERSION_PARTS[@]} -lt 3 ]; do
+      VERSION_PARTS+=("0")
+    done
+    while [ ${#MIN_PARTS[@]} -lt 3 ]; do
+      MIN_PARTS+=("0")
+    done
+
+    # Compare version numbers
+    major=${VERSION_PARTS[0]}
+    minor=${VERSION_PARTS[1]}
+    patch=${VERSION_PARTS[2]}
+    min_major=${MIN_PARTS[0]}
+    min_minor=${MIN_PARTS[1]}
+    min_patch=${MIN_PARTS[2]}
+
+    # Check if version is >= 0.8.1
+    if [[ "$major" -gt "$min_major" ]] || \
+       [[ "$major" -eq "$min_major" && "$minor" -gt "$min_minor" ]] || \
+       [[ "$major" -eq "$min_major" && "$minor" -eq "$min_minor" && "$patch" -ge "$min_patch" ]]; then
+      echo "$tag"
+    fi
+  done
+}
+
+FILTERED_TAGS=$(echo "$TAGS" | filter_versions)
 cd "$THEME_DIR"
 # Use jq to generate a JSON array (drop the trailing empty element)
-JSON=$(echo "$TAGS" | jq -R -s -c 'split("\n")[:-1]')
+JSON=$(echo "$FILTERED_TAGS" | jq -R -s -c 'split("\n") | map(select(length > 0))')
 echo "{\"versions\": $JSON}" > docs/versions.json
 echo "Generated docs/versions.json:"
 cat docs/versions.json

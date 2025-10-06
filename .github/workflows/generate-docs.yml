@@ -3,7 +3,7 @@ name: Generate and Deploy Documentation
 on:
   workflow_dispatch:
   push:
-    tags: [ '*.*.*' ]
+    tags: ["*.*.*"]
 
 jobs:
   docs:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout firmware repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Ensures all tags are available
+          fetch-depth: 0 # Ensures all tags are available
 
       - name: Install dependencies (Doxygen, Graphviz, jq)
         run: |
@@ -34,3 +34,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./doxygen/docs/
+          keep_files: true
+          force_orphan: false
