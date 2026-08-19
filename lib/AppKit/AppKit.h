@@ -158,6 +158,34 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
   }
 
   /**
+   * @brief Register a custom gzipped page on the configuration portal
+   * @param path URL path to serve the page on (e.g. "/app")
+   * @param gzData Pointer to the gzipped page data
+   * @param gzLen Length of the gzipped data in bytes
+   * @param label Button label shown in the portal UI (empty hides the button)
+   * @param contentType MIME content type (default: "text/html")
+   * @retval bool true if the route was registered successfully
+   *
+   * Must be called before begin().
+   */
+  bool addCustomPage(const String &path, const uint8_t *gzData, size_t gzLen, const String &label = "", const char *contentType = "text/html") {
+    return mNetwork.addCustomPage(path, gzData, gzLen, label, contentType);
+  }
+
+  /**
+   * @brief Register a custom HTTP route on the configuration portal
+   * @param path URL path for the route (e.g. "/api/data")
+   * @param method HTTP method(s) to accept
+   * @param handler Callback invoked to handle the request
+   * @retval bool true if the route was registered successfully
+   *
+   * Must be called before begin().
+   */
+  bool addCustomRoute(const String &path, WebRequestMethodComposite method, ArRequestHandlerFunction handler) {
+    return mNetwork.addCustomRoute(path, method, handler);
+  }
+
+  /**
    * @brief Add all managed tasks to the scheduler
    *
    * Implements ISchedulerConnectionKit interface to register all component tasks

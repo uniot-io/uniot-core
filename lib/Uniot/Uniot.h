@@ -200,6 +200,72 @@ class UniotCore {
   }
 
   /**
+   * @brief Register a custom gzipped page on the configuration portal
+   * @param path URL path to serve the page on (e.g. "/app")
+   * @param gzData Pointer to the gzipped page data
+   * @param gzLen Length of the gzipped data in bytes
+   * @param label Button label shown in the portal UI (empty hides the button)
+   * @param contentType MIME content type (default: "text/html")
+   *
+   * Serves a user-supplied embedded page from the captive portal server, and
+   * reports it to the configuration UI so it can link to the page.
+   * Must be called before begin().
+   *
+   * Typically used with a C array generated from a gzipped HTML file:
+   * @code
+   * #include "my_page.html.gz.h"
+   * Uniot.addCustomPage("/app", MY_PAGE_HTML_GZ, MY_PAGE_HTML_GZ_LENGTH, "My Settings");
+   * @endcode
+   */
+  void addCustomPage(const String& path, const uint8_t* gzData, size_t gzLen, const String& label = "", const char* contentType = "text/html") {
+    auto success = getAppKit().addCustomPage(path, gzData, gzLen, label, contentType);
+    UNIOT_LOG_ERROR_IF(!success, "Failed to register custom page at %s", path.c_str());
+  }
+
+  /**
+   * @brief Register a custom HTTP GET route on the configuration portal
+   * @param path URL path for the route (e.g. "/api/data")
+   * @param handler Callback invoked to handle the request
+   *
+   * Suitable for sensor data APIs and other endpoints that should not appear
+   * as a navigation button. Must be called before begin().
+   */
+  void addCustomRoute(const String& path, ArRequestHandlerFunction handler) {
+    auto success = getAppKit().addCustomRoute(path, HTTP_GET, handler);
+    UNIOT_LOG_ERROR_IF(!success, "Failed to register custom route at %s", path.c_str());
+  }
+
+  /**
+   * @brief Register a custom HTTP route on the configuration portal
+   * @param path URL path for the route (e.g. "/api/data")
+   * @param method HTTP method(s) to accept (e.g. HTTP_GET, HTTP_POST, HTTP_ANY)
+   * @param handler Callback invoked to handle the request
+   *
+   * Must be called before begin().
+   */
+  void addCustomRoute(const String& path, WebRequestMethodComposite method, ArRequestHandlerFunction handler) {
+    auto success = getAppKit().addCustomRoute(path, method, handler);
+    UNIOT_LOG_ERROR_IF(!success, "Failed to register custom route at %s", path.c_str());
+  }
+
+  /**
+   * @brief Register a user-defined MQTT device with the platform
+   * @param device The MQTTDevice instance to register
+   *
+   * Adds the device to the MQTT subsystem and synchronizes its subscriptions,
+   * so it can publish to and receive from its own topics.
+   *
+   * @code
+   * MyDevice myDevice;
+   * Uniot.addMQTTDevice(myDevice);
+   * @endcode
+   */
+  void addMQTTDevice(uniot::MQTTDevice& device) {
+    getAppKit().getMQTT().addDevice(device);
+    device.syncSubscriptions();
+  }
+
+  /**
    * @brief Enable periodic saving of date/time information
    * @param periodSeconds Interval between saves in seconds (0 to disable)
    *

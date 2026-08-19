@@ -245,6 +245,56 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
     return false;
   }
 
+  /**
+   * @brief Register a custom gzipped page on the configuration portal
+   * @param path URL path to serve the page on (e.g. "/app")
+   * @param gzData Pointer to the gzipped page data
+   * @param gzLen Length of the gzipped data in bytes
+   * @param label Button label shown in the portal UI (empty hides the button)
+   * @param contentType MIME content type (default: "text/html")
+   * @retval bool true if the route was registered, false if the server is unavailable
+   *
+   * Serves a user-supplied embedded page from the captive portal server.
+   * The data must remain valid for the lifetime of the server, which is the
+   * case for a PROGMEM array generated from a gzipped file.
+   *
+   * The path and label are reported to the configuration UI in the status
+   * payload, which renders a link to the page.
+   */
+  bool addCustomPage(const String &path, const uint8_t *gzData, size_t gzLen, const String &label = "", const char *contentType = "text/html") {
+    auto server = mConfigServer.get();
+    if (server) {
+      server->on(path.c_str(), HTTP_GET, [gzData, gzLen, type = String(contentType)](AsyncWebServerRequest *request) {
+        auto response = request->beginResponse(200, type, gzData, gzLen, nullptr);
+        response->addHeader("Content-Encoding", "gzip");
+        request->send(response);
+      });
+      mCustomPagePath = path;
+      mCustomPageLabel = label;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * @brief Register a custom HTTP route on the configuration portal
+   * @param path URL path for the route (e.g. "/api/data")
+   * @param method HTTP method(s) to accept (e.g. HTTP_GET, HTTP_POST, HTTP_ANY)
+   * @param handler Callback invoked to handle the request
+   * @retval bool true if the route was registered, false if the server is unavailable
+   *
+   * Registers a raw HTTP handler on the captive portal server without affecting
+   * the portal UI. Suitable for custom API endpoints.
+   */
+  bool addCustomRoute(const String &path, WebRequestMethodComposite method, ArRequestHandlerFunction handler) {
+    auto server = mConfigServer.get();
+    if (server) {
+      server->on(path.c_str(), method, handler);
+      return true;
+    }
+    return false;
+  }
+
  private:
   /**
    * @brief WebSocket message action types
@@ -257,7 +307,8 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
     STATUS = 100,  ///< Request current device and network status
     SAVE,          ///< Save new WiFi credentials
     SCAN,          ///< Request WiFi network scan
-    ASK            ///< Query last save operation result
+    ASK,           ///< Query last save operation result
+    PING = 104,    ///< Heartbeat that keeps the client marked active
   };
 
   /**
@@ -582,6 +633,8 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
                 .put("acc", mpCredentials->getOwnerId())
                 .put("nets", mLastNetworks.length() ? mLastNetworks : "[]", false)
                 .put("homeNet", WiFi.isConnected() ? WiFi.SSID() : "")
+                .put("customApp", mCustomPagePath)
+                .put("customAppLabel", mCustomPageLabel)
                 .close();
               mConfigServer.wsTextAll(status);
               break;
@@ -609,6 +662,11 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
               }
               break;
             }
+            case ACTIONS::PING:
+              // Nothing to answer. Receiving any message already refreshes the
+              // client's last-seen timestamp, which keeps wsClientsActive()
+              // true and suppresses background WiFi scans while a page is open.
+              break;
             default:
               break;
           }
@@ -649,7 +707,9 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
   IPAddress mApSubnet;                ///< Subnet mask for AP mode
   ConfigCaptivePortal mConfigServer;  ///< Configuration web server with captive portal
 
-  String mLastNetworks;    ///< Cached JSON string of last network scan results
+  String mLastNetworks;     ///< Cached JSON string of last network scan results
+  String mCustomPagePath;   ///< URL path of the registered custom page (empty if none)
+  String mCustomPageLabel;  ///< Button label for the custom page (empty hides the button)
   int8_t mLastSaveResult;  ///< Result of last credential save operation (-1: none, 0: failed, 1: success)
   bool mCanScan;           ///< Flag indicating if network scanning is allowed
   bool mApEnabled;         ///< Flag indicating if access point is currently active
