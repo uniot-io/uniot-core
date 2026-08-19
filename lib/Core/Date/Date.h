@@ -135,6 +135,7 @@ class Date : public IExecutor, public CBORStorage, public Singleton<Date>, publi
    *
    * Reconfigures the NTP client and initiates an immediate
    * time sync request regardless of the regular sync schedule.
+   * Emits TIME/SYNCED on success, TIME/SYNC_FAILED on failure.
    */
   void forceSync() {
     _reconfigure();

@@ -66,6 +66,18 @@
 #endif
 
 /**
+ * @brief Keep the WiFi radio awake between beacon intervals (ESP32 only).
+ * @ingroup common
+ *
+ * Set to 1 to disable modem sleep once the station associates. This avoids
+ * association drops caused by missed DTIM beacons on a marginal link, at the
+ * cost of a significantly higher idle current. Leave at 0 on battery devices.
+ */
+#ifndef UNIOT_WIFI_NO_SLEEP
+#define UNIOT_WIFI_NO_SLEEP 0
+#endif
+
+/**
  * @brief Creates a four-character code (FourCC) value from template parameters.
  * @ingroup common
  *

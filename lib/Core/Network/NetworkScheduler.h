@@ -123,6 +123,9 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
     mCanScan = true;
     mApEnabled = false;
     mLastSaveResult = -1;
+#if defined(ESP32)
+    mUseFallbackScan = false;
+#endif
 
     // default wifi persistent storage brings unexpected behavior, I turn it off
     WiFi.persistent(false);
@@ -326,12 +329,20 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
     // Station connection tasks
     mTaskConnectSta = TaskScheduler::make([this](SchedulerTask &self, short t) {
       WiFi.disconnect(false, true);
+#if defined(ESP32)
+      if (mUseFallbackScan) {
+        UNIOT_LOG_INFO("WiFi: connecting with WIFI_FAST_SCAN (fallback)");
+        WiFi.setScanMethod(WIFI_FAST_SCAN);
+      } else {
+        WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);
+      }
+#endif
       bool connect = WiFi.begin(mWifiStorage.getSsid().c_str(), mWifiStorage.getPassword().c_str()) != WL_CONNECT_FAILED;
       if (connect) {
 #if defined(ESP32) && defined(ENABLE_LOWER_WIFI_TX_POWER)
         WiFi.setTxPower(WIFI_TX_POWER_LEVEL);
 #endif
-        mTaskConnecting->attach(100, 50);
+        mTaskConnecting->attach(100, 100);
         CoreEventEmitter::sendDataToChannel(events::network::Channel::OUT_SSID, Bytes(mWifiStorage.getSsid()));
         CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::CONNECTING);
         mCanScan = false;
@@ -352,6 +363,15 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
           mTaskConnectSta->attach(500, 1);
         } else {
           tries = 0;
+#if defined(ESP32)
+          if (!mUseFallbackScan) {
+            UNIOT_LOG_WARN("WiFi: all-channel scan did not associate, retrying with fast scan");
+            mUseFallbackScan = true;
+            mTaskConnectSta->attach(500, 1);
+            return;
+          }
+          mUseFallbackScan = false;
+#endif
           mWifiStorage.restore();
           CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::FAILED);
           mCanScan = true;
@@ -373,6 +393,13 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
           mTaskStop->once(30000);    // Stopping Configuration. Step 1. Carefully change the deferrals.
           mTaskStopAp->once(35000);  // Stopping Configuration. Step 2. Carefully change the deferrals.
           mTaskAvailabilityCheck->detach();
+#if defined(ESP32)
+          mUseFallbackScan = false;
+#if UNIOT_WIFI_NO_SLEEP
+          // Keep the radio awake between beacons; see UNIOT_WIFI_NO_SLEEP in Common.h.
+          WiFi.setSleep(false);
+#endif  // UNIOT_WIFI_NO_SLEEP
+#endif  // ESP32
           CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::SUCCESS);
           break;
 
@@ -626,6 +653,9 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
   int8_t mLastSaveResult;  ///< Result of last credential save operation (-1: none, 0: failed, 1: success)
   bool mCanScan;           ///< Flag indicating if network scanning is allowed
   bool mApEnabled;         ///< Flag indicating if access point is currently active
+#if defined(ESP32)
+  bool mUseFallbackScan;   ///< True when falling back to fast scan after an all-channel scan failed
+#endif
 
   // Task pointers for all network operations
   TaskScheduler::TaskPtr mTaskStart;              ///< Task for starting configuration server

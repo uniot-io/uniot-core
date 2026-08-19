@@ -167,4 +167,17 @@ bool MQTTDevice::isTopicMatch(const String &storedTopic, const String &incomingT
   // Check if both topics have been fully traversed
   return storedPos >= storedTopic.length() && incomingPos >= incomingTopic.length();
 }
+
+bool MQTTDevice::isConnected() const {
+  if (!mpKit) {
+    return false;
+  }
+  return mpKit->isMqttConnected();
+}
+
+void MQTTDevice::forceDisconnect() {
+  if (mpKit) {
+    mpKit->forceDisconnect();
+  }
+}
 }  // namespace uniot
