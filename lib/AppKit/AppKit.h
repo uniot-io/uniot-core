@@ -34,6 +34,10 @@
 
 #pragma once
 
+#if defined(ESP32)
+#include <esp_system.h>
+#endif
+
 #include <CallbackEventListener.h>
 #include <CrashStorage.h>
 #include <Date.h>
@@ -359,6 +363,9 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
           info.put("mqtt_size", MQTT_MAX_PACKET_SIZE);
           info.put("debug", UNIOT_LOG_ENABLED);
           info.put("lisp_heap", UNIOT_LISP_HEAP);
+#if defined(ESP32)
+          info.put("reset_reason", static_cast<int64_t>(esp_reset_reason()));
+#endif
         }),
         mpNetworkDevice(nullptr) {
     _initMqtt();
@@ -373,8 +380,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
    * Synchronizes device subscriptions.
    */
   inline void _initMqtt() {
-    // TODO: should I move configs to the Credentials class?
-    mMQTT.setServer("mqtt.uniot.io", 1883);
+    mMQTT.setServer(UNIOT_MQTT_HOST, UNIOT_MQTT_PORT);
     mMQTT.addDevice(mTopDevice);
     mMQTT.addDevice(mLispDevice);
     mTopDevice.syncSubscriptions();

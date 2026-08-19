@@ -28,6 +28,44 @@
  */
 
 /**
+ * @brief Hostname of the MQTT broker the device connects to.
+ * @ingroup common
+ */
+#ifndef UNIOT_MQTT_HOST
+#define UNIOT_MQTT_HOST "mqtt.uniot.io"
+#endif
+
+/**
+ * @brief TCP port of the MQTT broker.
+ * @ingroup common
+ */
+#ifndef UNIOT_MQTT_PORT
+#define UNIOT_MQTT_PORT 1883
+#endif
+
+/**
+ * @brief Prefix for the generated configuration AP SSID.
+ * @ingroup common
+ *
+ * The full SSID is "PREFIX-DEVICEID", upper-cased.
+ */
+#ifndef UNIOT_WIFI_AP_PREFIX
+#define UNIOT_WIFI_AP_PREFIX "UNIOT"
+#endif
+
+/**
+ * @brief WPA2 password for the configuration AP.
+ * @ingroup common
+ *
+ * An empty string creates an open network. WPA2 requires at least 8
+ * characters; a shorter non-empty password makes softAP() fail and no
+ * configuration AP is started.
+ */
+#ifndef UNIOT_WIFI_AP_PASSWORD
+#define UNIOT_WIFI_AP_PASSWORD ""
+#endif
+
+/**
  * @brief Creates a four-character code (FourCC) value from template parameters.
  * @ingroup common
  *

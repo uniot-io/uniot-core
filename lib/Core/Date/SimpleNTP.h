@@ -131,7 +131,7 @@ class SimpleNTP {
       return false;
     }
     udp.endPacket();
-    UNIOT_LOG_TRACE("NTP packet sent to %s:%d.", selectedServer, ntpUdpPort);
+    UNIOT_LOG_DEBUG("NTP packet sent to %s:%d.", selectedServer, ntpUdpPort);
     return true;
   }
 

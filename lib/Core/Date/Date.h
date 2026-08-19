@@ -141,6 +141,8 @@ class Date : public IExecutor, public CBORStorage, public Singleton<Date>, publi
     auto epoch = mSNTP.getNtpTime();
     if (epoch) {
       _setTime(epoch);
+    } else {
+      CoreEventEmitter::emitEvent(uniot::events::date::Topic::TIME, uniot::events::date::Msg::SYNC_FAILED);
     }
   }
 

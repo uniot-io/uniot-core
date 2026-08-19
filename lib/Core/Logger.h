@@ -179,6 +179,32 @@
   } while (0)
 
 /**
+ * @brief Log sink function type
+ *
+ * Function pointer called with every formatted log line (including the
+ * level prefix, timestamp, file, line, and function name) in addition
+ * to the normal Serial output. Set via uniot_log_set_sink().
+ */
+typedef void (*uniot_log_sink_t)(const char *msg);
+
+/**
+ * @brief Global log sink (C++17 inline variable, one copy per program).
+ *
+ * Do not write this directly. Use uniot_log_set_sink().
+ * Must be set before any RTOS tasks fire to avoid a write/read race
+ * on the pointer itself.
+ */
+inline uniot_log_sink_t sUniotLogSink = nullptr;
+
+/**
+ * @brief Register an external log sink
+ *
+ * @param sink Function to call for each formatted log line,
+ *             or nullptr to clear the current sink.
+ */
+inline void uniot_log_set_sink(uniot_log_sink_t sink) { sUniotLogSink = sink; }
+
+/**
  * @brief Printf-style formatting function for log messages
  *
  * Formats a log message using vsnprintf and outputs it to the logging stream.
@@ -196,6 +222,7 @@ uniot_log_printf(const char *format, ...) {
   int len = vsnprintf(buf, sizeof(buf), format, arg);
   va_end(arg);
   UNIOT_LOG_PRINT(buf);
+  if (sUniotLogSink) sUniotLogSink(buf);
   if (len >= (int)sizeof(buf))
     UNIOT_LOG_PRINT(" [...]\n");
   return len;
@@ -214,6 +241,10 @@ uniot_log_printf(const char *format, ...) {
 #define UNIOT_LOG_PRINT(...) (UNUSED(__VA_ARGS__))
 #define UNIOT_LOG(log_type, ...) (UNUSED(__VA_ARGS__))
 #define UNIOT_LOG_IF(log_type, ...) (UNUSED(__VA_ARGS__))
+
+// Sink stubs: allow sink-related code to compile when logging is disabled.
+typedef void (*uniot_log_sink_t)(const char *);
+inline void uniot_log_set_sink(uniot_log_sink_t) {}
 #endif
 
 #if UNIOT_LOG_LEVEL_ERROR <= UNIOT_LOG_LEVEL

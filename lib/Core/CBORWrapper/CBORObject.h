@@ -112,6 +112,16 @@ class CBORObject {
   }
 
   /**
+   * @brief Check if the map contains a specific string key
+   * @param key The string key to check
+   * @retval true The key exists
+   * @retval false The key does not exist
+   */
+  bool hasKey(const char *key) const {
+    return cn_cbor_mapget_string(mpMapNode, key) != nullptr;
+  }
+
+  /**
    * @brief Create or get an array at a specific integer key
    * @param key The integer key
    * @retval Array Array object representing the array

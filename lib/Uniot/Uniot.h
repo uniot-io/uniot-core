@@ -140,13 +140,32 @@ class UniotCore {
   }
 
   /**
+   * @brief Sentinel value for configWiFiResetOnReboot(): disables reboot-reset entirely.
+   *
+   * Pass this as maxRebootCount to opt out of the automatic configuration-reset
+   * mechanism. No reboot counts are stored, read, or compared, and the device
+   * will never be force-reset due to repeated reboots.
+   *
+   * @code
+   * Uniot.configWiFiResetOnReboot(UniotCore::REBOOT_RESET_DISABLED);
+   * @endcode
+   */
+  static constexpr uint8_t REBOOT_RESET_DISABLED = UINT8_MAX;
+
+  /**
    * @brief Configure automatic WiFi reset on repeated reboots
-   * @param maxRebootCount Maximum reboots before triggering configuration reset
-   * @param rebootWindowMs Time window for counting reboots in milliseconds
+   * @param maxRebootCount Maximum reboots before triggering configuration reset,
+   *                       or UniotCore::REBOOT_RESET_DISABLED to opt out entirely.
+   * @param rebootWindowMs Time window for counting reboots in milliseconds (default: 10000).
+   *                       Ignored when maxRebootCount is REBOOT_RESET_DISABLED.
    *
    * Enables automatic configuration reset when the device reboots repeatedly
    * within a specified time window. This provides a recovery mechanism for
    * devices that become unreachable due to network configuration issues.
+   *
+   * Pass REBOOT_RESET_DISABLED to completely suppress this behaviour: no reboot
+   * counter is stored to or read from flash, and the network configuration is
+   * never reset automatically.
    */
   void configWiFiResetOnReboot(uint8_t maxRebootCount, uint32_t rebootWindowMs = 10000) {
     _createNetworkControllerConfig();

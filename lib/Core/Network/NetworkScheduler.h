@@ -104,7 +104,8 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
    * @param credentials Reference to device credentials manager
    *
    * Initializes the network scheduler with default configuration including:
-   * - AP name generation based on device ID
+   * - AP name: UNIOT_WIFI_AP_PREFIX + "-" + device short ID (upper-cased)
+   * - AP password: UNIOT_WIFI_AP_PASSWORD (empty string = open network)
    * - WiFi persistence and auto-connect disabled
    * - Task initialization for all network operations
    * - WebSocket configuration server setup
@@ -116,8 +117,9 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
           [this](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
             _handleWebSocketEvent(server, client, type, arg, data, len);
           }) {
-    mApName = "UNIOT-" + String(mpCredentials->getShortDeviceId(), HEX);
+    mApName = String(UNIOT_WIFI_AP_PREFIX) + "-" + String(mpCredentials->getShortDeviceId(), HEX);
     mApName.toUpperCase();
+    mApPassword = UNIOT_WIFI_AP_PASSWORD;
     mCanScan = true;
     mApEnabled = false;
     mLastSaveResult = -1;
@@ -300,7 +302,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
     mTaskConfigAp = TaskScheduler::make([this](SchedulerTask &self, short t) {
       WiFi.disconnect(true, true);
       mTaskStopAp->detach();
-      if (WiFi.softAPConfig(mConfigServer.ip(), mConfigServer.ip(), mApSubnet) && WiFi.softAP(mApName.c_str())) {
+      if (WiFi.softAPConfig(mConfigServer.ip(), mConfigServer.ip(), mApSubnet) && WiFi.softAP(mApName.c_str(), mApPassword.isEmpty() ? nullptr : mApPassword.c_str())) {
 #if defined(ESP32) && defined(ENABLE_LOWER_WIFI_TX_POWER)
         WiFi.setTxPower(WIFI_TX_POWER_LEVEL);
 #endif
@@ -615,7 +617,8 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
   Credentials *mpCredentials;  ///< Pointer to device credentials manager
   WifiStorage mWifiStorage;    ///< WiFi credentials storage handler
 
-  String mApName;                     ///< Generated access point name
+  String mApName;      ///< Generated AP SSID: UNIOT_WIFI_AP_PREFIX + "-" + device short ID
+  String mApPassword;  ///< AP WPA2 password (empty = open network)
   IPAddress mApSubnet;                ///< Subnet mask for AP mode
   ConfigCaptivePortal mConfigServer;  ///< Configuration web server with captive portal
 
