@@ -15,15 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#if defined(ESP8266)
-#include <CrashStorage.h>
-#endif
 #include <Uniot.h>
 
 UniotCore Uniot;
-
-#if defined(ESP8266)
-extern "C" void custom_crash_callback(struct rst_info *resetInfo, uint32_t stackStart, uint32_t stackEnd) {
-  uniot::uniotCrashCallback(resetInfo, stackStart, stackEnd);
-}
-#endif

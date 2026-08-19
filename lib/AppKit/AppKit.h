@@ -39,7 +39,6 @@
 #endif
 
 #include <CallbackEventListener.h>
-#include <CrashStorage.h>
 #include <Date.h>
 #include <EventBus.h>
 #include <IEventBusConnectionKit.h>
