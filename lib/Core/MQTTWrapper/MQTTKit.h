@@ -255,9 +255,10 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
           break;
         case events::date::Msg::SYNC_FAILED:
           // MQTT cannot start without a valid clock, so keep retrying.
-          if (!mTaskNtpRetry->isAttached()) {
-            mTaskNtpRetry->once(3000);
-          }
+          // Re-armed unconditionally: once() on an already-attached task simply
+          // restarts the timer, and guarding on isAttached() here would stall
+          // the retry chain permanently if the task were still attached.
+          mTaskNtpRetry->once(3000);
           break;
         default:
           break;
