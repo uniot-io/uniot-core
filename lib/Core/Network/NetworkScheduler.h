@@ -113,7 +113,13 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
   NetworkScheduler(Credentials &credentials)
       : mpCredentials(&credentials),
         mApSubnet(255, 255, 255, 0),
-        mConfigServer(IPAddress(1, 1, 1, 1),
+        // 192.0.2.1 is TEST-NET-1 (RFC 5737): reserved for documentation, never
+        // globally routed, and assigned to no one. Do NOT replace it with an
+        // RFC1918 address such as 192.168.4.1, 172.16.x.x or 10.x.x.x. Chromium
+        // classifies RFC1918 as "private" address space and blocks the navigation
+        // from the captive portal probe (a public origin) into it, so the portal
+        // never opens on Android.
+        mConfigServer(IPAddress(192, 0, 2, 1),
           [this](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
             _handleWebSocketEvent(server, client, type, arg, data, len);
           }) {
@@ -562,11 +568,9 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
   void _initServerCallbacks() {
     auto server = mConfigServer.get();
     if (server) {
-      server->onNotFound([](AsyncWebServerRequest *request) {
-        // auto response = request->beginResponse(307);
-        // response->addHeader("Location", "/");
-        // request->send(response);
-        request->redirect("http://uniot.local/");
+      auto portalIp = mConfigServer.ip().toString();
+      server->onNotFound([portalIp](AsyncWebServerRequest *request) {
+        request->redirect("http://" + portalIp + "/");
       });
 
       server->on("/", [this](AsyncWebServerRequest *request) {
