@@ -66,6 +66,28 @@
 #endif
 
 /**
+ * @brief Maximum nesting of Lisp eval() before a script is abandoned.
+ * @ingroup common
+ *
+ * Interpreter recursion runs on the C stack, and overrunning it resets the device
+ * rather than raising an error, so the depth is checked instead of discovered. One
+ * level costs 168 bytes on the ESP8266 and 184 on the ESP32-C3, measured on target
+ * with examples/LispEvalDepth; these defaults keep roughly a kilobyte of stack in
+ * reserve at the limit.
+ *
+ * Raising it buys recursion depth at the cost of that reserve. Measure before doing so.
+ */
+#ifndef UNIOT_LISP_MAX_EVAL_DEPTH
+#if defined(ESP8266)
+#define UNIOT_LISP_MAX_EVAL_DEPTH 16
+#elif defined(ESP32)
+#define UNIOT_LISP_MAX_EVAL_DEPTH 32
+#else
+#define UNIOT_LISP_MAX_EVAL_DEPTH 64
+#endif
+#endif
+
+/**
  * @brief Keep the WiFi radio awake between beacon intervals (ESP32 only).
  * @ingroup common
  *

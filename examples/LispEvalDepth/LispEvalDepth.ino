@@ -107,6 +107,11 @@ static void measure() {
   char here;
   const uintptr_t spTask = (uintptr_t)&here;
 
+  // The limit is fixed when runCode() recreates the machine, so it cannot be lifted
+  // from here. The ramp stops short of it on purpose, and the suggestion below comes
+  // from the measured slope rather than from reaching the ceiling.
+  const int configuredLimit = UNIOT_LISP_MAX_EVAL_DEPTH;
+
   Serial.println();
   Serial.println(F("=== lisp eval depth probe ==="));
   Serial.printf("task stack              : %u bytes\n", (unsigned)stackTotalBytes());
@@ -158,6 +163,13 @@ static void measure() {
       Serial.println(F("floor reached, stopping"));
       break;
     }
+    // Or before it would trip the configured recursion limit, which would surface as
+    // a lisp error rather than a measurement.
+    const int nestingPerStep = ((nesting - nBase) * kStep) / depth;
+    if (configuredLimit > 0 && nesting + nestingPerStep > configuredLimit) {
+      Serial.printf("configured limit (%d) reached, stopping\n", configuredLimit);
+      break;
+    }
   }
 
   if (bytesPerEvalX10 == 0) {
@@ -178,6 +190,7 @@ static void measure() {
   Serial.printf("deepest probed          : lisp %d / eval nesting %d\n", deepestLisp, deepestNesting);
   Serial.println();
   Serial.printf("suggested MAX_EVAL_DEPTH: %ld\n", maxEvalDepth);
+  Serial.printf("currently configured    : %d\n", configuredLimit);
   Serial.println(F("(compare against eval_depth, which counts entries to eval)"));
 }
 

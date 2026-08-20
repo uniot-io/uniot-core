@@ -444,7 +444,8 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    * registers user-defined primitives in the environment.
    */
   void _createMachine() {
-    lisp_create(UNIOT_LISP_HEAP);
+    // The recursion limit was measured on target with examples/LispEvalDepth.
+    lisp_create(UNIOT_LISP_HEAP, UNIOT_LISP_MAX_EVAL_DEPTH);
 
     *mLispEnv = make_env(mLispRoot, &Nil, &Nil);
     define_constants(mLispRoot, mLispEnv);
