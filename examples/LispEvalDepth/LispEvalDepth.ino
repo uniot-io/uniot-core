@@ -17,36 +17,47 @@
  */
 
 /*
- * Measures how much stack one level of Lisp eval nesting consumes, so that a
- * recursion limit can be chosen from measurements rather than guessed. Supports the
- * ESP8266 continuation stack and the ESP32 Arduino loop task stack.
+ * Works out how deep Lisp recursion may safely go, by measuring rather than guessing.
+ * Uniot is deliberately not involved: only the interpreter is linked, so the numbers
+ * describe the interpreter and nothing else.
  *
- * The measurement samples the stack pointer directly. The high water mark reported by
- * ESP.getFreeContStack() and uxTaskGetStackHighWaterMark() is deliberately not used
- * for it: those cover the whole run, so shallow probes hide under whatever peak WiFi
- * or MQTT established earlier and appear to cost nothing. The high water figure is
- * still printed, clearly labelled, for reference.
+ * Three figures decide the limit, and the sketch measures all three:
  *
- * The probe runs from a scheduler task, the context user scripts are evaluated in, so
- * the reported headroom reflects the stack already spent before eval is reached.
+ *   1. What one level of eval nesting costs. Sampled from the stack pointer inside a
+ *      running program, not from a high water mark: a high water mark covers the whole
+ *      run, so a shallow probe hides under an earlier peak and appears to cost nothing.
  *
- * Flash it and open the serial monitor at 115200. The run repeats, so attaching late
- * still catches a complete table.
+ *   2. What raising costs. The guard exists to stop a recursion before it runs off the
+ *      end of the stack, and it reports by formatting a message -- at the deepest point,
+ *      where there is least room. If that does not fit, the guard overruns the stack it
+ *      is there to protect. This is measured first, while the high water mark is still
+ *      clean.
+ *
+ *   3. How much stack there is to begin with.
+ *
+ * One caveat on reading the result. Linking only the interpreter leaves more stack free
+ * than the firmware has, because the firmware has already spent some getting to the point
+ * where a script is evaluated. Set STACK_ALREADY_SPENT below to that amount to have the
+ * suggestion account for it; the cost per level is a property of the interpreter and
+ * transfers unchanged either way.
  */
 
-#include <Uniot.h>
+#include <Arduino.h>
+
+extern "C" {
+#include "libminilisp.h"
+}
 
 #if defined(ESP8266)
 #include <cont.h>
+extern "C" cont_t *g_pcont;
 #elif defined(ESP32)
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #endif
 
-using namespace uniot;
-
-// Lowest address the running task's stack may reach, and its total size. Both chips
-// grow the stack down towards the bottom returned here.
+// Lowest address the running task's stack may reach, its size, and the least it has ever
+// had free. Both chips grow the stack downwards towards the bottom returned here.
 #if defined(ESP8266)
 static inline uintptr_t stackBottomAddr() { return (uintptr_t)g_pcont->stack; }
 static inline uint32_t stackTotalBytes() { return (uint32_t)CONT_STACKSIZE; }
@@ -55,91 +66,163 @@ static inline uint32_t stackHighWaterFree() { return ESP.getFreeContStack(); }
 static inline uintptr_t stackBottomAddr() { return (uintptr_t)pxTaskGetStackStart(NULL); }
 static inline uint32_t stackTotalBytes() { return (uint32_t)CONFIG_ARDUINO_LOOP_STACK_SIZE; }
 static inline uint32_t stackHighWaterFree() { return (uint32_t)uxTaskGetStackHighWaterMark(NULL); }
+#else
+#error "this sketch needs an ESP8266 or an ESP32"
 #endif
 
-/** Stop probing while at least this much stack is still below the deepest frame. */
-static const uint32_t kStackFloor = 512;
-/** Lisp recursion levels are probed in steps of this size. */
-static const int kStep = 2;
-/** Never probe deeper than this, whatever the measurements suggest. */
-static const int kMaxLispDepth = 300;
+// Stack the firmware has already consumed before it reaches eval. Zero here measures the
+// interpreter alone; set it from the firmware to have the suggestion apply to it.
+#ifndef STACK_ALREADY_SPENT
+#define STACK_ALREADY_SPENT 0
+#endif
+
+// Heap for the probes. Small: they allocate almost nothing and the heap is not the
+// subject here.
+#ifndef PROBE_HEAP
+#define PROBE_HEAP 4000
+#endif
+
+// Never leave less than this below the deepest frame, either while probing or in the
+// limit that comes out at the end.
+static const uint32_t kStackFloor = 256;
+// Lisp recursion levels are probed in steps of this size.
+static const int kStep = 1;
+// Never probe deeper than this, whatever the measurements suggest.
+static const int kMaxLispDepth = 400;
 
 static volatile uintptr_t sSpAtProbe = 0;
-static volatile uint32_t sHighWaterFree = 0;
-static volatile int sEvalDepthAtProbe = 0;
+static volatile int sNestingAtProbe = 0;
 
-/** Stack still available below the current frame, in bytes. */
+static char sLastResult[64];
+static char sLastError[128];
+
+static void sinkOut(const char *msg, int size) {
+  (void)size;
+  snprintf(sLastResult, sizeof(sLastResult), "%s", msg);
+}
+
+static void sinkErr(const char *msg, int size) {
+  (void)size;
+  if (sLastError[0] == '\0')
+    snprintf(sLastError, sizeof(sLastError), "%s", msg);
+}
+
+/** Stack still available below the given frame, in bytes. */
 static inline uint32_t stackBelow(uintptr_t sp) {
   const uintptr_t bottom = stackBottomAddr();
   return sp > bottom ? (uint32_t)(sp - bottom) : 0;
 }
 
 /** (stack) -> bytes still free below this frame, sampled at the point of the call. */
-Object stackProbe(Root root, VarObject env, VarObject list) {
-  auto expeditor = PrimitiveExpeditor::describe("stack", Lisp::Int, 0).init(root, env, list);
-  expeditor.assertDescribedArgs();
-
+static Obj *primStack(void *root, Obj **env, Obj **list) {
   char marker;
   sSpAtProbe = (uintptr_t)&marker;
-  sHighWaterFree = stackHighWaterFree();
-  sEvalDepthAtProbe = eval_depth;
-
-  return expeditor.makeInt((int)stackBelow(sSpAtProbe));
+  sNestingAtProbe = eval_depth;
+  return make_int(root, (int)stackBelow(sSpAtProbe));
 }
 
-/** Recurses `lispDepth` levels and samples the stack at the bottom. */
-static bool probe(int lispDepth, uintptr_t &sp, int &evalNesting, uint32_t &highWater) {
-  String code = F("(defun f (n) (if (= n 0) (stack) (f (+ n -1)))) (f ");
-  code += lispDepth;
-  code += ')';
+/**
+ * Evaluates one program from a clean interpreter.
+ * @param depthLimit nesting cap, or 0 to lift it entirely.
+ * @return true if the program ran without raising.
+ */
+static bool evaluate(const char *code, int depthLimit) {
+  void *envConstructor[3];
+  envConstructor[0] = NULL;
+  envConstructor[1] = NULL;
+  envConstructor[2] = ROOT_END;
+  void *root = envConstructor;
+  Obj **genv = (Obj **)(envConstructor + 1);
 
+  sLastResult[0] = '\0';
+  sLastError[0] = '\0';
   sSpAtProbe = 0;
-  sEvalDepthAtProbe = 0;
-  Uniot.getAppKit().getLisp().runCode(Bytes(code));
+  sNestingAtProbe = 0;
 
+  lisp_create(PROBE_HEAP, depthLimit);
+  if (!lisp_is_created()) {
+    snprintf(sLastError, sizeof(sLastError), "no heap");
+    return false;
+  }
+
+  *genv = make_env(root, &Nil, &Nil);
+  define_constants(root, genv);
+  define_primitives(root, genv);
+  add_primitive(root, genv, "stack", primStack);
+
+  const bool ok = lisp_eval(root, genv, code);
+  lisp_destroy();
+  return ok;
+}
+
+/** Recurses `lispDepth` levels and samples the stack at the bottom, with no nesting cap. */
+static bool probe(int lispDepth, uintptr_t &sp, int &nesting) {
+  char code[160];
+  snprintf(code, sizeof(code),
+           "(defun f (n) (if (= n 0) (stack) (f (+ n -1))))(f %d)", lispDepth);
+  if (!evaluate(code, 0))
+    return false;
   sp = sSpAtProbe;
-  evalNesting = sEvalDepthAtProbe;
-  highWater = sHighWaterFree;
+  nesting = sNestingAtProbe;
   return sp != 0;
 }
 
+/**
+ * What it costs to raise at depth. Run before the deep probes, while the high water mark
+ * still reflects nothing but this.
+ * @return bytes consumed by the guard and the error path, or 0 if it could not be measured.
+ */
+static uint32_t measureRaiseCost() {
+  const int kAt = 6;  // shallow enough to be safe on any of these chips
+
+  uintptr_t sp = 0;
+  int nesting = 0;
+  if (!probe(kAt, sp, nesting))
+    return 0;
+  const uint32_t freeAtDepth = stackBelow(sp);
+
+  // Drive a runaway recursion into the guard at exactly the nesting the probe reached,
+  // so that raising happens with `freeAtDepth` bytes left below it.
+  const uint32_t before = stackHighWaterFree();
+  if (evaluate("(defun r (n) (+ 1 (r (+ n 1))))(r 0)", nesting))
+    return 0;  // it was supposed to raise
+  const uint32_t after = stackHighWaterFree();
+  (void)before;
+
+  return freeAtDepth > after ? freeAtDepth - after : 0;
+}
+
 static void measure() {
-  char here;
-  const uintptr_t spTask = (uintptr_t)&here;
-
-  // The limit is fixed when runCode() recreates the machine, so it cannot be lifted
-  // from here. The ramp stops short of it on purpose, and the suggestion below comes
-  // from the measured slope rather than from reaching the ceiling.
-  const int configuredLimit = UNIOT_LISP_MAX_EVAL_DEPTH;
-
   Serial.println();
-  Serial.println(F("=== lisp eval depth probe ==="));
-  Serial.printf("task stack              : %u bytes\n", (unsigned)stackTotalBytes());
-  Serial.printf("free below task frame   : %u bytes  (instantaneous)\n", (unsigned)stackBelow(spTask));
-  Serial.printf("high water free         : %u bytes  (peak over the whole run)\n",
-                (unsigned)stackHighWaterFree());
-  Serial.println();
-  Serial.println(F("lisp depth  eval nesting  free below  used  bytes/eval"));
+  Serial.println(F("=== lisp eval depth ==="));
+  Serial.printf("task stack            : %u bytes\n", (unsigned)stackTotalBytes());
+
+  const uint32_t raiseCost = measureRaiseCost();
+  if (raiseCost)
+    Serial.printf("raising an error costs: %u bytes\n", (unsigned)raiseCost);
+  else
+    Serial.println(F("raising an error costs: could not measure"));
 
   uintptr_t spBase = 0;
   int nBase = 0;
-  uint32_t hwBase = 0;
-  if (!probe(0, spBase, nBase, hwBase)) {
+  if (!probe(0, spBase, nBase)) {
     Serial.println(F("probe failed at depth 0"));
     return;
   }
-  Serial.printf("%10d  %12d  %10u  %4s  %10s\n", 0, nBase, (unsigned)stackBelow(spBase), "-", "-");
+  const uint32_t headroom = stackBelow(spBase);
+  Serial.printf("free below depth 0    : %u bytes\n", (unsigned)headroom);
+  Serial.println();
+  Serial.println(F("lisp depth  eval nesting  free below  used  bytes/level"));
+  Serial.printf("%10d  %12d  %10u  %4s  %11s\n", 0, nBase, (unsigned)headroom, "-", "-");
 
-  uint32_t bytesPerEvalX10 = 0;
-  int deepestLisp = 0;
-  int deepestNesting = nBase;
+  uint32_t perLevel = 0;
+  int deepestLisp = 0, deepestNesting = nBase;
 
   for (int depth = kStep; depth <= kMaxLispDepth; depth += kStep) {
     uintptr_t sp = 0;
     int nesting = 0;
-    uint32_t hw = 0;
-    if (!probe(depth, sp, nesting, hw)) {
-      Serial.printf("probe failed at depth %d\n", depth);
+    if (!probe(depth, sp, nesting)) {
+      Serial.printf("probe stopped at depth %d: %s\n", depth, sLastError);
       break;
     }
     if (sp >= spBase || nesting <= nBase) {
@@ -148,68 +231,56 @@ static void measure() {
     }
 
     const uint32_t used = (uint32_t)(spBase - sp);
-    const uint32_t evalLevels = (uint32_t)(nesting - nBase);
-    bytesPerEvalX10 = (used * 10u) / evalLevels;
+    perLevel = used / (uint32_t)(nesting - nBase);
     deepestLisp = depth;
     deepestNesting = nesting;
 
-    Serial.printf("%10d  %12d  %10u  %4u  %7u.%u\n",
-                  depth, nesting, (unsigned)stackBelow(sp), (unsigned)used,
-                  (unsigned)(bytesPerEvalX10 / 10u), (unsigned)(bytesPerEvalX10 % 10u));
+    Serial.printf("%10d  %12d  %10u  %4u  %11u\n",
+                  depth, nesting, (unsigned)stackBelow(sp), (unsigned)used, (unsigned)perLevel);
+    Serial.flush();
 
-    // Stop before one more step could cross the floor.
+    // Stop before one more step could cross the floor, counting the room raising needs.
     const uint32_t stepCost = (used * (uint32_t)kStep) / (uint32_t)depth;
-    if (stackBelow(sp) < kStackFloor + stepCost) {
+    if (stackBelow(sp) < kStackFloor + raiseCost + stepCost) {
       Serial.println(F("floor reached, stopping"));
-      break;
-    }
-    // Or before it would trip the configured recursion limit, which would surface as
-    // a lisp error rather than a measurement.
-    const int nestingPerStep = ((nesting - nBase) * kStep) / depth;
-    if (configuredLimit > 0 && nesting + nestingPerStep > configuredLimit) {
-      Serial.printf("configured limit (%d) reached, stopping\n", configuredLimit);
       break;
     }
   }
 
-  if (bytesPerEvalX10 == 0) {
+  if (perLevel == 0) {
     Serial.println(F("not enough samples to draw a conclusion"));
     return;
   }
 
-  const uint32_t headroom = stackBelow(spBase);
-  const uint32_t usable = headroom > kStackFloor ? headroom - kStackFloor : 0;
-  const long maxEvalDepth = usable > 0 ? (long)((usable * 10u) / bytesPerEvalX10) + nBase : 0;
+  const uint32_t reserved = raiseCost + kStackFloor + (uint32_t)STACK_ALREADY_SPENT;
+  const long fits = headroom > reserved ? (long)((headroom - reserved) / perLevel) + nBase : 0;
 
   Serial.println();
-  Serial.printf("bytes per eval level    : %u.%u\n",
-                (unsigned)(bytesPerEvalX10 / 10u), (unsigned)(bytesPerEvalX10 % 10u));
-  Serial.printf("eval nesting at depth 0 : %d\n", nBase);
-  Serial.printf("free below depth 0      : %u bytes\n", (unsigned)headroom);
-  Serial.printf("reserved floor          : %u bytes\n", (unsigned)kStackFloor);
-  Serial.printf("deepest probed          : lisp %d / eval nesting %d\n", deepestLisp, deepestNesting);
+  Serial.printf("bytes per nesting level : %u\n", (unsigned)perLevel);
+  Serial.printf("nesting at depth 0      : %d\n", nBase);
+  Serial.printf("deepest probed          : lisp %d / nesting %d\n", deepestLisp, deepestNesting);
+  Serial.printf("reserved for raising    : %u bytes\n", (unsigned)raiseCost);
+  Serial.printf("reserved as floor       : %u bytes\n", (unsigned)kStackFloor);
+  Serial.printf("assumed already spent   : %u bytes\n", (unsigned)STACK_ALREADY_SPENT);
   Serial.println();
-  Serial.printf("suggested MAX_EVAL_DEPTH: %ld\n", maxEvalDepth);
-  Serial.printf("currently configured    : %d\n", configuredLimit);
-  Serial.println(F("(compare against eval_depth, which counts entries to eval)"));
+  Serial.printf("=> nesting that fits    : %ld\n", fits);
+  Serial.println(F("   Set UNIOT_LISP_MAX_EVAL_DEPTH no higher than this. If"));
+  Serial.println(F("   STACK_ALREADY_SPENT is 0 the figure is for the interpreter"));
+  Serial.println(F("   alone and is optimistic for the firmware."));
 }
-
-auto taskMeasure = Uniot.createTask("measure", [](SchedulerTask &self, short t) {
-  measure();
-});
 
 void setup() {
   Serial.begin(115200);
-  delay(200);
+  delay(2000);
 
-  Uniot.addLispPrimitive(stackProbe);
-  Uniot.begin();
+  lisp_set_cycle_yield(yield);
+  lisp_set_printers(sinkOut, NULL, sinkErr);
 
-  // Repeats so that a host attaching late still catches a complete run, which
-  // matters on the ESP32C3 where the USB serial port re-enumerates on reset.
-  taskMeasure->attach(20000, 0);
+  measure();
+
+  Serial.println(F("DONE"));
 }
 
 void loop() {
-  Uniot.loop();
+  delay(1000);
 }
