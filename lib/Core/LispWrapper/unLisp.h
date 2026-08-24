@@ -445,7 +445,7 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    */
   void _createMachine() {
     // The recursion limit was measured on target with examples/LispEvalDepth.
-    lisp_create(UNIOT_LISP_HEAP, UNIOT_LISP_MAX_EVAL_DEPTH);
+    lisp_create(UNIOT_LISP_HEAP, UNIOT_LISP_MAX_EVAL_STACK);
 
     *mLispEnv = make_env(mLispRoot, &Nil, &Nil);
     define_constants(mLispRoot, mLispEnv);

@@ -70,20 +70,27 @@
  * @ingroup common
  *
  * Interpreter recursion runs on the C stack, and overrunning it resets the device
- * rather than raising an error, so the depth is checked instead of discovered. One
- * level costs 168 bytes on the ESP8266 and 184 on the ESP32-C3, measured on target
- * with examples/LispEvalDepth; these defaults keep roughly a kilobyte of stack in
- * reserve at the limit.
+ * rather than raising an error, so what a script spends is measured as it spends it.
+ * The budget is in bytes, not levels of nesting: nesting is only a proxy for stack, and
+ * a poor one, since a level that prints costs several times what a bare call costs.
  *
- * Raising it buys recursion depth at the cost of that reserve. Measure before doing so.
+ * Measured on target with tools/LispEvalDepth: on an ESP8266 a level of nesting costs
+ * 184 bytes, an evaluation starts with 3232 bytes below it, and raising an error costs
+ * 864 -- the guard fires, and then reporting needs stack of its own. So the budget is
+ * that headroom less the cost of raising less a margin, which is why it is not simply
+ * "all the stack there is". The ESP32 figure is scaled from its larger stack and has
+ * not been measured on target.
+ *
+ * Raising the budget buys recursion at the cost of that reserve. Measure before doing so:
+ * the ESP8266 has 4 KB of continuation stack in total.
  */
-#ifndef UNIOT_LISP_MAX_EVAL_DEPTH
+#ifndef UNIOT_LISP_MAX_EVAL_STACK
 #if defined(ESP8266)
-#define UNIOT_LISP_MAX_EVAL_DEPTH 16
+#define UNIOT_LISP_MAX_EVAL_STACK 2048
 #elif defined(ESP32)
-#define UNIOT_LISP_MAX_EVAL_DEPTH 32
+#define UNIOT_LISP_MAX_EVAL_STACK 5632
 #else
-#define UNIOT_LISP_MAX_EVAL_DEPTH 64
+#define UNIOT_LISP_MAX_EVAL_STACK 8192
 #endif
 #endif
 

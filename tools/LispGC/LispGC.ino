@@ -74,16 +74,18 @@ static size_t largestFreeBlock() {
 #define UNIOT_LISP_HEAP 7000
 #endif
 #if defined(ESP8266)
-#define DEFAULT_MAX_DEPTH 16
+#define DEFAULT_MAX_EVAL_STACK 2048
 #else
-#define DEFAULT_MAX_DEPTH 32
+#define DEFAULT_MAX_EVAL_STACK 5632
 #endif
-#ifndef UNIOT_LISP_MAX_EVAL_DEPTH
-#define UNIOT_LISP_MAX_EVAL_DEPTH DEFAULT_MAX_DEPTH
+#ifndef UNIOT_LISP_MAX_EVAL_STACK
+#define UNIOT_LISP_MAX_EVAL_STACK DEFAULT_MAX_EVAL_STACK
 #endif
 
 static const size_t HEAP = UNIOT_LISP_HEAP;
-static const int MAX_DEPTH = UNIOT_LISP_MAX_EVAL_DEPTH;
+// Bytes of C stack one evaluation may spend, which is what the interpreter's recursion
+// guard actually measures.
+static const size_t MAX_EVAL_STACK = UNIOT_LISP_MAX_EVAL_STACK;
 
 static char last_result[64];
 static char last_error[96];
@@ -168,7 +170,7 @@ static bool run(const Workload *w, uint32_t *micros_taken) {
   last_result[0] = '\0';
   last_error[0] = '\0';
 
-  lisp_create(HEAP, MAX_DEPTH);
+  lisp_create(HEAP, MAX_EVAL_STACK);
   if (!lisp_is_created()) {
     snprintf(last_error, sizeof(last_error), "no heap");
     return false;
@@ -286,7 +288,7 @@ void setup() {
   Serial.println(F("================================================================"));
   Serial.printf("strategy      %s\n", STRATEGY);
   Serial.printf("lisp heap     %u bytes\n", (unsigned)HEAP);
-  Serial.printf("eval depth    %d\n", MAX_DEPTH);
+  Serial.printf("eval stack    %u bytes\n", (unsigned)MAX_EVAL_STACK);
   Serial.printf("free heap     %u bytes\n", (unsigned)ESP.getFreeHeap());
   Serial.printf("largest block %u bytes\n", (unsigned)largestFreeBlock());
   Serial.println(F("================================================================"));

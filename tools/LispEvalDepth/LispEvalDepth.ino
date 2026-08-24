@@ -90,6 +90,7 @@ static const int kStep = 1;
 // Never probe deeper than this, whatever the measurements suggest.
 static const int kMaxLispDepth = 400;
 
+static int gEntryFree = 0;
 static volatile uintptr_t sSpAtProbe = 0;
 static volatile int sNestingAtProbe = 0;
 
@@ -123,10 +124,10 @@ static Obj *primStack(void *root, Obj **env, Obj **list) {
 
 /**
  * Evaluates one program from a clean interpreter.
- * @param depthLimit nesting cap, or 0 to lift it entirely.
+ * @param stackBudget bytes of C stack the evaluation may spend, or 0 to lift the cap.
  * @return true if the program ran without raising.
  */
-static bool evaluate(const char *code, int depthLimit) {
+static bool evaluate(const char *code, size_t stackBudget) {
   void *envConstructor[3];
   envConstructor[0] = NULL;
   envConstructor[1] = NULL;
@@ -139,7 +140,7 @@ static bool evaluate(const char *code, int depthLimit) {
   sSpAtProbe = 0;
   sNestingAtProbe = 0;
 
-  lisp_create(PROBE_HEAP, depthLimit);
+  lisp_create(PROBE_HEAP, stackBudget);
   if (!lisp_is_created()) {
     snprintf(sLastError, sizeof(sLastError), "no heap");
     return false;
@@ -150,6 +151,7 @@ static bool evaluate(const char *code, int depthLimit) {
   define_primitives(root, genv);
   add_primitive(root, genv, "stack", primStack);
 
+  gEntryFree = (int)stackBelow((uintptr_t)&envConstructor);
   const bool ok = lisp_eval(root, genv, code);
   lisp_destroy();
   return ok;
@@ -168,28 +170,23 @@ static bool probe(int lispDepth, uintptr_t &sp, int &nesting) {
 }
 
 /**
- * What it costs to raise at depth. Run before the deep probes, while the high water mark
- * still reflects nothing but this.
- * @return bytes consumed by the guard and the error path, or 0 if it could not be measured.
+ * What raising costs: one eval frame of overshoot plus the whole error path, measured
+ * from the stack where evaluation began down to the deepest point reached.
+ *
+ * A budget of one byte makes the guard fire on the first eval it checks, so nothing is
+ * mixed in from the cost of getting deep. It has to run before any other probe, because
+ * the high water mark only ever falls -- once a deep probe has moved it, this can no
+ * longer see its own excursion.
+ *
+ * @return bytes that must stay in reserve below the limit, or 0 if it could not be
+ *         measured.
  */
 static uint32_t measureRaiseCost() {
-  const int kAt = 6;  // shallow enough to be safe on any of these chips
-
-  uintptr_t sp = 0;
-  int nesting = 0;
-  if (!probe(kAt, sp, nesting))
-    return 0;
-  const uint32_t freeAtDepth = stackBelow(sp);
-
-  // Drive a runaway recursion into the guard at exactly the nesting the probe reached,
-  // so that raising happens with `freeAtDepth` bytes left below it.
-  const uint32_t before = stackHighWaterFree();
-  if (evaluate("(defun r (n) (+ 1 (r (+ n 1))))(r 0)", nesting))
+  if (evaluate("(defun r (n) (+ 1 (r (+ n 1))))(r 0)", 1))
     return 0;  // it was supposed to raise
-  const uint32_t after = stackHighWaterFree();
-  (void)before;
-
-  return freeAtDepth > after ? freeAtDepth - after : 0;
+  const uint32_t deepest = stackHighWaterFree();
+  const uint32_t entry = (uint32_t)gEntryFree;
+  return entry > deepest ? entry - deepest : 0;
 }
 
 static void measure() {
@@ -253,20 +250,22 @@ static void measure() {
   }
 
   const uint32_t reserved = raiseCost + kStackFloor + (uint32_t)STACK_ALREADY_SPENT;
-  const long fits = headroom > reserved ? (long)((headroom - reserved) / perLevel) + nBase : 0;
+  const uint32_t budget = headroom > reserved ? headroom - reserved : 0;
 
   Serial.println();
   Serial.printf("bytes per nesting level : %u\n", (unsigned)perLevel);
   Serial.printf("nesting at depth 0      : %d\n", nBase);
   Serial.printf("deepest probed          : lisp %d / nesting %d\n", deepestLisp, deepestNesting);
+  Serial.printf("free below depth 0      : %u bytes\n", (unsigned)headroom);
   Serial.printf("reserved for raising    : %u bytes\n", (unsigned)raiseCost);
   Serial.printf("reserved as floor       : %u bytes\n", (unsigned)kStackFloor);
   Serial.printf("assumed already spent   : %u bytes\n", (unsigned)STACK_ALREADY_SPENT);
   Serial.println();
-  Serial.printf("=> nesting that fits    : %ld\n", fits);
-  Serial.println(F("   Set UNIOT_LISP_MAX_EVAL_DEPTH no higher than this. If"));
-  Serial.println(F("   STACK_ALREADY_SPENT is 0 the figure is for the interpreter"));
-  Serial.println(F("   alone and is optimistic for the firmware."));
+  Serial.printf("=> UNIOT_LISP_MAX_EVAL_STACK : %u bytes\n", (unsigned)budget);
+  Serial.printf("   which is about %u levels of the shape probed here\n",
+                (unsigned)(budget / perLevel));
+  Serial.println(F("   If STACK_ALREADY_SPENT is 0 this is for the interpreter alone"));
+  Serial.println(F("   and is optimistic for the firmware."));
 }
 
 void setup() {
