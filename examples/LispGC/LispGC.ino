@@ -49,6 +49,10 @@ extern "C" {
 struct Workload {
   const char *name;
   const char *expect;
+  // Whether this one is here to exercise the collector. `recursion` is not -- it measures
+  // what nested calls cost and never fills the heap -- so it is not expected to collect
+  // and is not complained about for failing to.
+  bool collects;
   const char *code;
 };
 
@@ -109,44 +113,45 @@ static Obj *prim_gc(void *root, Obj **env, Obj **list) {
 
 // Sized to fit a 7000 byte heap and, more restrictively, an eval nesting limit of 16.
 static const Workload WORKLOADS[] = {
-  {"churn", "0",
+  {"churn", "0", true,
    "(define i 0)(define j ())"
-   "(while (< i 150) (setq j (list 1 2 3 (list 4 5) 6)) (setq i (+ i 1)))"
+   "(while (< i 350) (setq j (list 1 2 3 (list 4 5) 6)) (setq i (+ i 1)))"
    "(setq j ())0"},
 
-  {"retain", "0",
+  {"retain", "0", true,
    "(define n ())(define i 0)"
-   "(while (< i 30) (setq n (cons (list i i) n)) (setq i (+ i 1)))0"},
+   "(while (< i 40) (setq n (cons (list i i) n)) (setq i (+ i 1)))"
+   "(gc)(gc)(gc)0"},
 
-  {"branching", "59",
+  {"branching", "59", true,
    "(define n ())(define i 0)"
    "(while (< i 60) (setq n (cons (list i) n)) (setq i (+ i 1)))"
-   "(gc)(car (car n))"},
+   "(gc)(gc)(gc)(car (car n))"},
 
-  {"working-set", "0",
+  {"working-set", "0", true,
    "(define tbl ())(define i 0)"
    "(while (< i 20) (setq tbl (cons (list i (* i 2)) tbl)) (setq i (+ i 1)))"
    "(define t ())(setq i 0)"
-   "(while (< i 120) (setq t (list i (list i i) i)) (setq i (+ i 1)))"
+   "(while (< i 250) (setq t (list i (list i i) i)) (setq i (+ i 1)))"
    "(setq t ())0"},
 
-  {"closures", "7",
+  {"closures", "7", true,
    "(define i 0)(define f ())"
-   "(while (< i 80) (setq f ((lambda (x) (lambda (y) (+ x y))) i)) (setq i (+ i 1)))"
+   "(while (< i 250) (setq f ((lambda (x) (lambda (y) (+ x y))) i)) (setq i (+ i 1)))"
    "(setq f ())(+ 3 4)"},
 
   // Depth 16 is the whole nesting budget on this board, and each level of `d` costs
   // several. Two is what fits; five overruns the continuation stack before the guard
   // can raise.
-  {"recursion", "2",
+  {"recursion", "2", false,
    "(defun d (n) (if (= n 0) 0 (+ 1 (d (+ n -1)))))(d 2)"},
 
-  {"mixed-sizes", "0",
+  {"mixed-sizes", "0", true,
    "(define a ())(define b ())(define i 0)"
-   "(while (< i 80) (setq a (list i)) (setq b (list i i i i i i i i)) (setq a ()) (setq i (+ i 1)))"
+   "(while (< i 200) (setq a (list i)) (setq b (list i i i i i i i i)) (setq a ()) (setq i (+ i 1)))"
    "(setq b ())0"},
 
-  {"survives", "(1 2 3)",
+  {"survives", "(1 2 3)", true,
    "(define keep (list 1 2 3))(gc)(gc)(gc) keep"},
 };
 
@@ -246,7 +251,13 @@ static void phase_measurement() {
     if (best == 0)
       continue;
 
-    Serial.printf("  %-12s %8lu %8lu %9lu %6u %7u %10u %9u %7u %8u %6d\n",
+    // A workload meant to exercise the collector that has stopped doing so has stopped
+    // measuring anything. That can happen quietly when objects shrink or the heap grows,
+    // which is exactly when these numbers are being compared against older ones.
+    const char *thin = (w->collects && snapshot.collections < 3)
+                           ? "  <- too few collections, rescale this workload"
+                           : "";
+    Serial.printf("  %-12s %8lu %8lu %9lu %6u %7u %10u %9u %7u %8u %6d%s\n",
                   w->name,
                   (unsigned long)best,
                   (unsigned long)snapshot.gc_time,
@@ -257,7 +268,7 @@ static void phase_measurement() {
                   (unsigned)snapshot.system_peak,
                   (unsigned)snapshot.free_blocks,
                   (unsigned)snapshot.free_largest,
-                  eval_depth_max);
+                  eval_depth_max, thin);
     Serial.flush();
   }
 }
