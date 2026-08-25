@@ -161,7 +161,10 @@ static bool evaluate(const char *code, size_t stackBudget) {
 static bool probe(int lispDepth, uintptr_t &sp, int &nesting) {
   char code[160];
   snprintf(code, sizeof(code),
-           "(defun f (n) (if (= n 0) (stack) (f (+ n -1))))(f %d)", lispDepth);
+           // Wrapped in an addition on purpose: the call must NOT be in tail position,
+           // or the interpreter eliminates it and the probe measures a stack that never
+           // grows. What is being measured here is the cost of a real nested call.
+           "(defun f (n) (if (= n 0) (stack) (+ 0 (f (+ n -1)))))(f %d)", lispDepth);
   if (!evaluate(code, 0))
     return false;
   sp = sSpAtProbe;

@@ -153,6 +153,12 @@ static const Workload WORKLOADS[] = {
    "(while (< i 200) (setq a (list i)) (setq b (list i i i i i i i i)) (setq a ()) (setq i (+ i 1)))"
    "(setq b ())0"},
 
+  // Five hundred nested calls would need roughly 92000 bytes of stack at 184 bytes a
+  // level, against a budget of 2048. It only fits because a call in tail position costs
+  // nothing, so this fails outright if tail call elimination stops working on target.
+  {"tail-calls", "0", true,
+   "(defun lp (n) (if (= n 0) 0 (lp (+ n -1))))(lp 500)"},
+
   {"survives", "(1 2 3)", true,
    "(define keep (list 1 2 3))(gc)(gc)(gc) keep"},
 };
