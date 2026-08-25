@@ -113,7 +113,7 @@ static Obj *prim_gc(void *root, Obj **env, Obj **list) {
 }
 
 
-// Sized to fit a 7000 byte heap and, more restrictively, an eval nesting limit of 16.
+// Sized to fit a 7000 byte heap and the stack budget the firmware runs with.
 static const Workload WORKLOADS[] = {
   {"churn", "0", true,
    "(define i 0)(define j ())"
@@ -142,9 +142,8 @@ static const Workload WORKLOADS[] = {
    "(while (< i 250) (setq f ((lambda (x) (lambda (y) (+ x y))) i)) (setq i (+ i 1)))"
    "(setq f ())(+ 3 4)"},
 
-  // Depth 16 is the whole nesting budget on this board, and each level of `d` costs
-  // several. Two is what fits; five overruns the continuation stack before the guard
-  // can raise.
+  // Not in tail position, so every level is a real frame. Two is what the firmware's
+  // stack budget holds for this shape.
   {"recursion", "2", false,
    "(defun d (n) (if (= n 0) 0 (+ 1 (d (+ n -1)))))(d 2)"},
 
@@ -237,7 +236,7 @@ static void phase_correctness() {
 static void phase_measurement() {
   Serial.println();
   Serial.println(F("== cost: normal settings =="));
-  Serial.println(F("  workload      total_us    gc_us  pause_us  colls  allocs  peak_live  peak_sys  blocks  largest  depth"));
+  Serial.println(F("  workload      total_us    gc_us  pause_us  colls  allocs  peak_live  peak_sys  blocks  largest"));
 
   for (size_t i = 0; i < WORKLOAD_COUNT; i++) {
     const Workload *w = &WORKLOADS[i];
@@ -265,7 +264,7 @@ static void phase_measurement() {
     const char *thin = (w->collects && snapshot.collections < 3)
                            ? "  <- too few collections, rescale this workload"
                            : "";
-    Serial.printf("  %-12s %8lu %8lu %9lu %6u %7u %10u %9u %7u %8u %6d%s\n",
+    Serial.printf("  %-12s %8lu %8lu %9lu %6u %7u %10u %9u %7u %8u%s\n",
                   w->name,
                   (unsigned long)best,
                   (unsigned long)snapshot.gc_time,
@@ -275,8 +274,7 @@ static void phase_measurement() {
                   (unsigned)snapshot.live_peak,
                   (unsigned)snapshot.system_peak,
                   (unsigned)snapshot.free_blocks,
-                  (unsigned)snapshot.free_largest,
-                  eval_depth_max, thin);
+                  (unsigned)snapshot.free_largest, thin);
     Serial.flush();
   }
 }

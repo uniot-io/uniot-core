@@ -23,7 +23,7 @@
  *
  * Three figures decide the limit, and the sketch measures all three:
  *
- *   1. What one level of eval nesting costs. Sampled from the stack pointer inside a
+ *   1. What one nested call costs. Sampled from the stack pointer inside a
  *      running program, not from a high water mark: a high water mark covers the whole
  *      run, so a shallow probe hides under an earlier peak and appears to cost nothing.
  *
@@ -92,7 +92,7 @@ static const int kMaxLispDepth = 400;
 
 static int gEntryFree = 0;
 static volatile uintptr_t sSpAtProbe = 0;
-static volatile int sNestingAtProbe = 0;
+
 
 static char sLastResult[64];
 static char sLastError[128];
@@ -118,7 +118,6 @@ static inline uint32_t stackBelow(uintptr_t sp) {
 static Obj *primStack(void *root, Obj **env, Obj **list) {
   char marker;
   sSpAtProbe = (uintptr_t)&marker;
-  sNestingAtProbe = eval_depth;
   return make_int(root, (int)stackBelow(sSpAtProbe));
 }
 
@@ -138,7 +137,6 @@ static bool evaluate(const char *code, size_t stackBudget) {
   sLastResult[0] = '\0';
   sLastError[0] = '\0';
   sSpAtProbe = 0;
-  sNestingAtProbe = 0;
 
   lisp_create(PROBE_HEAP, stackBudget);
   if (!lisp_is_created()) {
@@ -157,8 +155,8 @@ static bool evaluate(const char *code, size_t stackBudget) {
   return ok;
 }
 
-/** Recurses `lispDepth` levels and samples the stack at the bottom, with no nesting cap. */
-static bool probe(int lispDepth, uintptr_t &sp, int &nesting) {
+/** Recurses `lispDepth` calls deep and samples the stack at the bottom, with no cap. */
+static bool probe(int lispDepth, uintptr_t &sp) {
   char code[160];
   snprintf(code, sizeof(code),
            // Wrapped in an addition on purpose: the call must NOT be in tail position,
@@ -168,7 +166,6 @@ static bool probe(int lispDepth, uintptr_t &sp, int &nesting) {
   if (!evaluate(code, 0))
     return false;
   sp = sSpAtProbe;
-  nesting = sNestingAtProbe;
   return sp != 0;
 }
 
@@ -204,39 +201,36 @@ static void measure() {
     Serial.println(F("raising an error costs: could not measure"));
 
   uintptr_t spBase = 0;
-  int nBase = 0;
-  if (!probe(0, spBase, nBase)) {
+  if (!probe(0, spBase)) {
     Serial.println(F("probe failed at depth 0"));
     return;
   }
   const uint32_t headroom = stackBelow(spBase);
   Serial.printf("free below depth 0    : %u bytes\n", (unsigned)headroom);
   Serial.println();
-  Serial.println(F("lisp depth  eval nesting  free below  used  bytes/level"));
-  Serial.printf("%10d  %12d  %10u  %4s  %11s\n", 0, nBase, (unsigned)headroom, "-", "-");
+  Serial.println(F("     calls  free below  used  bytes/call"));
+  Serial.printf("%10d  %10u  %4s  %10s\n", 0, (unsigned)headroom, "-", "-");
 
   uint32_t perLevel = 0;
-  int deepestLisp = 0, deepestNesting = nBase;
+  int deepestLisp = 0;
 
   for (int depth = kStep; depth <= kMaxLispDepth; depth += kStep) {
     uintptr_t sp = 0;
-    int nesting = 0;
-    if (!probe(depth, sp, nesting)) {
+    if (!probe(depth, sp)) {
       Serial.printf("probe stopped at depth %d: %s\n", depth, sLastError);
       break;
     }
-    if (sp >= spBase || nesting <= nBase) {
+    if (sp >= spBase) {
       Serial.printf("implausible sample at depth %d, stopping\n", depth);
       break;
     }
 
     const uint32_t used = (uint32_t)(spBase - sp);
-    perLevel = used / (uint32_t)(nesting - nBase);
+    perLevel = used / (uint32_t)depth;
     deepestLisp = depth;
-    deepestNesting = nesting;
 
-    Serial.printf("%10d  %12d  %10u  %4u  %11u\n",
-                  depth, nesting, (unsigned)stackBelow(sp), (unsigned)used, (unsigned)perLevel);
+    Serial.printf("%10d  %10u  %4u  %10u\n",
+                  depth, (unsigned)stackBelow(sp), (unsigned)used, (unsigned)perLevel);
     Serial.flush();
 
     // Stop before one more step could cross the floor, counting the room raising needs.
@@ -256,16 +250,15 @@ static void measure() {
   const uint32_t budget = headroom > reserved ? headroom - reserved : 0;
 
   Serial.println();
-  Serial.printf("bytes per nesting level : %u\n", (unsigned)perLevel);
-  Serial.printf("nesting at depth 0      : %d\n", nBase);
-  Serial.printf("deepest probed          : lisp %d / nesting %d\n", deepestLisp, deepestNesting);
+  Serial.printf("bytes per nested call   : %u\n", (unsigned)perLevel);
+  Serial.printf("deepest probed          : %d calls\n", deepestLisp);
   Serial.printf("free below depth 0      : %u bytes\n", (unsigned)headroom);
   Serial.printf("reserved for raising    : %u bytes\n", (unsigned)raiseCost);
   Serial.printf("reserved as floor       : %u bytes\n", (unsigned)kStackFloor);
   Serial.printf("assumed already spent   : %u bytes\n", (unsigned)STACK_ALREADY_SPENT);
   Serial.println();
   Serial.printf("=> UNIOT_LISP_MAX_EVAL_STACK : %u bytes\n", (unsigned)budget);
-  Serial.printf("   which is about %u levels of the shape probed here\n",
+  Serial.printf("   which is about %u nested calls of the shape probed here\n",
                 (unsigned)(budget / perLevel));
   Serial.println(F("   If STACK_ALREADY_SPENT is 0 this is for the interpreter alone"));
   Serial.println(F("   and is optimistic for the firmware."));
