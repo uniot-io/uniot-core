@@ -285,6 +285,63 @@ static void phase_measurement() {
 //
 // Sweep merges neighbouring free blocks on every collection, so unlike a malloc heap this
 // one has no memory of its own history -- but that is an argument, and this measures it.
+// What one turn of a loop costs, which is the only thing that turns
+// MINILISP_MAX_LOOP_ITERATIONS from a number into a length of time. The limit exists to
+// stop a loop that never ends, and the question it answers -- how long a device sits
+// there before saying so -- cannot be answered on a workstation: the same iteration is
+// two orders of magnitude cheaper there.
+//
+// Two bodies, because the spread between them is most of the answer. An empty body is
+// the floor, and a body that allocates is what a real rule does.
+struct LoopCase {
+  const char *name;
+  const char *code;
+  unsigned long iterations;
+};
+
+static const LoopCase LOOP_CASES[] = {
+  {"empty body", "(while (< #itr 10000) 1) 0", 10000},
+  {"setq + add", "(define n 0)(while (< #itr 10000) (setq n (+ n 1))) 0", 10000},
+  {"nested call", "(defun f (x) (+ x 1))(define n 0)"
+                  "(while (< #itr 10000) (setq n (f n))) 0", 10000},
+};
+
+static void phase_loop_cost() {
+  Serial.println();
+  Serial.println(F("== loop cost: what MINILISP_MAX_LOOP_ITERATIONS is worth in seconds =="));
+  Serial.println(F("  case            us/iter   10k iters    at 20000    at 100000"));
+
+  for (size_t i = 0; i < sizeof(LOOP_CASES) / sizeof(LOOP_CASES[0]); i++) {
+    const LoopCase *c = &LOOP_CASES[i];
+    Workload w = {c->name, "0", false, c->code};
+
+    // Best of three: the interest is in what an iteration costs, not in whatever else
+    // the board happened to be doing during one of the runs.
+    uint32_t best = 0;
+    for (int r = 0; r < 3; r++) {
+      uint32_t took = 0;
+      if (!run(&w, &took)) {
+        Serial.printf("  %-14s RAISED: %s\n", c->name, last_error);
+        best = 0;
+        break;
+      }
+      if (r == 0 || took < best)
+        best = took;
+    }
+    if (best == 0)
+      continue;
+
+    const float per_iter = (float)best / (float)c->iterations;
+    Serial.printf("  %-14s %7.2f %9lu ms %8.2f s %10.2f s\n",
+                  c->name,
+                  per_iter,
+                  (unsigned long)(best / 1000),
+                  per_iter * 20000.0f / 1000000.0f,
+                  per_iter * 100000.0f / 1000000.0f);
+    Serial.flush();
+  }
+}
+
 static void phase_soak(unsigned long rounds) {
   Serial.println();
   Serial.println(F("== long run: free space over many collections =="));
@@ -362,6 +419,7 @@ void setup() {
 
   phase_correctness();
   phase_measurement();
+  phase_loop_cost();
   phase_soak(20000);
 
   Serial.println();
