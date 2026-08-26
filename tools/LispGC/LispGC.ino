@@ -279,6 +279,69 @@ static void phase_measurement() {
   }
 }
 
+// Long-run behaviour: does the free space degrade as a script runs for a long time, or
+// does it settle? A device runs the same script for weeks, so the question is whether the
+// heap after ten thousand collections looks like the heap after ten.
+//
+// Sweep merges neighbouring free blocks on every collection, so unlike a malloc heap this
+// one has no memory of its own history -- but that is an argument, and this measures it.
+static void phase_soak(unsigned long rounds) {
+  Serial.println();
+  Serial.println(F("== long run: free space over many collections =="));
+  Serial.println(F("     round     colls    blocks   largest      live"));
+
+  void *envConstructor[3];
+  envConstructor[0] = NULL;
+  envConstructor[1] = NULL;
+  envConstructor[2] = ROOT_END;
+  void *root = envConstructor;
+  Obj **genv = (Obj **)(envConstructor + 1);
+
+  lisp_create(HEAP, MAX_EVAL_STACK);
+  if (!lisp_is_created()) {
+    Serial.println(F("  no heap"));
+    return;
+  }
+  *genv = make_env(root, &Nil, &Nil);
+  define_constants(root, genv);
+  define_primitives(root, genv);
+
+  lisp_eval(root, genv,
+            "(define tbl ())(define i 0)"
+            "(while (< i 8) (setq tbl (cons (list i i) tbl)) (setq i (+ i 1)))"
+            "(define t1 ())(define t2 ())(define t3 ())");
+  lisp_stats_reset();
+
+  // A live set that grows and shrinks around a stable core, with allocations of several
+  // different sizes, so survivors land in different places each time round.
+  static const char *const shapes[] = {
+    "(setq tbl (cons (list 1 2 3 4 5 6) tbl))",
+    "(setq t1 (list 1 2 3))",
+    "(setq tbl (cdr tbl))",
+    "(setq t2 (list 1 2 3 4 5 6 7 8 9 10 11 12))",
+    "(setq tbl (cons (list 1) tbl))",
+    "(setq t3 (list (list 1 2) (list 3 4 5)))",
+    "(setq tbl (cdr tbl))",
+    "(setq t1 ((lambda (x) (list x x x)) 9))",
+  };
+  const int nshapes = (int)(sizeof(shapes) / sizeof(shapes[0]));
+
+  for (unsigned long r = 1; r <= rounds; r++) {
+    if (!lisp_eval(root, genv, shapes[r % nshapes])) {
+      Serial.printf("  raised at round %lu: %s\n", r, last_error);
+      break;
+    }
+    if (r % (rounds / 10) == 0) {
+      Serial.printf("  %9lu %9u %9u %9u %9u\n", r,
+                    (unsigned)lisp_stats.collections, (unsigned)lisp_stats.free_blocks,
+                    (unsigned)lisp_stats.free_largest, (unsigned)lisp_mem_used());
+      Serial.flush();
+    }
+    yield();
+  }
+  lisp_destroy();
+}
+
 void setup() {
   Serial.begin(115200);
   delay(2000);
@@ -299,6 +362,7 @@ void setup() {
 
   phase_correctness();
   phase_measurement();
+  phase_soak(20000);
 
   Serial.println();
   Serial.printf("free heap after: %u bytes, largest block %u\n",
