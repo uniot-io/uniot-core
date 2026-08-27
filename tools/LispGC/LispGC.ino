@@ -306,6 +306,62 @@ static const LoopCase LOOP_CASES[] = {
                   "(while (< #itr 10000) (setq n (f n))) 0", 10000},
 };
 
+// Arithmetic that must not be quietly wrong. This is on the device rather than the host
+// because the bug it guards against was an optimisation artefact: the old overflow check
+// multiplied first and divided back, which is undefined, and every build above -O0
+// deleted it. The device builds at -Os. Nothing but running it here settles whether the
+// replacement survives that.
+struct ArithCase {
+  const char *code;
+  const char *expect;   // the value, or the text the error must contain
+  bool raises;
+};
+
+static const ArithCase ARITH[] = {
+  {"(* 2000000000 2)",                    "Integer overflow in *", true},
+  {"(+ 2000000000 2000000000)",           "Integer overflow in +", true},
+  {"(- (- 0 2147483647) 2)",              "Integer overflow in -", true},
+  {"(- (- (- 0 2147483647) 1))",          "Integer overflow in -", true},
+  {"(/ (- (- 0 2147483647) 1) -1)",       "Integer overflow in /", true},
+  {"2147483648",                          "Integer literal is too large", true},
+  {"(/ 100000000 3)",                     "33333333",  false},
+  {"(/ 123456789 1 1)",                   "123456789", false},
+  {"(/ 2000000001 1 1)",                  "2000000001", false},
+  {"(/ -7 2)",                            "-3",        false},
+  {"(% -7 2)",                            "-1",        false},
+  {"(% (- (- 0 2147483647) 1) -1)",       "0",         false},
+  {"(* 46340 46340)",                     "2147395600", false},
+  {"(- (- 0 2147483647) 1)",              "-2147483648", false},
+};
+
+static void phase_arithmetic() {
+  Serial.println();
+  Serial.println(F("== arithmetic: overflow is caught, division is exact =="));
+
+  int failures = 0;
+  for (size_t i = 0; i < sizeof(ARITH) / sizeof(ARITH[0]); i++) {
+    const ArithCase *c = &ARITH[i];
+    Workload w = {"arith", c->expect, false, c->code};
+    uint32_t took = 0;
+    const bool ok = run(&w, &took);
+
+    const char *got = ok ? last_result : last_error;
+    bool pass;
+    if (c->raises)
+      pass = !ok && strstr(last_error, c->expect) != NULL;
+    else
+      pass = ok && strcmp(last_result, c->expect) == 0;
+
+    Serial.printf("  %-34s %-13s %s\n", c->code, c->raises ? "must raise" : "must equal", pass ? "ok" : "FAILED");
+    if (!pass) {
+      Serial.printf("      wanted %s, got %s\n", c->expect, got[0] ? got : "(nothing)");
+      failures++;
+    }
+    Serial.flush();
+  }
+  Serial.printf("  %d failure(s)\n", failures);
+}
+
 static void phase_loop_cost() {
   Serial.println();
   Serial.println(F("== loop cost: what MINILISP_MAX_LOOP_ITERATIONS is worth in seconds =="));
@@ -420,6 +476,7 @@ void setup() {
   phase_correctness();
   phase_measurement();
   phase_loop_cost();
+  phase_arithmetic();
   phase_soak(20000);
 
   Serial.println();
