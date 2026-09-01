@@ -66,31 +66,55 @@
 #endif
 
 /**
- * @brief Maximum nesting of Lisp eval() before a script is abandoned.
+ * @brief Bytes of heap the Lisp interpreter is given at startup.
  * @ingroup common
  *
- * Interpreter recursion runs on the C stack, and overrunning it resets the device
- * rather than raising an error, so what a script spends is measured as it spends it.
- * The budget is in bytes, not levels of nesting: nesting is only a proxy for stack, and
- * a poor one, since a level that prints costs several times what a bare call costs.
+ * Allocated once in lisp_create() and never grown, so it is a fixed claim on system heap
+ * for the life of the machine. Creating a machine costs ~3150 bytes before a script runs,
+ * so what a script actually has is this value less that. The library refuses anything
+ * above 65535.
+ */
+#ifndef UNIOT_LISP_HEAP
+// Not split by ESP32 variant: object sizes are identical on both parts.
+#if defined(ESP32)
+#define UNIOT_LISP_HEAP 24576
+#elif defined(ESP8266)
+#define UNIOT_LISP_HEAP 12288
+#else
+#define UNIOT_LISP_HEAP 8192
+#endif
+#endif
+
+/**
+ * @brief Bytes of C stack an evaluation may spend before a script is abandoned.
+ * @ingroup common
  *
- * Measured on target with tools/LispEvalDepth: on an ESP8266 a level of nesting costs
- * 184 bytes, an evaluation starts with 3232 bytes below it, and raising an error costs
- * 864 -- the guard fires, and then reporting needs stack of its own. So the budget is
- * that headroom less the cost of raising less a margin, which is why it is not simply
- * "all the stack there is". The ESP32 figure is scaled from its larger stack and has
- * not been measured on target.
+ * Interpreter recursion runs on the C stack, and overrunning it resets the device rather
+ * than raising an error. The budget is in bytes, not levels of nesting, since a level that
+ * prints costs several times what a bare call costs.
  *
- * Raising the budget buys recursion at the cost of that reserve. Measure before doing so:
- * the ESP8266 has 4 KB of continuation stack in total.
+ * It is not simply the stack that is free. The guard measures from where lisp_eval() was
+ * entered and stops seeing anything once a primitive or the error path takes over, so the
+ * true peak is the budget plus roughly 600 bytes paid afterwards, during unwinding. Each
+ * value below is measured on target against the full firmware, not the standalone tool,
+ * with the probe in src/main.cpp; measure a budget before changing it rather than scaling
+ * it from another part.
+ *
+ * Keep the ESP32 branches separate: defined(ESP32) is true for the C3, so collapsing them
+ * means a retune of one silently retunes the other.
  */
 #ifndef UNIOT_LISP_MAX_EVAL_STACK
 #if defined(ESP8266)
-#define UNIOT_LISP_MAX_EVAL_STACK 2048
+#define UNIOT_LISP_MAX_EVAL_STACK 1280
+#elif defined(CONFIG_IDF_TARGET_ESP32C3)
+#define UNIOT_LISP_MAX_EVAL_STACK 3072
 #elif defined(ESP32)
-#define UNIOT_LISP_MAX_EVAL_STACK 5632
+#define UNIOT_LISP_MAX_EVAL_STACK 3072
 #else
-#define UNIOT_LISP_MAX_EVAL_STACK 8192
+// An unknown platform is assumed to be a small MCU, not a host: too little heap raises a
+// clean error, too much stack resets the device, so the fallbacks lean small. A host build
+// with room to spare should set both explicitly rather than inherit these.
+#define UNIOT_LISP_MAX_EVAL_STACK 2048
 #endif
 #endif
 

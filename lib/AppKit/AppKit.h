@@ -38,6 +38,7 @@
 #include <esp_system.h>
 #endif
 
+#include <Common.h>
 #include <CallbackEventListener.h>
 #include <Date.h>
 #include <EventBus.h>

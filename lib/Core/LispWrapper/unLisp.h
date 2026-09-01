@@ -49,16 +49,6 @@
 #include <TaskScheduler.h>
 #include <libminilisp.h>
 
-#ifndef UNIOT_LISP_HEAP
-#if defined(ESP32)
-#define UNIOT_LISP_HEAP 20480  // 20 KB for ESP32
-#elif defined(ESP8266)
-#define UNIOT_LISP_HEAP 8192  // 8 KB for ESP8266
-#else
-#define UNIOT_LISP_HEAP 4096  // 4 KB for other platforms
-#endif
-#endif
-
 namespace uniot {
 using namespace lisp;
 
