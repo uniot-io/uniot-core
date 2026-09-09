@@ -34,7 +34,10 @@ void setup() {
   // Configure WiFi with status LED and reset button
   Uniot.configWiFiStatusLed(PIN_RED, LED_PIN_LEVEL);
   Uniot.configWiFiResetButton(PIN_BUTTON, BTN_PIN_LEVEL);
-  Uniot.configWiFiResetOnReboot(5, 10000);
+
+  // Reboot-reset is off unless asked for. Power-cycling clears the credentials, which
+  // is a second way back when the button is not reachable.
+  Uniot.configWiFiResetOnReboot();
 
   // Register GPIO pins for Lisp access
   Uniot.registerLispDigitalOutput(PIN_RED, PIN_GREEN, PIN_BLUE);
@@ -51,11 +54,11 @@ void setup() {
     UNIOT_LOG_DEBUG("Time: %s", Date::getFormattedTime().c_str());
   }, 5000);
 
-  // Log device information
-  UNIOT_LOG_INFO("CHIP_ID: %s", String(ESP.getChipId(), HEX).c_str());
-
   // Initialize and start Uniot
   Uniot.begin();
+
+  // Log device information. After begin(), which is what opens the log stream.
+  UNIOT_LOG_INFO("CHIP_ID: %s", String(ESP.getChipId(), HEX).c_str());
 }
 
 void loop() {

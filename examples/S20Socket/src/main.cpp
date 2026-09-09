@@ -29,7 +29,10 @@ void setup() {
   // Configure WiFi with status LED and reset button
   Uniot.configWiFiStatusLed(PIN_STATUS_LED);
   Uniot.configWiFiResetButton(PIN_BUTTON, BTN_PIN_LEVEL);
-  Uniot.configWiFiResetOnReboot(5, 10000);
+
+  // Reboot-reset is off unless asked for. Power-cycling clears the credentials, which
+  // is a second way back when the button is not reachable.
+  Uniot.configWiFiResetOnReboot();
 
   // Register GPIO pins for Lisp access
   Uniot.registerLispDigitalOutput(PIN_RELAY, PIN_STATUS_LED);

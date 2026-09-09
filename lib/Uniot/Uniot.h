@@ -156,8 +156,10 @@ class UniotCore {
    * @brief Configure automatic WiFi reset on repeated reboots
    * @param maxRebootCount Maximum reboots before triggering configuration reset,
    *                       or UniotCore::REBOOT_RESET_DISABLED to opt out entirely.
-   * @param rebootWindowMs Time window for counting reboots in milliseconds (default: 10000).
-   *                       Ignored when maxRebootCount is REBOOT_RESET_DISABLED.
+   *                       Defaults to UNIOT_WIFI_REBOOT_RESET_COUNT.
+   * @param rebootWindowMs Time window for counting reboots in milliseconds.
+   *                       Defaults to UNIOT_WIFI_REBOOT_WINDOW_MS. Ignored when
+   *                       maxRebootCount is REBOOT_RESET_DISABLED.
    *
    * Enables automatic configuration reset when the device reboots repeatedly
    * within a specified time window. This provides a recovery mechanism for
@@ -166,8 +168,13 @@ class UniotCore {
    * Pass REBOOT_RESET_DISABLED to completely suppress this behaviour: no reboot
    * counter is stored to or read from flash, and the network configuration is
    * never reset automatically.
+   *
+   * Called with no arguments it is also the way to ask for a network controller on
+   * a device that configures neither a button nor a status LED: the controller is
+   * what emits the WiFi status events, and on such a device reboot-reset is the
+   * only path back from bad credentials.
    */
-  void configWiFiResetOnReboot(uint8_t maxRebootCount, uint32_t rebootWindowMs = 10000) {
+  void configWiFiResetOnReboot(uint8_t maxRebootCount = UNIOT_WIFI_REBOOT_RESET_COUNT, uint32_t rebootWindowMs = UNIOT_WIFI_REBOOT_WINDOW_MS) {
     _createNetworkControllerConfig();
     mpNetworkControllerConfig->maxRebootCount = maxRebootCount;
     mpNetworkControllerConfig->rebootWindowMs = rebootWindowMs;
@@ -656,6 +663,12 @@ class UniotCore {
    *
    * Convenience method for listening to WiFi status LED events.
    * The callback receives a boolean indicating the desired LED state.
+   *
+   * These events come from the network controller, which exists only once one of
+   * the configWiFi* methods has asked for it. A device with no button and no LED
+   * -- a bulb driving its own light as the indicator, say -- still gets one from
+   * configWiFiResetOnReboot(). Without any of them this callback never fires; the
+   * missing controller is reported by AppKit when the scheduler is populated.
    */
   ListenerId addWifiStatusLedListener(std::function<void(bool)> callback) {
     if (!callback) {
@@ -748,6 +761,11 @@ class UniotCore {
    *
    * Lazy initialization of network controller configuration with default
    * values. Called by configuration methods to ensure the config exists.
+   *
+   * Reboot-reset starts disabled. It clears the stored credentials, and a device on an
+   * unreliable supply can power-cycle its way through the count without anyone touching
+   * it, so it is opt-in: configWiFiResetOnReboot() turns it on, and that method's own
+   * default argument supplies the count.
    */
   void _createNetworkControllerConfig() {
     if (!mpNetworkControllerConfig) {
@@ -756,8 +774,8 @@ class UniotCore {
       mpNetworkControllerConfig->activeLevelBtn = LOW;
       mpNetworkControllerConfig->pinLed = UINT8_MAX;  // Not used by default
       mpNetworkControllerConfig->activeLevelLed = HIGH;
-      mpNetworkControllerConfig->maxRebootCount = 5;
-      mpNetworkControllerConfig->rebootWindowMs = 10000;
+      mpNetworkControllerConfig->maxRebootCount = REBOOT_RESET_DISABLED;
+      mpNetworkControllerConfig->rebootWindowMs = UNIOT_WIFI_REBOOT_WINDOW_MS;
       mpNetworkControllerConfig->registerLispBtn = true;
     }
   }

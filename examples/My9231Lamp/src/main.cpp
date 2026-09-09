@@ -43,9 +43,11 @@ Object lamp_update(Root root, VarObject env, VarObject list) {
   warm = std::min(255, std::max(0, warm));
   cool = std::min(255, std::max(0, cool));
 
-  // Note: For Sonoff B1R2, you may need to adjust:
-  // warm = warm > 0 ? 255 : 0;
-  // cool = cool > 0 ? 255 : 0;
+  // The Sonoff B1R2 needs different logic here: its white channels do not dim, so a
+  // level between the ends lights them at full anyway. Drive them as on/off instead:
+  // warm = warm > 0 ? 255 : 0;  // Sonoff B1R2
+  // cool = cool > 0 ? 255 : 0;  // Sonoff B1R2
+  // That revision also moves the driver pins -- see DI_PIN and DCK_PIN in My9231Lamp.h.
 
   // Update the lamp
   Lamp.off();
@@ -58,6 +60,11 @@ Object lamp_update(Root root, VarObject env, VarObject list) {
 void setup() {
   // Initialize the lamp
   Lamp.off();
+
+  // A bulb has no button, so power-cycling it is the only way back from bad
+  // credentials. This also creates the network controller, and with it the WiFi
+  // status events the listener below responds to.
+  Uniot.configWiFiResetOnReboot();
 
   // Custom WiFi status LED handler that uses the lamp
   Uniot.addWifiStatusLedListener([](bool state) {

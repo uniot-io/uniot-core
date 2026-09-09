@@ -97,8 +97,8 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     uint8_t activeLevelBtn = LOW;     ///< Active level for button (LOW or HIGH)
     uint8_t pinLed = UINT8_MAX;       ///< LED pin (UINT8_MAX means not used)
     uint8_t activeLevelLed = HIGH;    ///< Active level for LED (LOW or HIGH)
-    uint8_t maxRebootCount = 3;       ///< Maximum number of consecutive reboots
-    uint32_t rebootWindowMs = 10000;  ///< Time window in ms for counting reboots
+    uint8_t maxRebootCount = UNIOT_WIFI_REBOOT_RESET_COUNT;       ///< Maximum number of consecutive reboots
+    uint32_t rebootWindowMs = UNIOT_WIFI_REBOOT_WINDOW_MS;        ///< Time window in ms for counting reboots
     bool registerLispBtn = true;      ///< Whether to register the button with the Lisp interpreter
   };
 
@@ -328,8 +328,8 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
                                   uint8_t activeLevelBtn = LOW,
                                   uint8_t pinLed = UINT8_MAX,
                                   uint8_t activeLevelLed = HIGH,
-                                  uint8_t maxRebootCount = 3,
-                                  uint32_t rebootWindowMs = 10000,
+                                  uint8_t maxRebootCount = UNIOT_WIFI_REBOOT_RESET_COUNT,
+                                  uint32_t rebootWindowMs = UNIOT_WIFI_REBOOT_WINDOW_MS,
                                   bool registerLispBtn = true) {
     if (mpNetworkDevice) {
       UNIOT_LOG_WARN("Network Controller already configured");

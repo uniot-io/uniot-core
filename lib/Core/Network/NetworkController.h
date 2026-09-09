@@ -20,6 +20,7 @@
 
 #include <Button.h>
 #include <CBORStorage.h>
+#include <Common.h>
 #include <EventListener.h>
 #include <ISchedulerConnectionKit.h>
 #include <NetworkEvents.h>
@@ -120,8 +121,8 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
     uint8_t activeLevelBtn = LOW,
     uint8_t pinLed = UINT8_MAX,
     uint8_t activeLevelLed = HIGH,
-    uint8_t maxRebootCount = 3,
-    uint32_t rebootWindowMs = 10000)
+    uint8_t maxRebootCount = UNIOT_WIFI_REBOOT_RESET_COUNT,
+    uint32_t rebootWindowMs = UNIOT_WIFI_REBOOT_WINDOW_MS)
       : CBORStorage("ctrl.cbor"),
         mpNetwork(&network),
         mNetworkLastState(events::network::Msg::SUCCESS),

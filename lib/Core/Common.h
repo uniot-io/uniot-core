@@ -66,6 +66,36 @@
 #endif
 
 /**
+ * @brief Consecutive reboots that reset the stored network configuration.
+ * @ingroup common
+ *
+ * Each reboot within UNIOT_WIFI_REBOOT_WINDOW_MS of the last one increments a
+ * counter held in ctrl.cbor; reaching this many clears the credentials. It is
+ * the only reset path on a device with no button, so it is a deliberate gesture
+ * -- power-cycling this many times in quick succession -- and the count trades
+ * ease of use against wiping a device by accident on flaky power.
+ *
+ * This is the count used once the mechanism is switched on, not whether it is on.
+ * UniotCore leaves reboot-reset disabled until configWiFiResetOnReboot() asks for
+ * it, precisely because of that accidental-wipe risk; this value is what that call
+ * uses when given no count of its own.
+ */
+#ifndef UNIOT_WIFI_REBOOT_RESET_COUNT
+#define UNIOT_WIFI_REBOOT_RESET_COUNT 5
+#endif
+
+/**
+ * @brief How long after boot a reboot still counts towards the reset, in ms.
+ * @ingroup common
+ *
+ * Staying up longer than this clears the counter, so ordinary restarts do not
+ * accumulate towards a reset. Ignored when the count is UINT8_MAX.
+ */
+#ifndef UNIOT_WIFI_REBOOT_WINDOW_MS
+#define UNIOT_WIFI_REBOOT_WINDOW_MS 10000
+#endif
+
+/**
  * @brief Bytes of heap the Lisp interpreter is given at startup.
  * @ingroup common
  *
