@@ -730,7 +730,8 @@ class CBORObject {
       return actual;
     });
 
-    return bytes.prune(written);
+    bytes.prune(written);
+    return bytes;
   }
 
   /**

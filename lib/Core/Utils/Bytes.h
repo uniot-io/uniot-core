@@ -104,6 +104,20 @@ class Bytes {
   }
 
   /**
+   * @brief Move constructor.
+   *
+   * Takes over the other object's buffer without copying it. The other object is left
+   * empty, as a default-constructed Bytes.
+   *
+   * @param value The Bytes object to move from
+   */
+  Bytes(Bytes &&value) noexcept {
+    mBuffer = value.mBuffer;
+    mSize = value.mSize;
+    value._init();
+  }
+
+  /**
    * @brief Constructor from Arduino String.
    *
    * Creates a Bytes object from the contents of an Arduino String.
@@ -139,6 +153,25 @@ class Bytes {
       } else {
         _invalidate();
       }
+    }
+    return *this;
+  }
+
+  /**
+   * @brief Move assignment operator.
+   *
+   * Releases this object's buffer and takes over the other's without copying it. The
+   * other object is left empty, as a default-constructed Bytes.
+   *
+   * @param rhs The Bytes object to move from
+   * @retval Bytes& Reference to this object
+   */
+  Bytes &operator=(Bytes &&rhs) noexcept {
+    if (this != &rhs) {
+      _invalidate();
+      mBuffer = rhs.mBuffer;
+      mSize = rhs.mSize;
+      rhs._init();
     }
     return *this;
   }
@@ -183,7 +216,9 @@ class Bytes {
     }
 
     Bytes bytes;
-    bytes._reserve(len / 2);
+    if (!bytes._reserve(len / 2)) {
+      return Bytes();
+    }
     for (size_t i = 0; i < len; i += 2) {
       char buf[3] = {hexStr.charAt(i), hexStr.charAt(i + 1), '\0'};
       uint8_t b = strtol(buf, nullptr, 16);
@@ -250,8 +285,12 @@ class Bytes {
     }
 
     if (mBuffer[mSize - 1] != '\0') {
-      _reserve(mSize + 1);
-      mBuffer[mSize - 1] = '\0';
+      if (_reserve(mSize + 1)) {
+        mBuffer[mSize - 1] = '\0';
+      } else {
+        // An unterminated buffer would be read past its end by anything using c_str().
+        _invalidate();
+      }
     }
     return *this;
   }
@@ -260,11 +299,12 @@ class Bytes {
    * @brief Gets the byte array as a C string.
    *
    * Returns the buffer as a C string. The buffer should be null-terminated first.
+   * Never returns nullptr: a Bytes with no buffer reads as an empty string.
    *
-   * @retval char* Pointer to the internal buffer
+   * @retval char* Pointer to the internal buffer, or to "" when there is none
    */
   const char *c_str() const {
-    return (const char *)mBuffer;
+    return mBuffer ? (const char *)mBuffer : "";
   }
 
   /**
@@ -358,12 +398,25 @@ class Bytes {
    * @retval false Memory allocation failed
    */
   bool _reserve(size_t newSize) {
-    mBuffer = (uint8_t *)realloc(mBuffer, newSize);
-    if (mBuffer && (newSize > mSize)) {
-      memset(mBuffer + mSize, 0, newSize - mSize);
+    // realloc(ptr, 0) may free and return null, which would read as a failure below.
+    if (!newSize) {
+      _invalidate();
+      return true;
     }
+
+    // On failure realloc leaves the original block intact, so the object is left exactly
+    // as it was: never a size the buffer does not have, and nothing leaked.
+    auto buffer = (uint8_t *)realloc(mBuffer, newSize);
+    if (!buffer) {
+      return false;
+    }
+
+    if (newSize > mSize) {
+      memset(buffer + mSize, 0, newSize - mSize);
+    }
+    mBuffer = buffer;
     mSize = newSize;
-    return mBuffer;
+    return true;
   }
 
   /**
@@ -377,7 +430,9 @@ class Bytes {
    */
   Bytes &_copy(const uint8_t *data, size_t size) {
     if (_reserve(size)) {
-      memcpy(mBuffer, data, size);
+      if (size) {
+        memcpy(mBuffer, data, size);
+      }
     } else {
       _invalidate();
     }

@@ -76,6 +76,16 @@ public:
     if (mCbor.dirty())
     {
       mData = mCbor.build();
+
+      // A map encodes to at least one byte, so an empty build means encoding failed, in
+      // practice an allocation. Writing it would truncate the file, or on NVS remove the
+      // key, so the stored contents are kept and the failure is reported instead.
+      if (!mData.size())
+      {
+        UNIOT_LOG_ERROR("CBOR build failed, %s not stored", mPath.c_str());
+        return false;
+      }
+
       return Storage::store();
     }
     return true;

@@ -313,6 +313,61 @@ class UniotCore {
   }
 
   /**
+   * @brief Set the hook called when a Lisp script starts
+   * @param hook Callback receiving why the script started
+   *
+   * Runs after the interpreter is built and its primitives are registered, but before
+   * the script is evaluated, so a peripheral brought up here is ready for the first
+   * pass. The reason says where the script came from: LispStartReason::Restored for one
+   * loaded from flash at boot, LispStartReason::Received for one delivered over MQTT.
+   *
+   * @code
+   * Uniot.setLispStartHook([](uniot::LispStartReason reason) {
+   *   sensor.wake();
+   * });
+   * @endcode
+   *
+   * Keep the hook short -- see setLispStopHook() for why that matters most there.
+   */
+  void setLispStartHook(uniot::LispStartHook hook) {
+    getAppKit().setLispStartHook(hook);
+  }
+
+  /**
+   * @brief Set the hook called when a Lisp script stops
+   * @param hook Callback receiving why the script stopped
+   *
+   * Runs before the interpreter is destroyed, whichever way the script ended:
+   * Completed (it ran to the end, or a finite task used up its passes), Replaced (a new
+   * script took its place), Cleared (an empty script arrived, meaning run nothing) or
+   * Failed (a Lisp error tore the machine down).
+   *
+   * @code
+   * Uniot.setLispStopHook([](uniot::LispStopReason reason) {
+   *   sensor.sleep();   // short, and safe to run on any path
+   * });
+   * @endcode
+   *
+   * Both hooks run synchronously, so keep them short and move heavy work out with
+   * setImmediate(), which runs it on the next scheduler pass instead:
+   *
+   * @code
+   * Uniot.setLispStopHook([](uniot::LispStopReason reason) {
+   *   sensor.sleep();
+   *   Uniot.setImmediate([]() { report(); });   // the slow part, off this stack
+   * });
+   * @endcode
+   *
+   * This matters most for LispStopReason::Failed. That case is reached from the
+   * interpreter's error printer while lisp_eval() is still unwinding, on a stack
+   * already near the limit UNIOT_LISP_MAX_EVAL_STACK guards -- do only what is needed
+   * to leave the hardware in a safe state, and defer everything else.
+   */
+  void setLispStopHook(uniot::LispStopHook hook) {
+    getAppKit().setLispStopHook(hook);
+  }
+
+  /**
    * @brief Publish an event to the Lisp interpreter
    * @param eventID Unique identifier for the event
    * @param value Numeric value associated with the event

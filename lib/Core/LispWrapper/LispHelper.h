@@ -30,6 +30,8 @@
 
 #include <libminilisp.h>
 
+#include <functional>
+
 /**
  * @ingroup uniot-lisp-helper
  * @brief Macro to get the current function name.
@@ -156,5 +158,38 @@ class Lisp {
     }
   }
 };
+
+/**
+ * @brief Why a script started running.
+ * @ingroup uniot-lisp-helper
+ */
+enum class LispStartReason {
+  Restored,  ///< A stored script, run from AppKit::attach() during boot
+  Received   ///< A script that arrived over MQTT
+};
+
+/**
+ * @brief Why a script stopped running.
+ * @ingroup uniot-lisp-helper
+ */
+enum class LispStopReason {
+  Completed,  ///< The script ran to the end, or a finite task used up its passes
+  Replaced,   ///< A new script arrived and took its place
+  Cleared,    ///< An empty script arrived, which means "run nothing"
+  Failed      ///< A Lisp error tore the machine down
+};
+
+/**
+ * @brief Called after the interpreter is built and before the script is evaluated.
+ * @ingroup uniot-lisp-helper
+ */
+using LispStartHook = std::function<void(LispStartReason)>;
+
+/**
+ * @brief Called before the interpreter is destroyed.
+ * @ingroup uniot-lisp-helper
+ */
+using LispStopHook = std::function<void(LispStopReason)>;
+
 /** @} */
 }  // namespace uniot

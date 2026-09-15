@@ -46,6 +46,7 @@
 #include <IExecutor.h>
 #include <SimpleNTP.h>
 #include <Singleton.h>
+#include <TaskScheduler.h>
 #include <time.h>
 
 namespace uniot {
@@ -131,6 +132,19 @@ class Date : public IExecutor, public CBORStorage, public Singleton<Date>, publi
   }
 
   /**
+   * @brief Get the task that stores and reports time synchronizations
+   *
+   * Sync callbacks trigger it rather than doing the work themselves, so it must be pushed to
+   * a scheduler under a name for syncs to take effect. A sync that happens before then is
+   * kept, and applied on the scheduler's first pass.
+   *
+   * @retval TaskScheduler::TaskPtr The sync task
+   */
+  TaskScheduler::TaskPtr getSyncTask() {
+    return mTaskSync;
+  }
+
+  /**
    * @brief Forces immediate NTP time synchronization
    *
    * Reconfigures the NTP client and initiates an immediate
@@ -155,21 +169,29 @@ class Date : public IExecutor, public CBORStorage, public Singleton<Date>, publi
    * Configures platform-specific time sync notification handlers.
    */
   Date() : CBORStorage("date.cbor") {
-#if defined(ESP8266)
-    settimeofday_cb([this](bool from_sntp) {
+    // A sync is reported from contexts where storing or emitting events is unsafe. On ESP8266
+    // the core runs settimeofday_cb from inside yield(), including the yields LittleFS makes
+    // while it writes, so a store there nests one filesystem operation inside another. On
+    // ESP32 the SNTP callback runs on the network task, concurrently with the loop. The
+    // callbacks therefore only trigger mTaskSync, and the store and the event run on the
+    // scheduler. This also makes a forced sync store the new time: SimpleNTP reports before
+    // forceSync() has applied it.
+    mTaskSync = TaskScheduler::make([](SchedulerTask &, short) {
       Date::getInstance()._timeSyncCallback();
-      UNIOT_LOG_INFO("Time is set from %s", from_sntp ? "SNTP" : "RTC");
+    });
+
+#if defined(ESP8266)
+    settimeofday_cb([](bool) {
+      Date::getInstance().mTaskSync->trigger();
     });
 #elif defined(ESP32)
     sntp_set_sync_mode(SNTP_SYNC_MODE_IMMED);
-    sntp_set_time_sync_notification_cb([](struct timeval *tv) {
-      Date::getInstance()._timeSyncCallback();
-      UNIOT_LOG_INFO("Time is set from SNTP");
+    sntp_set_time_sync_notification_cb([](struct timeval *) {
+      Date::getInstance().mTaskSync->trigger();
     });
 #endif
-    mSNTP.setSyncTimeCallback([](time_t epoch) {
-      Date::getInstance()._timeSyncCallback();
-      UNIOT_LOG_INFO("Time is forced to synchronize with SNTP");
+    mSNTP.setSyncTimeCallback([](time_t) {
+      Date::getInstance().mTaskSync->trigger();
     });
 
     _reconfigure();
@@ -185,6 +207,7 @@ class Date : public IExecutor, public CBORStorage, public Singleton<Date>, publi
    */
   void _timeSyncCallback() {
     execute(0);
+    UNIOT_LOG_INFO("Time is synchronized");
     CoreEventEmitter::emitEvent(uniot::events::date::Topic::TIME, uniot::events::date::Msg::SYNCED);
   }
 
@@ -251,6 +274,9 @@ class Date : public IExecutor, public CBORStorage, public Singleton<Date>, publi
 
   /** @brief NTP client instance */
   SimpleNTP mSNTP;
+
+  /** @brief Stores and reports a sync on the scheduler; triggered by the sync callbacks */
+  TaskScheduler::TaskPtr mTaskSync;
 };
 /** @} */
 }  // namespace uniot

@@ -256,15 +256,26 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    *
    * @param data The Lisp code to execute as a byte array
    */
-  void runCode(const Bytes &data) {
-    if (!data.size())
+  void runCode(const Bytes &data, LispStartReason reason = LispStartReason::Received) {
+    // An empty script means "run nothing": stop whatever is running without building a
+    // machine for it. Emptiness is judged by content, not size -- code arrives as a
+    // terminated string, so an empty one is a single '\0' rather than zero bytes.
+    //
+    // mLastCode keeps a valid empty string rather than being freed, because store()
+    // reads it back through c_str() and would otherwise be handed a null pointer.
+    if (!data.size() || !data.c_str()[0]) {
+      mLastCode = data;
+      mLastCode.terminate();
+      mTaskLispEval->detach();
+      _destroyMachine(LispStopReason::Cleared);
       return;
+    }
 
     mLastCode = data;
 
     mTaskLispEval->detach();
-    _destroyMachine();
-    _createMachine();
+    _destroyMachine(LispStopReason::Replaced);
+    _createMachine(reason);
 
     auto code = mLastCode.terminate().c_str();
     UNIOT_LOG_DEBUG("eval: %s", code);
@@ -272,8 +283,41 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
     _refreshIncomingEvents();
     lisp_eval(mLispRoot, mLispEnv, code);
     if (!mTaskLispEval->isAttached()) {
-      _destroyMachine();
+      _destroyMachine(LispStopReason::Completed);
     }
+  }
+
+  /**
+   * @brief Set the hook called when a script starts
+   *
+   * Runs after the interpreter is built and its primitives are registered, but before
+   * the script is evaluated, so a peripheral prepared here is ready for the first pass.
+   *
+   * Keep it short: it runs synchronously, and the script waits on it. Move anything
+   * heavy out with Uniot.setImmediate() -- see setStopHook(), where this matters most.
+   *
+   * @param hook Callback receiving why the script started
+   */
+  void setStartHook(LispStartHook hook) {
+    mStartHook = hook;
+  }
+
+  /**
+   * @brief Set the hook called when a script stops
+   *
+   * Runs before the interpreter is destroyed, for every reason a script can stop:
+   * it finished, it was replaced, it was cleared, or it failed.
+   *
+   * Keep it short, and keep it especially short for LispStopReason::Failed. That case
+   * is reached from the interpreter's error printer, while lisp_eval() is still
+   * unwinding, on a stack already close to the limit the eval-stack budget guards --
+   * do the minimum needed to leave the hardware safe, and hand the rest to
+   * Uniot.setImmediate() so it runs on a fresh stack from the scheduler.
+   *
+   * @param hook Callback receiving why the script stopped
+   */
+  void setStopHook(LispStopHook hook) {
+    mStopHook = hook;
   }
 
   /**
@@ -383,7 +427,7 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
       instance.emitEvent(events::lisp::Topic::OUT_LISP_MSG, events::lisp::Msg::OUT_MSG_ERROR);
 
       instance.mTaskLispEval->detach();
-      instance._destroyMachine();
+      instance._destroyMachine(LispStopReason::Failed);
     };
 
     lisp_set_cycle_yield(yield);
@@ -402,7 +446,7 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
       safe_eval(root, env, t_obj);
 
       if (!t) {
-        _destroyMachine();
+        _destroyMachine(LispStopReason::Completed);
       }
 
       // UNIOT_LOG_DEBUG("lisp machine running, mem used: %d", lisp_mem_used());
@@ -433,7 +477,7 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
    * Initializes the Lisp heap, sets up constants, primitives, and
    * registers user-defined primitives in the environment.
    */
-  void _createMachine() {
+  void _createMachine(LispStartReason reason) {
     // The recursion limit was measured on target with examples/LispEvalDepth.
     lisp_create(UNIOT_LISP_HEAP, UNIOT_LISP_MAX_EVAL_STACK);
 
@@ -455,12 +499,35 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
     });
 
     UNIOT_LOG_DEBUG("lisp machine created, mem used: %d", lisp_mem_used());
+
+    // Last, so the script sees a machine that is fully built, and so a hook that
+    // touches hardware runs before the first evaluation reads it.
+    if (mStartHook) {
+      mStartHook(reason);
+    }
   }
 
   /**
    * @brief Destroy the Lisp machine and free its resources
+   *
+   * The only place the stop hook fires. It has four callers -- a replacement, a script
+   * that ran to the end, a cleared script and an error -- and routing all of them
+   * through here is what guarantees one stop per start.
+   *
+   * @param reason Why the script stopped, passed to the hook
    */
-  void _destroyMachine() {
+  void _destroyMachine(LispStopReason reason) {
+    // lisp_destroy() is a no-op when nothing was created, and runCode() calls this
+    // before the first script of all. Without this guard a stop would fire with no
+    // start before it.
+    if (!lisp_is_created()) {
+      return;
+    }
+
+    if (mStopHook) {
+      mStopHook(reason);
+    }
+
     lisp_destroy();
   }
 
@@ -636,6 +703,9 @@ class unLisp : public CoreEventListener, public Singleton<unLisp> {
   void *mLispEnvConstructor[3];        ///< Storage for Lisp environment constructor
   Root mLispRoot;                      ///< Lisp root object
   VarObject mLispEnv;                  ///< Lisp environment object
+
+  LispStartHook mStartHook;            ///< Called after the machine is built, before eval
+  LispStopHook mStopHook;              ///< Called before the machine is destroyed
   IncomingEventManager mEventManager;  ///< Map of event queues by event ID
 };
 /** @} */

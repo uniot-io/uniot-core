@@ -198,6 +198,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     scheduler.push(mMQTT);
     scheduler.push("lisp_task", getLisp().getTask());
     scheduler.push("lisp_cleanup", getLisp().getCleanupTask());
+    scheduler.push("date_sync", Date::getInstance().getSyncTask());
 
     mTopDevice.setScheduler(scheduler);
 
@@ -353,6 +354,22 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
    */
   void setLispEventInterceptor(LispEventInterceptor interceptor) {
     mLispDevice.setEventInterceptor(interceptor);
+  }
+
+  /**
+   * @brief Set the hook called when a Lisp script starts
+   * @param hook Callback receiving why the script started
+   */
+  void setLispStartHook(LispStartHook hook) {
+    mLispDevice.setStartHook(hook);
+  }
+
+  /**
+   * @brief Set the hook called when a Lisp script stops
+   * @param hook Callback receiving why the script stopped
+   */
+  void setLispStopHook(LispStopHook hook) {
+    mLispDevice.setStopHook(hook);
   }
 
   /**
