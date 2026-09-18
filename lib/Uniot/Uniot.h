@@ -20,6 +20,7 @@
 
 #include <AppKit.h>
 #include <Arduino.h>
+#include <ClearQueue.h>
 #include <Credentials.h>
 #include <Date.h>
 #include <EventBus.h>
@@ -113,6 +114,10 @@ class UniotCore {
    * Configures a hardware button for WiFi network reset functionality.
    * The button provides both manual reconnection (single press) and
    * configuration reset (multiple rapid presses followed by long press).
+   *
+   * With registerLispBtn, the button is linked into the bclicked register during begin().
+   * Buttons added with addLispButton() before begin() therefore come before it; add them after
+   * begin(), still in setup(), to keep this button at index 0.
    */
   void configWiFiResetButton(uint8_t pinBtn, uint8_t activeLevelBtn = LOW, bool registerLispBtn = true) {
     _createNetworkControllerConfig();
@@ -400,6 +405,9 @@ class UniotCore {
    *
    * Makes specified GPIO pins available to the Lisp interpreter as
    * digital input pins, enabling script-based sensor reading.
+   *
+   * Register inputs before begin(). Registering sets the pins to plain INPUT, which clears
+   * any pull; begin() gives a button on one of these pins its pull back.
    */
   template <typename... Pins>
   void registerLispDigitalInput(uint8_t first, Pins... pins) {
@@ -413,6 +421,9 @@ class UniotCore {
    *
    * Makes specified GPIO pins available to the Lisp interpreter as
    * analog input pins, enabling script-based analog sensor reading.
+   *
+   * Register inputs before begin(). Registering sets the pins to plain INPUT, which clears
+   * any pull; begin() gives a button on one of these pins its pull back.
    */
   template <typename... Pins>
   void registerLispAnalogInput(uint8_t first, Pins... pins) {
@@ -443,6 +454,85 @@ class UniotCore {
    */
   bool registerLispButton(uniot::Button* button, uint32_t id = FOURCC(_btn)) {
     return uniot::PrimitiveExpeditor::getRegisterManager().link(uniot::primitive::name::bclicked, button, id);
+  }
+
+  /**
+   * @brief Create a button on a pin and expose it to Lisp scripts
+   * @param pin GPIO pin the button is connected to
+   * @param activeLevel Logic level while the button is pressed (LOW or HIGH)
+   * @param id FOURCC identifier shown for the button in the device's registers (default: _btn)
+   * @param callback Optional handler for CLICK and LONG_PRESS, run from the scheduler
+   * @retval int The button's index, as scripts pass it to bclicked, or -1 if it could not be
+   *             registered
+   *
+   * Everything a button needs, in one call: the Button is created and owned here, polled
+   * every 100 ms, and linked into the bclicked register. A long press is 3 seconds, the same
+   * as the WiFi reset button. For a button with other timing, create it yourself and use
+   * registerLispButton().
+   *
+   * The index is the button's position in the bclicked register, so it follows registration
+   * order. The WiFi reset button from configWiFiResetButton() is linked during begin(), so
+   * buttons added before begin() come before it and buttons added after it follow. Adding
+   * buttons after begin(), at the end of setup(), keeps the reset button at index 0.
+   *
+   * Add buttons in setup(). Registers are reported to the platform when MQTT connects, which
+   * happens once loop() is running, so a button added later is not reported until the device
+   * reconnects.
+   *
+   * The pin gets the internal pull its active level needs: a pull-up for LOW, a pull-down
+   * for HIGH. Pins without that pull need an external resistor; see Button::applyPinMode().
+   *
+   * @code
+   * auto door = Uniot.addLispButton(4, LOW, FOURCC(door));  // scripts use (bclicked 0)
+   * @endcode
+   */
+  int addLispButton(uint8_t pin, uint8_t activeLevel = LOW, uint32_t id = FOURCC(_btn), uniot::Button::ButtonCallback callback = nullptr) {
+    constexpr uint8_t longPressTicks = 30;
+    constexpr uint32_t pollMs = 100;
+
+    auto button = uniot::MakeShared<uniot::Button>(pin, activeLevel, longPressTicks, callback);
+
+    auto &registers = uniot::PrimitiveExpeditor::getRegisterManager();
+    if (!registers.link(uniot::primitive::name::bclicked, button.get(), id)) {
+      return -1;
+    }
+    mButtons.push(button);
+
+    // One task polls every button, created with the first.
+    if (!mpTaskButtons) {
+      mpTaskButtons = uniot::TaskScheduler::make([this](uniot::SchedulerTask &, short times) {
+        mButtons.forEach([times](const uniot::SharedPointer<uniot::Button> &button) {
+          button->execute(times);
+        });
+      });
+      mScheduler.push("lisp_buttons", mpTaskButtons);
+      mpTaskButtons->attach(pollMs);
+    }
+
+    return static_cast<int>(registers.getRegisterLength(uniot::primitive::name::bclicked)) - 1;
+  }
+
+  /**
+   * @brief Clear pending clicks and long presses on every Lisp button
+   *
+   * A press that no script has read stays pending for up to 10 seconds, so a script started
+   * within that window can read a press made before it existed. Call this from a start hook
+   * to drop those presses:
+   *
+   * @code
+   * Uniot.setLispStartHook([](uniot::LispStartReason) {
+   *   Uniot.resetLispButtons();
+   * });
+   * @endcode
+   *
+   * Covers every button in the bclicked register, however it was added. The WiFi reset
+   * button's own behaviour is unaffected: it works from its callbacks, not these flags.
+   */
+  void resetLispButtons() {
+    _forEachLispButton([](uniot::Button *button) {
+      button->resetClick();
+      button->resetLongPress();
+    });
   }
 
   /**
@@ -762,6 +852,13 @@ class UniotCore {
     mScheduler.push("event_bus", taskHandleEventBus);
     taskHandleEventBus->attach(eventBusTaskPeriod);
 
+    // Registering a pin for dread or aread sets it to plain INPUT, which clears any pull. Every
+    // button gets its own mode back here, so the order of those calls in setup() does not
+    // matter. Before attach(), which runs the stored script.
+    _forEachLispButton([](uniot::Button *button) {
+      button->applyPinMode();
+    });
+
     mScheduler.push(app);
     app.attach();
   }
@@ -811,6 +908,22 @@ class UniotCore {
   }
 
  private:
+  /**
+   * @brief Call fn for every button in the bclicked register, skipping empty and dead slots
+   * @param fn Callable taking a uniot::Button*
+   */
+  template <typename Fn>
+  void _forEachLispButton(Fn fn) {
+    auto &registers = uniot::PrimitiveExpeditor::getRegisterManager();
+    auto count = registers.getRegisterLength(uniot::primitive::name::bclicked);
+    for (size_t i = 0; i < count; i++) {
+      auto button = registers.getObject<uniot::Button>(uniot::primitive::name::bclicked, i);
+      if (button) {
+        fn(button);
+      }
+    }
+  }
+
   /**
    * @brief Create network controller configuration if not exists
    *
@@ -876,6 +989,8 @@ class UniotCore {
   uniot::Map<TimerId, uniot::TaskScheduler::TaskPtr> mActiveTimers;                                 ///< Active timer tracking
   uniot::Map<ListenerId, uniot::SharedPointer<uniot::CoreCallbackEventListener>> mActiveListeners;  ///< Active listener tracking
   uniot::UniquePointer<uniot::AppKit::NetworkControllerConfig> mpNetworkControllerConfig;           ///< Network configuration (temporary)
+  ClearQueue<uniot::SharedPointer<uniot::Button>> mButtons;                                         ///< Buttons created by addLispButton(), owned here
+  uniot::TaskScheduler::TaskPtr mpTaskButtons;                                                      ///< Polls mButtons; created with the first button
 };
 
 /**

@@ -324,6 +324,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
    * @param activeLevelLed Active level for LED (LOW or HIGH)
    * @param maxRebootCount Maximum number of consecutive reboots
    * @param rebootWindowMs Time window in ms for counting reboots
+   * @param registerLispBtn Whether to expose the button to bclicked
    */
   void configureNetworkController(uint8_t pinBtn = UINT8_MAX,
                                   uint8_t activeLevelBtn = LOW,

@@ -118,10 +118,9 @@ Uniot.configWiFiStatusLed(LED_BUILTIN, HIGH);
 // (hold ~3 s = manual reconnect; 4+ rapid clicks followed by a ~3 s hold =
 // clear WiFi config, see "Resetting WiFi Configuration" below).
 // The third parameter (default: true) also exposes the button to UniotLisp under
-// the `bclicked` primitive. The reset button is linked during Uniot.begin(), so
-// its bclicked index = number of buttons you registered via registerLispButton()
-// before begin(). With no other buttons registered, the index is 0, used as
-// (bclicked 0) in scripts.
+// the `bclicked` primitive. It is linked during Uniot.begin(), so buttons added
+// with addLispButton() before begin() come before it and buttons added after it
+// follow. Adding yours after begin() keeps this button at (bclicked 0).
 Uniot.configWiFiResetButton(0, LOW, true); // pin, active level, expose to UniotLisp
 
 // Automatic reset on repeated reboots (recovery mechanism).
@@ -185,15 +184,25 @@ Uniot.registerLispDigitalInput(0, 4);                 // dread:  0=GPIO0, 1=GPIO
 Uniot.registerLispAnalogInput(A0);                    // aread:  0=A0
 Uniot.registerLispAnalogOutput(12, 13, 14);           // awrite: 0=GPIO12, 1=GPIO13, 2=GPIO14
 
-// Register a button object.
-// The button must be polled by the scheduler to detect presses,
-// so wrap it in a task and attach it (the WiFi reset button is
-// wired up the same way internally by NetworkController).
-auto button = new uniot::Button(0, LOW, 30); // pin, active level, long-press threshold
-                                             // in poll ticks (30 ticks x 100 ms = 3 s)
+// Add a button. It is created, polled every 100 ms and registered in one call,
+// with a 3 s long press. The return value is its bclicked index; the FOURCC id
+// labels it in the device's registers. The pin gets the internal pull its active
+// level needs (pull-up for LOW, pull-down for HIGH). Pins with no such pull need
+// an external resistor: ESP8266 GPIO0-15 have no pull-down and GPIO16 no pull-up,
+// classic ESP32 GPIO34-39 have neither. Register dread/aread pins before
+// begin(): registering one sets it to plain INPUT, and begin() gives a button on
+// that pin its pull back.
+//
+// Where you call this decides the index. The WiFi reset button is linked during
+// Uniot.begin(), so calling this after begin() -- still in setup(), before the
+// device connects -- leaves the reset button at 0 and numbers yours from 1.
+int door = Uniot.addLispButton(4, LOW, FOURCC(door));
+
+// For different timing, create and poll the button yourself, then register it.
+auto button = new uniot::Button(5, LOW, 50); // pin, active level, long press in poll ticks
 auto buttonTask = uniot::TaskScheduler::make(*button);
-Uniot.getScheduler().push("user_btn", buttonTask);
-buttonTask->attach(100); // Poll every 100 ms
+Uniot.getScheduler().push("user_btn", buttonTask); // must be named
+buttonTask->attach(100); // 50 ticks x 100 ms = 5 s
 Uniot.registerLispButton(button);
 ```
 
@@ -389,6 +398,7 @@ The `Uniot` global instance provides the main API:
 | `registerLispDigitalInput(pins...)`    | Register GPIO inputs       |
 | `registerLispAnalogOutput(pins...)`    | Register PWM outputs       |
 | `registerLispAnalogInput(pins...)`     | Register analog inputs     |
+| `addLispButton(pin, activeLevel = LOW, id = ...)` | Create, poll and register a button |
 | `registerLispButton(button, id = ...)` | Register button object     |
 | `registerLispObject(name, ptr, id)`    | Register generic object    |
 
