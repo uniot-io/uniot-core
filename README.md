@@ -49,7 +49,8 @@ From home automation to custom devices and prototypes, Uniot Core simplifies the
   rebooting the device
 - **WiFi management** with automatic reconnection, a captive portal for end-user setup, and
   recovery paths for a device that can no longer reach its network
-- **MQTT client** authenticated to the broker with COSE/Ed25519 signed messages
+- **MQTT client** that authenticates to the broker and signs what it publishes with
+  COSE/Ed25519
 - **CBOR storage** on LittleFS for credentials, configuration and your own data
 - **NTP time** that survives reboots
 
@@ -199,6 +200,8 @@ Each directory is a self-contained PlatformIO project.
 | [WittyCloud](examples/WittyCloud/) | WittyCloud ESP8266 board | RGB output, light sensor, button, everything exposed to scripts |
 | [My9231Lamp](examples/My9231Lamp/) | ESP8266 smart bulb with a MY9231 LED driver | A custom Lisp primitive, and a device with no button or status LED |
 | [S20Socket](examples/S20Socket/) | ESP8266 smart socket or relay board | Relay control and a scriptable GPIO |
+| [LispHooks](examples/LispHooks/) | Any ESP8266 board | Powering a sensor from the script lifecycle hooks |
+| [Buttons](examples/Buttons/) | WittyCloud ESP8266 board | Two buttons exposed to scripts, and clearing stale presses |
 
 ## Configuration
 

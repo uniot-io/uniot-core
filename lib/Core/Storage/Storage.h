@@ -237,10 +237,18 @@ class Storage {
 #ifndef UNIOT_USE_NVSFS
   Bytes _readSmallFile(File &file) {
     auto toRead = file.size() - file.position();
-    char *buf = (char *)malloc(toRead);
-    auto countRead = file.readBytes(buf, toRead);
-    const Bytes data((uint8_t *)buf, countRead);
-    free(buf);
+
+    Bytes data(nullptr, toRead);
+    if (data.size() != toRead) {
+      UNIOT_LOG_ERROR("no memory to read %u bytes of %s", toRead, mPath.c_str());
+      return Bytes();
+    }
+
+    auto countRead = data.fill([&file](uint8_t *buf, size_t size) {
+      return file.readBytes(reinterpret_cast<char *>(buf), size);
+    });
+    data.prune(countRead);
+
     return data;
   }
 #endif

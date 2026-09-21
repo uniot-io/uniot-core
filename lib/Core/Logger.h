@@ -79,9 +79,14 @@
  * When UNIOT_LOG_ENABLED is defined, this section provides the actual
  * implementation of the logging functionality.
  */
+// Included for both paths: UNUSED lives here, and the macros for levels that are filtered
+// out expand to it even when logging itself is enabled.
+#include <Common.h>
+
 #if UNIOT_LOG_ENABLED
 
 #include <Arduino.h>
+#include <pgmspace.h>
 
 /**
  * @brief Default serial port for logging
@@ -156,10 +161,18 @@
  * @param log_fmt Format string for the message
  * @param log_arg Variable arguments for format string
  */
-#define UNIOT_LOG(log_type, log_fmt, log_arg...)                         \
-  do {                                                                   \
-    uniot_log_printf("[" #log_type "][%lu][%s:%d][%s] " log_fmt "\n",    \
-                     millis(), __FILE__, __LINE__, __FUNC_NAME__, ##log_arg); \
+#define UNIOT_LOG_STRINGIFY_(x) #x
+#define UNIOT_LOG_STRINGIFY(x) UNIOT_LOG_STRINGIFY_(x)
+
+/*
+ * The file and the line are literals, so they are concatenated into the format and go to
+ * flash with it. __func__ is a variable, not a literal, so it stays an argument in RAM.
+ */
+#define UNIOT_LOG(log_type, log_fmt, log_arg...)                                   \
+  do {                                                                             \
+    uniot_log_printf(PSTR("[" #log_type "][%lu][" __FILE__ ":"                     \
+                          UNIOT_LOG_STRINGIFY(__LINE__) "][%s] " log_fmt "\n"),    \
+                     millis(), __FUNC_NAME__, ##log_arg);                          \
   } while (0)
 
 /**
@@ -207,19 +220,23 @@ inline void uniot_log_set_sink(uniot_log_sink_t sink) { sUniotLogSink = sink; }
 /**
  * @brief Printf-style formatting function for log messages
  *
- * Formats a log message using vsnprintf and outputs it to the logging stream.
- * Handles buffer overflow by adding a truncation indicator.
+ * Formats a log message and outputs it to the logging stream. Handles buffer overflow by
+ * adding a truncation indicator.
  *
- * @param format Printf-style format string
+ * The format is read from flash: UNIOT_LOG wraps it in PSTR(), which on ESP8266 keeps every
+ * message out of RAM, and on ESP32 is a no-op because literals live in flash already.
+ * Arguments are read from RAM as usual, so a %s still points at a RAM string.
+ *
+ * @param format Printf-style format string, in program memory
  * @param ... Variable arguments for the format string
  * @retval int Length of the formatted string
  */
 static inline int
-uniot_log_printf(const char *format, ...) {
+uniot_log_printf(PGM_P format, ...) {
   va_list arg;
   va_start(arg, format);
   char buf[UNIOT_LOG_BUF_SIZE];
-  int len = vsnprintf(buf, sizeof(buf), format, arg);
+  int len = vsnprintf_P(buf, sizeof(buf), format, arg);
   va_end(arg);
   UNIOT_LOG_PRINT(buf);
   if (sUniotLogSink) sUniotLogSink(buf);
@@ -235,7 +252,6 @@ uniot_log_printf(const char *format, ...) {
  * When logging is disabled, these no-op macros ensure that
  * log calls don't generate any code while still being syntactically valid.
  */
-#include <Common.h>
 
 #define UNIOT_LOG_SET_READY() do {} while(0)
 #define UNIOT_LOG_PRINT(...) (UNUSED(__VA_ARGS__))

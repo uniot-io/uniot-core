@@ -11,6 +11,7 @@ disagree.
 - [Core Components](#core-components)
 - [API Reference](#api-reference)
 - [Logging](#logging)
+- [Device Status](#device-status)
 - [Best Practices](#best-practices)
 - [Troubleshooting](#troubleshooting)
 
@@ -164,6 +165,8 @@ Uniot Core includes an embedded UniotLisp interpreter for dynamic runtime script
 Each `registerLisp*` call exposes the listed GPIO pins to UniotLisp through a
 matching primitive: `dwrite` (digital write), `dread` (digital read),
 `awrite` (analog/PWM write), `aread` (analog read), and `bclicked` for buttons.
+Analog values are 10 bits on every chip, so `aread` returns 0-1023 and `awrite`
+takes 0-1023. The voltage behind a reading still differs per board.
 
 Pins are not addressed by their raw GPIO number from Lisp. Instead, the
 register subsystem assigns each pin a 0-based **logical index** in the order
@@ -301,6 +304,45 @@ For more complex primitives that interact with hardware or access device state, 
 Uniot.registerLispObject("my-object", myRecordPointer, FOURCC(myid));
 ```
 
+**Script Lifecycle:**
+
+A script runs on its own interpreter, which is built when the script starts and destroyed
+when it stops. Two hooks bracket that, which is where a peripheral a script depends on is
+prepared and shut down:
+
+```cpp
+Uniot.setLispStartHook([](uniot::LispStartReason reason) {
+  sensor.wake();  // runs before the script's first evaluation
+});
+
+Uniot.setLispStopHook([](uniot::LispStopReason reason) {
+  sensor.sleep();
+});
+```
+
+The reason says what happened:
+
+| Start | Meaning |
+| --- | --- |
+| `Restored` | a stored script, run at boot |
+| `Received` | a script delivered over MQTT |
+
+| Stop | Meaning |
+| --- | --- |
+| `Completed` | it ran to the end, or a finite task used up its passes |
+| `Replaced` | a new script took its place |
+| `Cleared` | an empty script arrived, which means "run nothing" |
+| `Failed` | a Lisp error tore the interpreter down |
+
+Both hooks run synchronously and hold up the script, so keep them short and move anything
+slow to `setImmediate()`. That matters most for `Failed`, which is reached while the
+interpreter is still unwinding its error, on a stack that is already close to its limit: do
+only what leaves the hardware safe, and defer the rest.
+
+A button press that no script has read yet stays pending for a while, so a script starting
+just after a press would react to it. `Uniot.resetLispButtons()` drops those, and a start
+hook is the place to call it.
+
 ### 5. Storage Management
 
 Uniot Core uses CBOR (Concise Binary Object Representation) for efficient data serialization and persistent storage:
@@ -337,9 +379,13 @@ if (storage.restore()) {
 
 NTP synchronization and time persistence:
 
+The time is written to flash on every successful sync and read back at boot, so a device
+starts with roughly the right time before NTP answers. `enablePeriodicDateSave()` adds saves
+*between* syncs, for a device that may be up for a long time without reaching an NTP server:
+
 ```cpp
-// Enable periodic date saving (survives reboots)
-Uniot.enablePeriodicDateSave(300); // Save every 5 minutes
+// Save the time every 5 minutes as well, not only when it syncs
+Uniot.enablePeriodicDateSave(300);
 
 // In your code, access time functions
 Serial.println(uniot::Date::getFormattedTime()); // "YYYY-MM-DD HH:MM:SS"
@@ -393,6 +439,9 @@ The `Uniot` global instance provides the main API:
 | -------------------------------------- | -------------------------- |
 | `addLispPrimitive(primitive)`          | Add custom Lisp primitive  |
 | `setLispEventInterceptor(interceptor)` | Set Lisp event interceptor |
+| `setLispStartHook(hook)`               | Called before a script is evaluated |
+| `setLispStopHook(hook)`                | Called before its interpreter is destroyed |
+| `resetLispButtons()`                   | Drop presses no script has read |
 | `publishLispEvent(eventID, value)`     | Publish event to Lisp      |
 | `registerLispDigitalOutput(pins...)`   | Register GPIO outputs      |
 | `registerLispDigitalInput(pins...)`    | Register GPIO inputs       |
@@ -401,6 +450,18 @@ The `Uniot` global instance provides the main API:
 | `addLispButton(pin, activeLevel = LOW, id = ...)` | Create, poll and register a button |
 | `registerLispButton(button, id = ...)` | Register button object     |
 | `registerLispObject(name, ptr, id)`    | Register generic object    |
+
+#### Extensibility Methods
+
+Available while the configuration portal is running, and for devices that speak MQTT
+alongside the built-in ones:
+
+| Method | Description |
+| --- | --- |
+| `addCustomPage(path, gzData, gzLen, label = "", contentType = "text/html")` | Serve a gzipped page from the configuration portal, optionally linked from it |
+| `addCustomRoute(path, handler)` | Handle a GET request on the portal |
+| `addCustomRoute(path, method, handler)` | Handle a request for the given HTTP method(s) |
+| `addMQTTDevice(device)` | Register a user-defined `MQTTDevice` with its own topics |
 
 #### System Methods
 
@@ -427,6 +488,43 @@ UNIOT_LOG_TRACE("Function called: %s", __func__);
 // Conditional logging (every level has an _IF variant)
 UNIOT_LOG_ERROR_IF(condition, "Error if condition is true");
 ```
+
+Each line carries its level, the time in milliseconds, the file and line it came from, and
+the function name. Levels are selected with `UNIOT_LOG_LEVEL` and the whole system compiles
+away with `UNIOT_LOG_ENABLED=0`; both are described in the README.
+
+**The message text lives in flash**, not RAM, which on an ESP8266 saves several kilobytes
+across a firmware. That has one rule attached: the macro handles the format string, so never
+wrap an *argument* in `PSTR()` or `F()`. A `%s` argument must point at RAM.
+
+A line is formatted into a single buffer of `UNIOT_LOG_BUF_SIZE` bytes (256 by default),
+shared with the prefix. Anything longer is truncated and marked with ` [...]`.
+
+Output goes to `UNIOT_LOG_STREAM` (`Serial`), which the platform opens itself if the sketch
+has not. A second destination can be attached, which receives each finished line, including
+its newline:
+
+```cpp
+uniot_log_set_sink([](const char *line) { /* mirror it somewhere */ });
+```
+
+## Device Status
+
+On every connection the device publishes a retained status message that tells the platform
+what it is and what it can do:
+
+| Field | Meaning |
+| --- | --- |
+| `online`, `connection_id` | Connection state and its sequence number |
+| `version`, `lisp_version` | Core and interpreter versions, packed as `major * 10000 + minor * 100 + patch` |
+| `mcu` | `"ESP8266"`, or the exact model on ESP32, such as `"ESP32-C3"` |
+| `reset_reason` | Why the chip last restarted. The values are the chip's own enum, so they only make sense together with `mcu` |
+| `lisp_heap`, `lisp_stack` | Interpreter limits this firmware was built with |
+| `mqtt_size` | Largest MQTT packet the device accepts, which bounds the size of a script |
+| `primitives`, `misc.registers` | Primitives the scripts can call, and the pins and objects behind them |
+| `creator`, `public_key`, `timestamp`, `debug` | Identity, key, time of connection, and whether logging is built in |
+
+The versions are fixed when the firmware is built and cannot be overridden by a sketch.
 
 ## Best Practices
 

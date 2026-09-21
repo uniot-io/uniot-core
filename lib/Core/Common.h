@@ -28,6 +28,26 @@
  */
 
 /**
+ * @brief Packs a semantic version into one integer.
+ * @ingroup common
+ *
+ * Uses the same formula as uniot-lisp's SEMVER_TO_INT, so a core version and an interpreter
+ * version are comparable and read the same way. It carries its own name so that including
+ * both headers cannot make one definition silently stand for the other.
+ */
+#define UNIOT_SEMVER_TO_INT(major, minor, patch) ((major * 10000) + (minor * 100) + patch)
+
+/**
+ * @brief Version of Uniot Core, reported in the device's status packet.
+ * @ingroup common
+ *
+ * Neither this nor UNIOT_SEMVER_TO_INT is guarded, so a sketch cannot redefine them: they
+ * describe the core that is running, not something a sketch chooses. Keep this in step with
+ * the version in library.json.
+ */
+#define UNIOT_CORE_VERSION UNIOT_SEMVER_TO_INT(0, 8, 1)
+
+/**
  * @brief Hostname of the MQTT broker the device connects to.
  * @ingroup common
  */

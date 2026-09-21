@@ -224,12 +224,6 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
       mpNetworkDevice->attach();
     }
 
-#if defined(ESP8266)
-    analogWriteRange(1023);
-#elif defined(ESP32)
-    analogWriteResolution(10);
-#endif
-
     getLisp().getCleanupTask()->attach(15000);
     mLispDevice.runStoredCode();
   }
@@ -402,14 +396,22 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
           auto registers = info.putMap("misc").putMap("registers");
           PrimitiveExpeditor::getRegisterManager().serializeRegisters(registers);
 
-          // TODO: add uniot core version
           info.put("timestamp", static_cast<int64_t>(Date::now()));
           info.put("creator", mCredentials.getCreatorId().c_str());
           info.put("public_key", mCredentials.getPublicKey().c_str());
           info.put("mqtt_size", MQTT_MAX_PACKET_SIZE);
           info.put("debug", UNIOT_LOG_ENABLED);
+          info.put("version", UNIOT_CORE_VERSION);
+          info.put("lisp_version", LISP_VERSION);
           info.put("lisp_heap", UNIOT_LISP_HEAP);
-#if defined(ESP32)
+          info.put("lisp_stack", UNIOT_LISP_MAX_EVAL_STACK);
+          // The reset reason is an enum of the chip's own, so it only means something
+          // alongside the model.
+#if defined(ESP8266)
+          info.put("mcu", "ESP8266");
+          info.put("reset_reason", static_cast<int64_t>(ESP.getResetInfoPtr()->reason));
+#elif defined(ESP32)
+          info.put("mcu", ESP.getChipModel());
           info.put("reset_reason", static_cast<int64_t>(esp_reset_reason()));
 #endif
         }),
@@ -455,11 +457,24 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     if (PrimitiveExpeditor::getRegisterManager().getRegisterLength(primitive::name::dread)) {
       getLisp().pushPrimitive(primitive::dread);
     }
+    // Analog values are 10 bits on every chip, so a script reads and writes the same range
+    // wherever it runs. These are global Arduino settings, so they are only applied when a
+    // script can actually use analog, and a sketch that wants different values sets them
+    // after begin().
     if (PrimitiveExpeditor::getRegisterManager().getRegisterLength(primitive::name::awrite)) {
       getLisp().pushPrimitive(primitive::awrite);
+#if defined(ESP8266)
+      analogWriteRange(1023);
+#elif defined(ESP32)
+      analogWriteResolution(10);
+#endif
     }
     if (PrimitiveExpeditor::getRegisterManager().getRegisterLength(primitive::name::aread)) {
       getLisp().pushPrimitive(primitive::aread);
+      // The ESP8266's ADC is 10 bits already; the ESP32 family returns 12 or 13.
+#if defined(ESP32)
+      analogReadResolution(10);
+#endif
     }
     if (PrimitiveExpeditor::getRegisterManager().getRegisterLength(primitive::name::bclicked)) {
       getLisp().pushPrimitive(primitive::bclicked);

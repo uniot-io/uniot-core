@@ -60,6 +60,10 @@ namespace uniot {
  */
 class Credentials : public CBORStorage, public ICOSESigner {
  public:
+  static constexpr size_t PRIVATE_KEY_SIZE = 32;  ///< Size of an Ed25519 private key
+  static constexpr size_t PUBLIC_KEY_SIZE = 32;   ///< Size of an Ed25519 public key
+  static constexpr size_t SIGNATURE_SIZE = 64;    ///< Size of an Ed25519 signature
+
   /**
    * @brief Constructor that initializes device credentials.
    *
@@ -71,7 +75,7 @@ class Credentials : public CBORStorage, public ICOSESigner {
     mDeviceId = _calcDeviceId();
     Credentials::restore();
 
-    if (mPrivateKey.size() == 0) {
+    if (mPrivateKey.size() != PRIVATE_KEY_SIZE) {
       _generatePrivateKey();
       Credentials::store();
     }
@@ -104,6 +108,15 @@ class Credentials : public CBORStorage, public ICOSESigner {
     if (CBORStorage::restore()) {
       mOwnerId = object().getString("account");
       mPrivateKey = object().getBytes("private_key");
+
+      // Every use of the key reads exactly PRIVATE_KEY_SIZE bytes from it, so a stored key of
+      // any other length is dropped rather than read past. The constructor then generates a
+      // new one, which gives the device a new identity: the platform sees a new public key.
+      if (mPrivateKey.size() && mPrivateKey.size() != PRIVATE_KEY_SIZE) {
+        UNIOT_LOG_ERROR("stored private key is %u bytes, expected %u; discarding it",
+                        mPrivateKey.size(), PRIVATE_KEY_SIZE);
+        mPrivateKey.clean();
+      }
       return true;
     }
     UNIOT_LOG_ERROR("%s", "credentials not restored");
@@ -200,10 +213,15 @@ class Credentials : public CBORStorage, public ICOSESigner {
    * @retval Bytes The signature of the data.
    */
   virtual Bytes sign(const Bytes &data) const override {
-    uint8_t signature[64];
-    uint8_t publicKey[32];
-    Ed25519::derivePublicKey(publicKey, mPrivateKey.raw());
-    Ed25519::sign(signature, mPrivateKey.raw(), publicKey, data.raw(), data.size());
+    if (mPrivateKey.size() != PRIVATE_KEY_SIZE || mPublicKeyRaw.size() != PUBLIC_KEY_SIZE) {
+      UNIOT_LOG_ERROR("%s", "cannot sign without a valid key pair");
+      return Bytes();
+    }
+
+    // The public key is the one derived at startup. Deriving it again here would repeat the
+    // scalar multiplication that is the expensive half of Ed25519, on every signature.
+    uint8_t signature[SIGNATURE_SIZE];
+    Ed25519::sign(signature, mPrivateKey.raw(), mPublicKeyRaw.raw(), data.raw(), data.size());
     return Bytes(signature, sizeof(signature));
   }
 
@@ -247,7 +265,7 @@ class Credentials : public CBORStorage, public ICOSESigner {
     // Initialize the random number generator with device-specific entropy
     RNG.begin(String("uniot::entropy::" + mCreatorId + "::" + mDeviceId).c_str());
 
-    uint8_t privateKey[32];
+    uint8_t privateKey[PRIVATE_KEY_SIZE];
     Ed25519::generatePrivateKey(privateKey);
     mPrivateKey = Bytes(privateKey, sizeof(privateKey));
   }
@@ -258,7 +276,12 @@ class Credentials : public CBORStorage, public ICOSESigner {
    * Computes both raw binary and hexadecimal string representations.
    */
   void _derivePublicKey() {
-    uint8_t publicKey[32];
+    if (mPrivateKey.size() != PRIVATE_KEY_SIZE) {
+      UNIOT_LOG_ERROR("%s", "no valid private key to derive from");
+      return;
+    }
+
+    uint8_t publicKey[PUBLIC_KEY_SIZE];
     Ed25519::derivePublicKey(publicKey, mPrivateKey.raw());
     mPublicKeyRaw = Bytes(publicKey, sizeof(publicKey));
     mPublicKey = mPublicKeyRaw.toHexString();
