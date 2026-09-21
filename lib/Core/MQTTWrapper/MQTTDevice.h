@@ -164,6 +164,14 @@ class MQTTDevice {
    */
   void publishEmptyDevice(const String &subTopic);
 
+  /**
+   * @brief Returns true if the MQTT broker connection is currently established.
+   *
+   * Thread-safe: reads the atomic flag written by the MQTT task on connect and
+   * disconnect. Safe to call from any FreeRTOS task.
+   */
+  bool isConnected() const;
+
  protected:
   /**
    * @brief Handles incoming MQTT messages.
@@ -173,6 +181,14 @@ class MQTTDevice {
    * Implementing classes must override this to process incoming messages.
    */
   virtual void handle(const String &topic, const Bytes &payload) = 0;
+
+  /**
+   * @brief Publishes the retained offline status and closes the connection.
+   *
+   * Use before a deliberate restart so the device does not appear to the
+   * broker as having crashed.
+   */
+  void forceDisconnect();
 
  private:
   /**

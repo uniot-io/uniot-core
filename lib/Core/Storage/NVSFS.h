@@ -49,7 +49,6 @@ namespace uniot {
  * - Missing size(), position(), and readBytes() methods required by Storage class
  * - No default constructor for temporary object creation
  * - Limited error handling in some operations
- * - Memory management in _loadData() needs improvement
  *
  * Key differences from traditional file systems:
  * - File paths are converted to NVS keys (max 15 characters)
@@ -207,8 +206,8 @@ class NVSFile {
    * Retrieves the data associated with the NVS key and stores
    * it in the internal buffer for subsequent read operations.
    *
-   * @warning Current implementation uses Bytes::fill() which may
-   * need review for memory safety and error handling.
+   * If the buffer cannot be allocated the data is left empty and an error is logged,
+   * rather than reading into a buffer smaller than the stored value.
    */
   void _loadData() {
     if (!mPrefs.isKey(mKey.c_str())) {
@@ -223,9 +222,19 @@ class NVSFile {
     }
 
     mBuffer = Bytes(nullptr, dataSize);
-    mBuffer.fill([this, dataSize](uint8_t* buf, size_t size) {
-      return mPrefs.getBytes(mKey.c_str(), buf, dataSize);
+    if (mBuffer.size() != dataSize) {
+      UNIOT_LOG_ERROR("NVS read failed, no memory for %u bytes: %s", dataSize, mKey.c_str());
+      mBuffer = Bytes();
+      return;
+    }
+
+    // Sized by the buffer, not dataSize, so a buffer that does not match can never be
+    // overrun. A short read keeps only what was read: the zero padding left behind would
+    // otherwise decode as data.
+    auto read = mBuffer.fill([this](uint8_t* buf, size_t size) {
+      return mPrefs.getBytes(mKey.c_str(), buf, size);
     });
+    mBuffer.prune(read);
   }
 };
 /** @} */
@@ -285,7 +294,7 @@ class NVSFileSystem {
 
     mInitialized = mPrefs.begin("uniot_files", false);
     if (!mInitialized) {
-      UNIOT_LOG_ERROR("Failed to open NVS namespace 'uniot_files'");
+      UNIOT_LOG_ERROR("failed to open NVS namespace 'uniot_files'");
     }
 
     return mInitialized;

@@ -57,7 +57,7 @@ class ObjectRegisterRecord : public IWithType {
    */
   ObjectRegisterRecord() {
     auto success = sRegisteredLinks.pushUnique(this);
-    UNIOT_LOG_DEBUG("record.push [%lu][%d]", this, success);
+    UNIOT_LOG_DEBUG("record registered: %lu, added: %d", this, success);
   }
 
   /**
@@ -68,7 +68,7 @@ class ObjectRegisterRecord : public IWithType {
    */
   virtual ~ObjectRegisterRecord() {
     auto success = sRegisteredLinks.removeOne(this);
-    UNIOT_LOG_DEBUG("record.remove [%lu][%d]", this, success);
+    UNIOT_LOG_DEBUG("record unregistered: %lu, removed: %d", this, success);
   }
 
   /**

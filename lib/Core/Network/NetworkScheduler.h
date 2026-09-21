@@ -104,7 +104,8 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
    * @param credentials Reference to device credentials manager
    *
    * Initializes the network scheduler with default configuration including:
-   * - AP name generation based on device ID
+   * - AP name: UNIOT_WIFI_AP_PREFIX + "-" + device short ID (upper-cased)
+   * - AP password: UNIOT_WIFI_AP_PASSWORD (empty string = open network)
    * - WiFi persistence and auto-connect disabled
    * - Task initialization for all network operations
    * - WebSocket configuration server setup
@@ -112,15 +113,25 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
   NetworkScheduler(Credentials &credentials)
       : mpCredentials(&credentials),
         mApSubnet(255, 255, 255, 0),
-        mConfigServer(IPAddress(1, 1, 1, 1),
+        // 192.0.2.1 is TEST-NET-1 (RFC 5737): reserved for documentation, never
+        // globally routed, and assigned to no one. Do NOT replace it with an
+        // RFC1918 address such as 192.168.4.1, 172.16.x.x or 10.x.x.x. Chromium
+        // classifies RFC1918 as "private" address space and blocks the navigation
+        // from the captive portal probe (a public origin) into it, so the portal
+        // never opens on Android.
+        mConfigServer(IPAddress(192, 0, 2, 1),
           [this](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
             _handleWebSocketEvent(server, client, type, arg, data, len);
           }) {
-    mApName = "UNIOT-" + String(mpCredentials->getShortDeviceId(), HEX);
+    mApName = String(UNIOT_WIFI_AP_PREFIX) + "-" + String(mpCredentials->getShortDeviceId(), HEX);
     mApName.toUpperCase();
+    mApPassword = UNIOT_WIFI_AP_PASSWORD;
     mCanScan = true;
     mApEnabled = false;
     mLastSaveResult = -1;
+#if defined(ESP32)
+    mUseFallbackScan = false;
+#endif
 
     // default wifi persistent storage brings unexpected behavior, I turn it off
     WiFi.persistent(false);
@@ -182,7 +193,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
    */
   void config() {
     if (_tryToRecoverAp()) {
-      UNIOT_LOG_DEBUG("Config already in progress. AP recovered");
+      UNIOT_LOG_DEBUG("config already in progress, AP recovered");
       return;
     }
     mTaskConfigAp->once(100);
@@ -195,7 +206,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
    * Emits disconnecting event to notify other system components.
    */
   void forget() {
-    UNIOT_LOG_DEBUG("Forget credentials: %s", mWifiStorage.getSsid().c_str());
+    UNIOT_LOG_DEBUG("forgetting credentials: %s", mWifiStorage.getSsid().c_str());
     mWifiStorage.clean();
     CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::DISCONNECTING);
     mTaskConfigAp->once(500);
@@ -214,7 +225,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
       mTaskConnectSta->once(500);
 
       if (_tryToRecoverAp()) {
-        UNIOT_LOG_DEBUG("Reconnecting while AP is enabled. AP recovered");
+        UNIOT_LOG_DEBUG("reconnecting while AP is enabled, AP recovered");
       }
 
       return true;
@@ -240,6 +251,56 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
     return false;
   }
 
+  /**
+   * @brief Register a custom gzipped page on the configuration portal
+   * @param path URL path to serve the page on (e.g. "/app")
+   * @param gzData Pointer to the gzipped page data
+   * @param gzLen Length of the gzipped data in bytes
+   * @param label Button label shown in the portal UI (empty hides the button)
+   * @param contentType MIME content type (default: "text/html")
+   * @retval bool true if the route was registered, false if the server is unavailable
+   *
+   * Serves a user-supplied embedded page from the captive portal server.
+   * The data must remain valid for the lifetime of the server, which is the
+   * case for a PROGMEM array generated from a gzipped file.
+   *
+   * The path and label are reported to the configuration UI in the status
+   * payload, which renders a link to the page.
+   */
+  bool addCustomPage(const String &path, const uint8_t *gzData, size_t gzLen, const String &label = "", const char *contentType = "text/html") {
+    auto server = mConfigServer.get();
+    if (server) {
+      server->on(path.c_str(), HTTP_GET, [gzData, gzLen, type = String(contentType)](AsyncWebServerRequest *request) {
+        auto response = request->beginResponse(200, type, gzData, gzLen, nullptr);
+        response->addHeader("Content-Encoding", "gzip");
+        request->send(response);
+      });
+      mCustomPagePath = path;
+      mCustomPageLabel = label;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * @brief Register a custom HTTP route on the configuration portal
+   * @param path URL path for the route (e.g. "/api/data")
+   * @param method HTTP method(s) to accept (e.g. HTTP_GET, HTTP_POST, HTTP_ANY)
+   * @param handler Callback invoked to handle the request
+   * @retval bool true if the route was registered, false if the server is unavailable
+   *
+   * Registers a raw HTTP handler on the captive portal server without affecting
+   * the portal UI. Suitable for custom API endpoints.
+   */
+  bool addCustomRoute(const String &path, WebRequestMethodComposite method, ArRequestHandlerFunction handler) {
+    auto server = mConfigServer.get();
+    if (server) {
+      server->on(path.c_str(), method, handler);
+      return true;
+    }
+    return false;
+  }
+
  private:
   /**
    * @brief WebSocket message action types
@@ -252,7 +313,8 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
     STATUS = 100,  ///< Request current device and network status
     SAVE,          ///< Save new WiFi credentials
     SCAN,          ///< Request WiFi network scan
-    ASK            ///< Query last save operation result
+    ASK,           ///< Query last save operation result
+    PING = 104,    ///< Heartbeat that keeps the client marked active
   };
 
   /**
@@ -271,7 +333,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
         mConfigServer.wsEnable(true);  // Ensure that WS are enabled after disabling them in "Step 1 of Stopping Configuration" during the AP recovery process
         mTaskServe->attach(10);
       } else {
-        UNIOT_LOG_WARN("Start server failed. Restarting...");
+        UNIOT_LOG_WARN("config server failed to start, restarting");
         self.once(1000);
       }
     });
@@ -280,7 +342,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
 
     mTaskStop = TaskScheduler::make([this](SchedulerTask &self, short t) {
       static bool wsClosed = false;
-      UNIOT_LOG_DEBUG("Stop server, state: %d", wsClosed);
+      UNIOT_LOG_DEBUG("stopping config server, state: %d", wsClosed);
       // 1: close websocket
       // 2: stop access point
       // 3: stop server
@@ -300,7 +362,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
     mTaskConfigAp = TaskScheduler::make([this](SchedulerTask &self, short t) {
       WiFi.disconnect(true, true);
       mTaskStopAp->detach();
-      if (WiFi.softAPConfig(mConfigServer.ip(), mConfigServer.ip(), mApSubnet) && WiFi.softAP(mApName.c_str())) {
+      if (WiFi.softAPConfig(mConfigServer.ip(), mConfigServer.ip(), mApSubnet) && WiFi.softAP(mApName.c_str(), mApPassword.isEmpty() ? nullptr : mApPassword.c_str())) {
 #if defined(ESP32) && defined(ENABLE_LOWER_WIFI_TX_POWER)
         WiFi.setTxPower(WIFI_TX_POWER_LEVEL);
 #endif
@@ -311,7 +373,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
         CoreEventEmitter::sendDataToChannel(events::network::Channel::OUT_SSID, Bytes(mApName));
         CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::ACCESS_POINT);
       } else {
-        UNIOT_LOG_WARN("Start server failed");
+        UNIOT_LOG_WARN("config server failed to start");
         mTaskConfigAp->attach(500, 1);
       }
     });
@@ -324,12 +386,20 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
     // Station connection tasks
     mTaskConnectSta = TaskScheduler::make([this](SchedulerTask &self, short t) {
       WiFi.disconnect(false, true);
+#if defined(ESP32)
+      if (mUseFallbackScan) {
+        UNIOT_LOG_INFO("connecting with WIFI_FAST_SCAN (fallback)");
+        WiFi.setScanMethod(WIFI_FAST_SCAN);
+      } else {
+        WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);
+      }
+#endif
       bool connect = WiFi.begin(mWifiStorage.getSsid().c_str(), mWifiStorage.getPassword().c_str()) != WL_CONNECT_FAILED;
       if (connect) {
 #if defined(ESP32) && defined(ENABLE_LOWER_WIFI_TX_POWER)
         WiFi.setTxPower(WIFI_TX_POWER_LEVEL);
 #endif
-        mTaskConnecting->attach(100, 50);
+        mTaskConnecting->attach(100, 100);
         CoreEventEmitter::sendDataToChannel(events::network::Channel::OUT_SSID, Bytes(mWifiStorage.getSsid()));
         CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::CONNECTING);
         mCanScan = false;
@@ -346,10 +416,19 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
       auto __processFailure = [this](int triesBeforeGivingUp = 3) {
         static int tries = 0;
         if (++tries < triesBeforeGivingUp) {
-          UNIOT_LOG_INFO("Tries to connect until give up is %d", triesBeforeGivingUp - tries);
+          UNIOT_LOG_INFO("attempts left before giving up: %d", triesBeforeGivingUp - tries);
           mTaskConnectSta->attach(500, 1);
         } else {
           tries = 0;
+#if defined(ESP32)
+          if (!mUseFallbackScan) {
+            UNIOT_LOG_WARN("all-channel scan did not associate, retrying with fast scan");
+            mUseFallbackScan = true;
+            mTaskConnectSta->attach(500, 1);
+            return;
+          }
+          mUseFallbackScan = false;
+#endif
           mWifiStorage.restore();
           CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::FAILED);
           mCanScan = true;
@@ -371,6 +450,13 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
           mTaskStop->once(30000);    // Stopping Configuration. Step 1. Carefully change the deferrals.
           mTaskStopAp->once(35000);  // Stopping Configuration. Step 2. Carefully change the deferrals.
           mTaskAvailabilityCheck->detach();
+#if defined(ESP32)
+          mUseFallbackScan = false;
+#if UNIOT_WIFI_NO_SLEEP
+          // Keep the radio awake between beacons; see UNIOT_WIFI_NO_SLEEP in Common.h.
+          WiFi.setSleep(false);
+#endif  // UNIOT_WIFI_NO_SLEEP
+#endif  // ESP32
           CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::SUCCESS);
           break;
 
@@ -394,7 +480,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
           break;
 
         default:
-          UNIOT_LOG_WARN("Unexpected WiFi status: %d", WiFi.status());
+          UNIOT_LOG_WARN("unexpected WiFi status: %d", WiFi.status());
           break;
       }
     });
@@ -440,14 +526,14 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
     mTaskAvailabilityCheck = TaskScheduler::make([this](SchedulerTask &self, short times) {
       static int scanInProgressFuse = 0;
       if (scanInProgressFuse-- > 0) {
-        UNIOT_LOG_INFO("Availability check skipped, scan in progress");
+        UNIOT_LOG_INFO("availability check skipped, scan in progress");
         return;
       }
 
       if (mCanScan &&
           !mConfigServer.wsClientsActive() &&
           mWifiStorage.isCredentialsValid()) {
-        UNIOT_LOG_INFO("Checking availability of the network [%s]", mWifiStorage.getSsid().c_str());
+        UNIOT_LOG_INFO("checking availability of network '%s'", mWifiStorage.getSsid().c_str());
         scanInProgressFuse = 3;
 
         mWifiScan.scanNetworksAsync([&](int n) {
@@ -458,13 +544,13 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
               mWifiStorage.isCredentialsValid()) {
             for (auto i = 0; i < n; ++i) {
               if (WiFi.SSID(i) == mWifiStorage.getSsid()) {
-                UNIOT_LOG_INFO("Network [%s] is available", WiFi.SSID(i).c_str());
+                UNIOT_LOG_INFO("network '%s' is available", WiFi.SSID(i).c_str());
                 CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::AVAILABLE);
                 break;
               }
             }
           } else {
-            UNIOT_LOG_INFO("Scan done, skipping availability check");
+            UNIOT_LOG_INFO("scan done, skipping availability check");
           }
           WiFi.scanDelete();
         });
@@ -482,11 +568,9 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
   void _initServerCallbacks() {
     auto server = mConfigServer.get();
     if (server) {
-      server->onNotFound([](AsyncWebServerRequest *request) {
-        // auto response = request->beginResponse(307);
-        // response->addHeader("Location", "/");
-        // request->send(response);
-        request->redirect("http://uniot.local/");
+      auto portalIp = mConfigServer.ip().toString();
+      server->onNotFound([portalIp](AsyncWebServerRequest *request) {
+        request->redirect("http://" + portalIp + "/");
       });
 
       server->on("/", [this](AsyncWebServerRequest *request) {
@@ -553,6 +637,8 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
                 .put("acc", mpCredentials->getOwnerId())
                 .put("nets", mLastNetworks.length() ? mLastNetworks : "[]", false)
                 .put("homeNet", WiFi.isConnected() ? WiFi.SSID() : "")
+                .put("customApp", mCustomPagePath)
+                .put("customAppLabel", mCustomPageLabel)
                 .close();
               mConfigServer.wsTextAll(status);
               break;
@@ -562,7 +648,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
               if (mWifiStorage.isCredentialsValid()) {
                 mTaskConnectSta->once(500);
                 mpCredentials->setOwnerId(msg.getString("acc"));
-                UNIOT_LOG_DEBUG("Is owner changed: %d", mpCredentials->isOwnerChanged());
+                UNIOT_LOG_DEBUG("owner changed: %d", mpCredentials->isOwnerChanged());
               }
               break;
             }
@@ -580,6 +666,11 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
               }
               break;
             }
+            case ACTIONS::PING:
+              // Nothing to answer. Receiving any message already refreshes the
+              // client's last-seen timestamp, which keeps wsClientsActive()
+              // true and suppresses background WiFi scans while a page is open.
+              break;
             default:
               break;
           }
@@ -615,14 +706,20 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
   Credentials *mpCredentials;  ///< Pointer to device credentials manager
   WifiStorage mWifiStorage;    ///< WiFi credentials storage handler
 
-  String mApName;                     ///< Generated access point name
+  String mApName;      ///< Generated AP SSID: UNIOT_WIFI_AP_PREFIX + "-" + device short ID
+  String mApPassword;  ///< AP WPA2 password (empty = open network)
   IPAddress mApSubnet;                ///< Subnet mask for AP mode
   ConfigCaptivePortal mConfigServer;  ///< Configuration web server with captive portal
 
-  String mLastNetworks;    ///< Cached JSON string of last network scan results
+  String mLastNetworks;     ///< Cached JSON string of last network scan results
+  String mCustomPagePath;   ///< URL path of the registered custom page (empty if none)
+  String mCustomPageLabel;  ///< Button label for the custom page (empty hides the button)
   int8_t mLastSaveResult;  ///< Result of last credential save operation (-1: none, 0: failed, 1: success)
   bool mCanScan;           ///< Flag indicating if network scanning is allowed
   bool mApEnabled;         ///< Flag indicating if access point is currently active
+#if defined(ESP32)
+  bool mUseFallbackScan;   ///< True when falling back to fast scan after an all-channel scan failed
+#endif
 
   // Task pointers for all network operations
   TaskScheduler::TaskPtr mTaskStart;              ///< Task for starting configuration server

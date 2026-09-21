@@ -50,7 +50,7 @@ class CBORObject {
    */
   CBORObject(const CBORObject &) : mDirty(false) {
     _create();
-    UNIOT_LOG_WARN("Copy constructor is not implemented!");
+    UNIOT_LOG_WARN("copy constructor is not implemented");
   }
 
   /**
@@ -60,7 +60,7 @@ class CBORObject {
    * @note This operator logs a warning since copying is not implemented
    */
   CBORObject &operator=(const CBORObject &) {
-    UNIOT_LOG_WARN("Copy assignment operator is not implemented!");
+    UNIOT_LOG_WARN("copy assignment operator is not implemented");
     return *this;
   }
 
@@ -109,6 +109,16 @@ class CBORObject {
 
   bool hasError() {
     return mErr.err != CN_CBOR_NO_ERROR;
+  }
+
+  /**
+   * @brief Check if the map contains a specific string key
+   * @param key The string key to check
+   * @retval true The key exists
+   * @retval false The key does not exist
+   */
+  bool hasKey(const char *key) const {
+    return cn_cbor_mapget_string(mpMapNode, key) != nullptr;
   }
 
   /**
@@ -524,7 +534,7 @@ class CBORObject {
    * @note This is useful when modifications were made outside the class's interface
    */
   void forceDirty() {
-    UNIOT_LOG_WARN("the data forced marked as dirty");
+    UNIOT_LOG_DEBUG("data marked dirty by force");
     _markAsDirty(true);
   }
 
@@ -720,7 +730,8 @@ class CBORObject {
       return actual;
     });
 
-    return bytes.prune(written);
+    bytes.prune(written);
+    return bytes;
   }
 
   /**

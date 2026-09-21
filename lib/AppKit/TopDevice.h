@@ -124,12 +124,18 @@ class TopDevice : public MQTTDevice {
   /**
    * @brief Handle request for memory usage information
    *
-   * Collects and publishes information about available free heap memory.
+   * Collects and publishes information about available free heap memory,
+   * and PSRAM (if present on this hardware) alongside the heap data.
    * Data is sent via MQTT in CBOR format to the "debug/mem" topic.
    */
   void handleMem() {
     CBORObject packet;
     packet.put("available", static_cast<uint64_t>(ESP.getFreeHeap()));
+#if defined(ESP32)
+    if (psramFound()) {
+      packet.put("available_psram", static_cast<uint64_t>(ESP.getFreePsram()));
+    }
+#endif
     MQTTDevice::publishDevice("debug/mem", packet.build());
   }
 

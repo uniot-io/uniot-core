@@ -70,7 +70,7 @@ void* GlobalBufferMemoryManager::allocate(size_t size) {
 
     // Safety check against corrupted memory
     if (block->size < sizeof(FreeBlock)) {
-      UNIOT_LOG_ERROR("GlobalBufferMemoryManager: Detected a block with invalid size: %d. Possible memory corruption!", block->size);
+      UNIOT_LOG_ERROR("block with invalid size: %d, possible memory corruption", block->size);
       return nullptr;
     }
 
@@ -171,7 +171,7 @@ void* GlobalBufferMemoryManager::reallocate(void* ptr, size_t newSize) {
 
   // Safety check against corrupted memory
   if (block->size < 0) {
-    UNIOT_LOG_ERROR("GlobalBufferMemoryManager: Detected negative block size: %d. Possible memory corruption!", block->size);
+    UNIOT_LOG_ERROR("negative block size: %d, possible memory corruption", block->size);
     return nullptr;
   }
 
@@ -190,7 +190,7 @@ void* GlobalBufferMemoryManager::reallocate(void* ptr, size_t newSize) {
     deallocate(ptr);
     UNIOT_LOG_DEBUG_IF(DEBUG, "GlobalBufferMemoryManager: Successfully reallocated to new block. Exiting reallocate.");
   } else {
-    UNIOT_LOG_ERROR("GlobalBufferMemoryManager: Failed to reallocate. Exiting reallocate.");
+    UNIOT_LOG_ERROR("failed to reallocate");
   }
 
   return newPtr;

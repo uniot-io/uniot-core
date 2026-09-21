@@ -40,6 +40,10 @@
 #include <ObjectRegisterRecord.h>
 #include <TaskScheduler.h>
 
+#if defined(ESP32)
+#include <driver/gpio.h>
+#endif
+
 namespace uniot {
 /**
  * @brief Button input handler with support for click and long press detection.
@@ -93,7 +97,7 @@ class Button : public IExecutor, public ObjectRegisterRecord {
         mPrevState(false),
         mLongPressTicker(0),
         mAutoResetTicker(0) {
-    pinMode(mPin, INPUT);
+    applyPinMode();
   }
 
   /**
@@ -102,6 +106,22 @@ class Button : public IExecutor, public ObjectRegisterRecord {
    * @retval true Click event was detected since the last reset
    * @retval false No click event was detected since the last reset
    */
+  /**
+   * @brief Configure the pin as an input with the pull its active level needs.
+   *
+   * A button that is active LOW must read HIGH when released, so it gets a pull-up; one that is
+   * active HIGH gets a pull-down. The internal resistor is used where the pin has one, and an
+   * external resistor on the board simply works alongside it. Where the pin has no suitable
+   * internal pull -- ESP8266 GPIO0-15 have no pull-down and GPIO16 no pull-up, classic ESP32
+   * GPIO34-39 have neither -- the pin is set to plain INPUT and an external resistor is needed.
+   *
+   * Called by the constructor, and again for every Lisp button by UniotCore::begin(). Calling
+   * pinMode() on the pin after begin() overrides it.
+   */
+  void applyPinMode() {
+    pinMode(mPin, _inputMode(mPin, mActiveLevel));
+  }
+
   bool resetClick() {
     auto was = mWasClick;
     mWasClick = false;
@@ -138,10 +158,15 @@ class Button : public IExecutor, public ObjectRegisterRecord {
    */
   virtual void execute(short times) override {
     bool curState = digitalRead(mPin) == mActiveLevel;
-    if (curState && ++mLongPressTicker == mLongPressTicks) {
-      mWasLongPress = true;
-      if (OnLongPress)
-        OnLongPress(this, LONG_PRESS);
+    // The counter stops at the threshold. It is a uint8_t, so left running it would wrap
+    // after 255 ticks: a long hold would fire LONG_PRESS again, and releasing just after the
+    // wrap would count as a click.
+    if (curState && mLongPressTicker < mLongPressTicks) {
+      if (++mLongPressTicker == mLongPressTicks) {
+        mWasLongPress = true;
+        if (OnLongPress)
+          OnLongPress(this, LONG_PRESS);
+      }
     }
     if (mPrevState && !curState) {
       if (mLongPressTicker < mLongPressTicks) {
@@ -171,6 +196,30 @@ class Button : public IExecutor, public ObjectRegisterRecord {
   }
 
  protected:
+  /**
+   * @brief The input mode for a pin, with the internal pull matching the active level.
+   *
+   * @param pin GPIO pin number
+   * @param activeLevel Logic level while pressed (LOW or HIGH)
+   * @retval uint8_t A mode for pinMode()
+   */
+  static uint8_t _inputMode(uint8_t pin, uint8_t activeLevel) {
+#if defined(ESP8266)
+    if (pin == 16) {
+      return activeLevel == HIGH ? INPUT_PULLDOWN_16 : INPUT;
+    }
+    return activeLevel == LOW ? INPUT_PULLUP : INPUT;
+#elif defined(ESP32)
+    // Input-only pins have no pull resistors, and asking for one can fail the whole config.
+    if (!GPIO_IS_VALID_OUTPUT_GPIO(pin)) {
+      return INPUT;
+    }
+    return activeLevel == LOW ? INPUT_PULLUP : INPUT_PULLDOWN;
+#else
+    return INPUT;
+#endif
+  }
+
   uint8_t mPin;             ///< GPIO pin number connected to the button
   uint8_t mActiveLevel;     ///< Logic level that represents button press (HIGH or LOW)
 

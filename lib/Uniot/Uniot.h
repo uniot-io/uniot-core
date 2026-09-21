@@ -20,6 +20,7 @@
 
 #include <AppKit.h>
 #include <Arduino.h>
+#include <ClearQueue.h>
 #include <Credentials.h>
 #include <Date.h>
 #include <EventBus.h>
@@ -113,6 +114,10 @@ class UniotCore {
    * Configures a hardware button for WiFi network reset functionality.
    * The button provides both manual reconnection (single press) and
    * configuration reset (multiple rapid presses followed by long press).
+   *
+   * With registerLispBtn, the button is linked into the bclicked register during begin().
+   * Buttons added with addLispButton() before begin() therefore come before it; add them after
+   * begin(), still in setup(), to keep this button at index 0.
    */
   void configWiFiResetButton(uint8_t pinBtn, uint8_t activeLevelBtn = LOW, bool registerLispBtn = true) {
     _createNetworkControllerConfig();
@@ -140,15 +145,41 @@ class UniotCore {
   }
 
   /**
+   * @brief Sentinel value for configWiFiResetOnReboot(): disables reboot-reset entirely.
+   *
+   * Pass this as maxRebootCount to opt out of the automatic configuration-reset
+   * mechanism. No reboot counts are stored, read, or compared, and the device
+   * will never be force-reset due to repeated reboots.
+   *
+   * @code
+   * Uniot.configWiFiResetOnReboot(UniotCore::REBOOT_RESET_DISABLED);
+   * @endcode
+   */
+  static constexpr uint8_t REBOOT_RESET_DISABLED = UINT8_MAX;
+
+  /**
    * @brief Configure automatic WiFi reset on repeated reboots
-   * @param maxRebootCount Maximum reboots before triggering configuration reset
-   * @param rebootWindowMs Time window for counting reboots in milliseconds
+   * @param maxRebootCount Maximum reboots before triggering configuration reset,
+   *                       or UniotCore::REBOOT_RESET_DISABLED to opt out entirely.
+   *                       Defaults to UNIOT_WIFI_REBOOT_RESET_COUNT.
+   * @param rebootWindowMs Time window for counting reboots in milliseconds.
+   *                       Defaults to UNIOT_WIFI_REBOOT_WINDOW_MS. Ignored when
+   *                       maxRebootCount is REBOOT_RESET_DISABLED.
    *
    * Enables automatic configuration reset when the device reboots repeatedly
    * within a specified time window. This provides a recovery mechanism for
    * devices that become unreachable due to network configuration issues.
+   *
+   * Pass REBOOT_RESET_DISABLED to completely suppress this behaviour: no reboot
+   * counter is stored to or read from flash, and the network configuration is
+   * never reset automatically.
+   *
+   * Called with no arguments it is also the way to ask for a network controller on
+   * a device that configures neither a button nor a status LED: the controller is
+   * what emits the WiFi status events, and on such a device reboot-reset is the
+   * only path back from bad credentials.
    */
-  void configWiFiResetOnReboot(uint8_t maxRebootCount, uint32_t rebootWindowMs = 10000) {
+  void configWiFiResetOnReboot(uint8_t maxRebootCount = UNIOT_WIFI_REBOOT_RESET_COUNT, uint32_t rebootWindowMs = UNIOT_WIFI_REBOOT_WINDOW_MS) {
     _createNetworkControllerConfig();
     mpNetworkControllerConfig->maxRebootCount = maxRebootCount;
     mpNetworkControllerConfig->rebootWindowMs = rebootWindowMs;
@@ -178,6 +209,72 @@ class UniotCore {
   void configUser(const String& user) {
     auto success = getAppKit().setUserId(user);
     UNIOT_LOG_ERROR_IF(!success, "Failed to set user ID");
+  }
+
+  /**
+   * @brief Register a custom gzipped page on the configuration portal
+   * @param path URL path to serve the page on (e.g. "/app")
+   * @param gzData Pointer to the gzipped page data
+   * @param gzLen Length of the gzipped data in bytes
+   * @param label Button label shown in the portal UI (empty hides the button)
+   * @param contentType MIME content type (default: "text/html")
+   *
+   * Serves a user-supplied embedded page from the captive portal server, and
+   * reports it to the configuration UI so it can link to the page.
+   * Must be called before begin().
+   *
+   * Typically used with a C array generated from a gzipped HTML file:
+   * @code
+   * #include "my_page.html.gz.h"
+   * Uniot.addCustomPage("/app", MY_PAGE_HTML_GZ, MY_PAGE_HTML_GZ_LENGTH, "My Settings");
+   * @endcode
+   */
+  void addCustomPage(const String& path, const uint8_t* gzData, size_t gzLen, const String& label = "", const char* contentType = "text/html") {
+    auto success = getAppKit().addCustomPage(path, gzData, gzLen, label, contentType);
+    UNIOT_LOG_ERROR_IF(!success, "Failed to register custom page at %s", path.c_str());
+  }
+
+  /**
+   * @brief Register a custom HTTP GET route on the configuration portal
+   * @param path URL path for the route (e.g. "/api/data")
+   * @param handler Callback invoked to handle the request
+   *
+   * Suitable for sensor data APIs and other endpoints that should not appear
+   * as a navigation button. Must be called before begin().
+   */
+  void addCustomRoute(const String& path, ArRequestHandlerFunction handler) {
+    auto success = getAppKit().addCustomRoute(path, HTTP_GET, handler);
+    UNIOT_LOG_ERROR_IF(!success, "Failed to register custom route at %s", path.c_str());
+  }
+
+  /**
+   * @brief Register a custom HTTP route on the configuration portal
+   * @param path URL path for the route (e.g. "/api/data")
+   * @param method HTTP method(s) to accept (e.g. HTTP_GET, HTTP_POST, HTTP_ANY)
+   * @param handler Callback invoked to handle the request
+   *
+   * Must be called before begin().
+   */
+  void addCustomRoute(const String& path, WebRequestMethodComposite method, ArRequestHandlerFunction handler) {
+    auto success = getAppKit().addCustomRoute(path, method, handler);
+    UNIOT_LOG_ERROR_IF(!success, "Failed to register custom route at %s", path.c_str());
+  }
+
+  /**
+   * @brief Register a user-defined MQTT device with the platform
+   * @param device The MQTTDevice instance to register
+   *
+   * Adds the device to the MQTT subsystem and synchronizes its subscriptions,
+   * so it can publish to and receive from its own topics.
+   *
+   * @code
+   * MyDevice myDevice;
+   * Uniot.addMQTTDevice(myDevice);
+   * @endcode
+   */
+  void addMQTTDevice(uniot::MQTTDevice& device) {
+    getAppKit().getMQTT().addDevice(device);
+    device.syncSubscriptions();
   }
 
   /**
@@ -221,6 +318,61 @@ class UniotCore {
   }
 
   /**
+   * @brief Set the hook called when a Lisp script starts
+   * @param hook Callback receiving why the script started
+   *
+   * Runs after the interpreter is built and its primitives are registered, but before
+   * the script is evaluated, so a peripheral brought up here is ready for the first
+   * pass. The reason says where the script came from: LispStartReason::Restored for one
+   * loaded from flash at boot, LispStartReason::Received for one delivered over MQTT.
+   *
+   * @code
+   * Uniot.setLispStartHook([](uniot::LispStartReason reason) {
+   *   sensor.wake();
+   * });
+   * @endcode
+   *
+   * Keep the hook short -- see setLispStopHook() for why that matters most there.
+   */
+  void setLispStartHook(uniot::LispStartHook hook) {
+    getAppKit().setLispStartHook(hook);
+  }
+
+  /**
+   * @brief Set the hook called when a Lisp script stops
+   * @param hook Callback receiving why the script stopped
+   *
+   * Runs before the interpreter is destroyed, whichever way the script ended:
+   * Completed (it ran to the end, or a finite task used up its passes), Replaced (a new
+   * script took its place), Cleared (an empty script arrived, meaning run nothing) or
+   * Failed (a Lisp error tore the machine down).
+   *
+   * @code
+   * Uniot.setLispStopHook([](uniot::LispStopReason reason) {
+   *   sensor.sleep();   // short, and safe to run on any path
+   * });
+   * @endcode
+   *
+   * Both hooks run synchronously, so keep them short and move heavy work out with
+   * setImmediate(), which runs it on the next scheduler pass instead:
+   *
+   * @code
+   * Uniot.setLispStopHook([](uniot::LispStopReason reason) {
+   *   sensor.sleep();
+   *   Uniot.setImmediate([]() { report(); });   // the slow part, off this stack
+   * });
+   * @endcode
+   *
+   * This matters most for LispStopReason::Failed. That case is reached from the
+   * interpreter's error printer while lisp_eval() is still unwinding, on a stack
+   * already near the limit UNIOT_LISP_MAX_EVAL_STACK guards -- do only what is needed
+   * to leave the hardware in a safe state, and defer everything else.
+   */
+  void setLispStopHook(uniot::LispStopHook hook) {
+    getAppKit().setLispStopHook(hook);
+  }
+
+  /**
    * @brief Publish an event to the Lisp interpreter
    * @param eventID Unique identifier for the event
    * @param value Numeric value associated with the event
@@ -253,6 +405,9 @@ class UniotCore {
    *
    * Makes specified GPIO pins available to the Lisp interpreter as
    * digital input pins, enabling script-based sensor reading.
+   *
+   * Register inputs before begin(). Registering sets the pins to plain INPUT, which clears
+   * any pull; begin() gives a button on one of these pins its pull back.
    */
   template <typename... Pins>
   void registerLispDigitalInput(uint8_t first, Pins... pins) {
@@ -266,6 +421,9 @@ class UniotCore {
    *
    * Makes specified GPIO pins available to the Lisp interpreter as
    * analog input pins, enabling script-based analog sensor reading.
+   *
+   * Register inputs before begin(). Registering sets the pins to plain INPUT, which clears
+   * any pull; begin() gives a button on one of these pins its pull back.
    */
   template <typename... Pins>
   void registerLispAnalogInput(uint8_t first, Pins... pins) {
@@ -296,6 +454,85 @@ class UniotCore {
    */
   bool registerLispButton(uniot::Button* button, uint32_t id = FOURCC(_btn)) {
     return uniot::PrimitiveExpeditor::getRegisterManager().link(uniot::primitive::name::bclicked, button, id);
+  }
+
+  /**
+   * @brief Create a button on a pin and expose it to Lisp scripts
+   * @param pin GPIO pin the button is connected to
+   * @param activeLevel Logic level while the button is pressed (LOW or HIGH)
+   * @param id FOURCC identifier shown for the button in the device's registers (default: _btn)
+   * @param callback Optional handler for CLICK and LONG_PRESS, run from the scheduler
+   * @retval int The button's index, as scripts pass it to bclicked, or -1 if it could not be
+   *             registered
+   *
+   * Everything a button needs, in one call: the Button is created and owned here, polled
+   * every 100 ms, and linked into the bclicked register. A long press is 3 seconds, the same
+   * as the WiFi reset button. For a button with other timing, create it yourself and use
+   * registerLispButton().
+   *
+   * The index is the button's position in the bclicked register, so it follows registration
+   * order. The WiFi reset button from configWiFiResetButton() is linked during begin(), so
+   * buttons added before begin() come before it and buttons added after it follow. Adding
+   * buttons after begin(), at the end of setup(), keeps the reset button at index 0.
+   *
+   * Add buttons in setup(). Registers are reported to the platform when MQTT connects, which
+   * happens once loop() is running, so a button added later is not reported until the device
+   * reconnects.
+   *
+   * The pin gets the internal pull its active level needs: a pull-up for LOW, a pull-down
+   * for HIGH. Pins without that pull need an external resistor; see Button::applyPinMode().
+   *
+   * @code
+   * auto door = Uniot.addLispButton(4, LOW, FOURCC(door));  // scripts use (bclicked 0)
+   * @endcode
+   */
+  int addLispButton(uint8_t pin, uint8_t activeLevel = LOW, uint32_t id = FOURCC(_btn), uniot::Button::ButtonCallback callback = nullptr) {
+    constexpr uint8_t longPressTicks = 30;
+    constexpr uint32_t pollMs = 100;
+
+    auto button = uniot::MakeShared<uniot::Button>(pin, activeLevel, longPressTicks, callback);
+
+    auto &registers = uniot::PrimitiveExpeditor::getRegisterManager();
+    if (!registers.link(uniot::primitive::name::bclicked, button.get(), id)) {
+      return -1;
+    }
+    mButtons.push(button);
+
+    // One task polls every button, created with the first.
+    if (!mpTaskButtons) {
+      mpTaskButtons = uniot::TaskScheduler::make([this](uniot::SchedulerTask &, short times) {
+        mButtons.forEach([times](const uniot::SharedPointer<uniot::Button> &button) {
+          button->execute(times);
+        });
+      });
+      mScheduler.push("lisp_buttons", mpTaskButtons);
+      mpTaskButtons->attach(pollMs);
+    }
+
+    return static_cast<int>(registers.getRegisterLength(uniot::primitive::name::bclicked)) - 1;
+  }
+
+  /**
+   * @brief Clear pending clicks and long presses on every Lisp button
+   *
+   * A press that no script has read stays pending for up to 10 seconds, so a script started
+   * within that window can read a press made before it existed. Call this from a start hook
+   * to drop those presses:
+   *
+   * @code
+   * Uniot.setLispStartHook([](uniot::LispStartReason) {
+   *   Uniot.resetLispButtons();
+   * });
+   * @endcode
+   *
+   * Covers every button in the bclicked register, however it was added. The WiFi reset
+   * button's own behaviour is unaffected: it works from its callbacks, not these flags.
+   */
+  void resetLispButtons() {
+    _forEachLispButton([](uniot::Button *button) {
+      button->resetClick();
+      button->resetLongPress();
+    });
   }
 
   /**
@@ -571,6 +808,12 @@ class UniotCore {
    *
    * Convenience method for listening to WiFi status LED events.
    * The callback receives a boolean indicating the desired LED state.
+   *
+   * These events come from the network controller, which exists only once one of
+   * the configWiFi* methods has asked for it. A device with no button and no LED
+   * -- a bulb driving its own light as the indicator, say -- still gets one from
+   * configWiFiResetOnReboot(). Without any of them this callback never fires; the
+   * missing controller is reported by AppKit when the scheduler is populated.
    */
   ListenerId addWifiStatusLedListener(std::function<void(bool)> callback) {
     if (!callback) {
@@ -608,6 +851,13 @@ class UniotCore {
     auto taskHandleEventBus = uniot::TaskScheduler::make(mEventBus);
     mScheduler.push("event_bus", taskHandleEventBus);
     taskHandleEventBus->attach(eventBusTaskPeriod);
+
+    // Registering a pin for dread or aread sets it to plain INPUT, which clears any pull. Every
+    // button gets its own mode back here, so the order of those calls in setup() does not
+    // matter. Before attach(), which runs the stored script.
+    _forEachLispButton([](uniot::Button *button) {
+      button->applyPinMode();
+    });
 
     mScheduler.push(app);
     app.attach();
@@ -659,10 +909,31 @@ class UniotCore {
 
  private:
   /**
+   * @brief Call fn for every button in the bclicked register, skipping empty and dead slots
+   * @param fn Callable taking a uniot::Button*
+   */
+  template <typename Fn>
+  void _forEachLispButton(Fn fn) {
+    auto &registers = uniot::PrimitiveExpeditor::getRegisterManager();
+    auto count = registers.getRegisterLength(uniot::primitive::name::bclicked);
+    for (size_t i = 0; i < count; i++) {
+      auto button = registers.getObject<uniot::Button>(uniot::primitive::name::bclicked, i);
+      if (button) {
+        fn(button);
+      }
+    }
+  }
+
+  /**
    * @brief Create network controller configuration if not exists
    *
    * Lazy initialization of network controller configuration with default
    * values. Called by configuration methods to ensure the config exists.
+   *
+   * Reboot-reset starts disabled. It clears the stored credentials, and a device on an
+   * unreliable supply can power-cycle its way through the count without anyone touching
+   * it, so it is opt-in: configWiFiResetOnReboot() turns it on, and that method's own
+   * default argument supplies the count.
    */
   void _createNetworkControllerConfig() {
     if (!mpNetworkControllerConfig) {
@@ -671,8 +942,8 @@ class UniotCore {
       mpNetworkControllerConfig->activeLevelBtn = LOW;
       mpNetworkControllerConfig->pinLed = UINT8_MAX;  // Not used by default
       mpNetworkControllerConfig->activeLevelLed = HIGH;
-      mpNetworkControllerConfig->maxRebootCount = 5;
-      mpNetworkControllerConfig->rebootWindowMs = 10000;
+      mpNetworkControllerConfig->maxRebootCount = REBOOT_RESET_DISABLED;
+      mpNetworkControllerConfig->rebootWindowMs = UNIOT_WIFI_REBOOT_WINDOW_MS;
       mpNetworkControllerConfig->registerLispBtn = true;
     }
   }
@@ -718,6 +989,8 @@ class UniotCore {
   uniot::Map<TimerId, uniot::TaskScheduler::TaskPtr> mActiveTimers;                                 ///< Active timer tracking
   uniot::Map<ListenerId, uniot::SharedPointer<uniot::CoreCallbackEventListener>> mActiveListeners;  ///< Active listener tracking
   uniot::UniquePointer<uniot::AppKit::NetworkControllerConfig> mpNetworkControllerConfig;           ///< Network configuration (temporary)
+  ClearQueue<uniot::SharedPointer<uniot::Button>> mButtons;                                         ///< Buttons created by addLispButton(), owned here
+  uniot::TaskScheduler::TaskPtr mpTaskButtons;                                                      ///< Polls mButtons; created with the first button
 };
 
 /**

@@ -95,6 +95,14 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
     mEventInterceptor = interceptor;
   }
 
+  void setStartHook(LispStartHook hook) {
+    getLisp().setStartHook(hook);
+  }
+
+  void setStopHook(LispStopHook hook) {
+    getLisp().setStopHook(hook);
+  }
+
   void publishLispEvent(const String &eventID, int32_t value) {
     CBORObject event;
     event.put("eventID", eventID.c_str());
@@ -115,7 +123,7 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
       mChecksum = object().getInt("checksum");
 
       if (mPersist && code.length() > 0) {
-        getLisp().runCode(code);
+        getLisp().runCode(code, LispStartReason::Restored);
       }
     }
   }
@@ -240,6 +248,16 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
   void handleScript(const Bytes &payload) {
     static bool firstPacketReceived = false;
     CBORObject packet(payload);
+
+    // An empty "code" is a request to stop the machine, but getString() also returns ""
+    // when the key is absent -- and a payload that fails to decode reads as an empty map.
+    // Without this, a malformed packet would stop the running script. Returning before
+    // any state changes also leaves firstPacketReceived for the real retained packet.
+    if (!packet.hasKey("code")) {
+      UNIOT_LOG_WARN("script packet has no code, ignored");
+      return;
+    }
+
     auto script = Bytes(packet.getString("code"));
     auto newPersist = packet.getBool("persist");
     auto newChecksum = script.terminate().checksum();
@@ -258,7 +276,7 @@ class LispDevice : public MQTTDevice, public CBORStorage, public CoreEventListen
       mFailedWithError = false;
 
       // TODO: check signature here later
-      getLisp().runCode(script);
+      getLisp().runCode(script, LispStartReason::Received);
       LispDevice::store();
     } else {
       UNIOT_LOG_INFO("script ignored: %s", script.c_str());

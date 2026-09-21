@@ -20,6 +20,7 @@
 
 #include <Button.h>
 #include <CBORStorage.h>
+#include <Common.h>
 #include <EventListener.h>
 #include <ISchedulerConnectionKit.h>
 #include <NetworkEvents.h>
@@ -98,8 +99,13 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
    * @param activeLevelBtn Active logic level for button (LOW or HIGH)
    * @param pinLed GPIO pin for status LED (UINT8_MAX to disable)
    * @param activeLevelLed Active logic level for LED (LOW or HIGH)
-   * @param maxRebootCount Maximum reboots before auto-reset (default: 3)
-   * @param rebootWindowMs Time window for reboot counting in milliseconds (default: 10000)
+   * @param maxRebootCount Maximum reboots before auto-reset, or UINT8_MAX to
+   *                       disable the reboot-reset feature entirely. When set
+   *                       to UINT8_MAX no reboot counter is stored, read, or
+   *                       compared, and no automatic configuration reset occurs.
+   * @param rebootWindowMs Time window for reboot counting in milliseconds
+   *                       (default: 10000). Ignored when maxRebootCount is
+   *                       UINT8_MAX.
    *
    * Initializes the network controller with specified hardware configuration.
    * The controller will automatically handle GPIO configuration for enabled
@@ -115,8 +121,8 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
     uint8_t activeLevelBtn = LOW,
     uint8_t pinLed = UINT8_MAX,
     uint8_t activeLevelLed = HIGH,
-    uint8_t maxRebootCount = 3,
-    uint32_t rebootWindowMs = 10000)
+    uint8_t maxRebootCount = UNIOT_WIFI_REBOOT_RESET_COUNT,
+    uint32_t rebootWindowMs = UNIOT_WIFI_REBOOT_WINDOW_MS)
       : CBORStorage("ctrl.cbor"),
         mpNetwork(&network),
         mNetworkLastState(events::network::Msg::SUCCESS),
@@ -259,7 +265,9 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
    * and sets initial status indication to busy state.
    */
   virtual void attach() override {
-    mpTaskResetRebootCounter->once(mRebootWindowMs);
+    if (_hasRebootReset()) {
+      mpTaskResetRebootCounter->once(mRebootWindowMs);
+    }
     if (_hasButton()) {
       mpTaskConfigBtn->attach(100);
     }
@@ -340,7 +348,7 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
     if (_hasButton()) {
       mpTaskConfigBtn = TaskScheduler::make(*mpConfigBtn);
       mpTaskResetClickCounter = TaskScheduler::make([&](SchedulerTask &self, short t) {
-        UNIOT_LOG_DEBUG("ClickCounter = %d", mClickCounter);
+        UNIOT_LOG_DEBUG("click counter: %d", mClickCounter);
         mClickCounter = 0;
       });
     }
@@ -360,6 +368,9 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
    * network issues or corrupted settings.
    */
   void _checkAndHandleReboot() {
+    if (!_hasRebootReset()) {
+      return;  // reboot-reset disabled: skip restore, increment, and store entirely
+    }
     NetworkController::restore();
     mRebootCount++;
     if (mRebootCount >= mMaxRebootCount) {
@@ -399,6 +410,17 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
    */
   inline bool _hasLed() {
     return mPinLed != UINT8_MAX;
+  }
+
+  /**
+   * @brief Check if the reboot-reset feature is enabled
+   *
+   * Returns false when maxRebootCount was set to UINT8_MAX, which disables
+   * all reboot counting, storage access, and automatic configuration reset.
+   * @retval bool true if reboot reset is active, false if disabled
+   */
+  inline bool _hasRebootReset() {
+    return mMaxRebootCount != UINT8_MAX;
   }
 
   NetworkScheduler *mpNetwork;  ///< Pointer to the managed network scheduler

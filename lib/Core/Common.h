@@ -28,6 +28,159 @@
  */
 
 /**
+ * @brief Packs a semantic version into one integer.
+ * @ingroup common
+ *
+ * Uses the same formula as uniot-lisp's SEMVER_TO_INT, so a core version and an interpreter
+ * version are comparable and read the same way. It carries its own name so that including
+ * both headers cannot make one definition silently stand for the other.
+ */
+#define UNIOT_SEMVER_TO_INT(major, minor, patch) ((major * 10000) + (minor * 100) + patch)
+
+/**
+ * @brief Version of Uniot Core, reported in the device's status packet.
+ * @ingroup common
+ *
+ * Neither this nor UNIOT_SEMVER_TO_INT is guarded, so a sketch cannot redefine them: they
+ * describe the core that is running, not something a sketch chooses. Keep this in step with
+ * the version in library.json.
+ */
+#define UNIOT_CORE_VERSION UNIOT_SEMVER_TO_INT(0, 9, 0)
+
+/**
+ * @brief Hostname of the MQTT broker the device connects to.
+ * @ingroup common
+ */
+#ifndef UNIOT_MQTT_HOST
+#define UNIOT_MQTT_HOST "mqtt.uniot.io"
+#endif
+
+/**
+ * @brief TCP port of the MQTT broker.
+ * @ingroup common
+ */
+#ifndef UNIOT_MQTT_PORT
+#define UNIOT_MQTT_PORT 1883
+#endif
+
+/**
+ * @brief Prefix for the generated configuration AP SSID.
+ * @ingroup common
+ *
+ * The full SSID is "PREFIX-DEVICEID", upper-cased.
+ */
+#ifndef UNIOT_WIFI_AP_PREFIX
+#define UNIOT_WIFI_AP_PREFIX "UNIOT"
+#endif
+
+/**
+ * @brief WPA2 password for the configuration AP.
+ * @ingroup common
+ *
+ * An empty string creates an open network. WPA2 requires at least 8
+ * characters; a shorter non-empty password makes softAP() fail and no
+ * configuration AP is started.
+ */
+#ifndef UNIOT_WIFI_AP_PASSWORD
+#define UNIOT_WIFI_AP_PASSWORD ""
+#endif
+
+/**
+ * @brief Consecutive reboots that reset the stored network configuration.
+ * @ingroup common
+ *
+ * Each reboot within UNIOT_WIFI_REBOOT_WINDOW_MS of the last one increments a
+ * counter held in ctrl.cbor; reaching this many clears the credentials. It is
+ * the only reset path on a device with no button, so it is a deliberate gesture
+ * -- power-cycling this many times in quick succession -- and the count trades
+ * ease of use against wiping a device by accident on flaky power.
+ *
+ * This is the count used once the mechanism is switched on, not whether it is on.
+ * UniotCore leaves reboot-reset disabled until configWiFiResetOnReboot() asks for
+ * it, precisely because of that accidental-wipe risk; this value is what that call
+ * uses when given no count of its own.
+ */
+#ifndef UNIOT_WIFI_REBOOT_RESET_COUNT
+#define UNIOT_WIFI_REBOOT_RESET_COUNT 5
+#endif
+
+/**
+ * @brief How long after boot a reboot still counts towards the reset, in ms.
+ * @ingroup common
+ *
+ * Staying up longer than this clears the counter, so ordinary restarts do not
+ * accumulate towards a reset. Ignored when the count is UINT8_MAX.
+ */
+#ifndef UNIOT_WIFI_REBOOT_WINDOW_MS
+#define UNIOT_WIFI_REBOOT_WINDOW_MS 10000
+#endif
+
+/**
+ * @brief Bytes of heap the Lisp interpreter is given at startup.
+ * @ingroup common
+ *
+ * Allocated once in lisp_create() and never grown, so it is a fixed claim on system heap
+ * for the life of the machine. Creating a machine costs ~3150 bytes before a script runs,
+ * so what a script actually has is this value less that. The library refuses anything
+ * above 65535.
+ */
+#ifndef UNIOT_LISP_HEAP
+// Not split by ESP32 variant: object sizes are identical on both parts.
+#if defined(ESP32)
+#define UNIOT_LISP_HEAP 24576
+#elif defined(ESP8266)
+#define UNIOT_LISP_HEAP 12288
+#else
+#define UNIOT_LISP_HEAP 8192
+#endif
+#endif
+
+/**
+ * @brief Bytes of C stack an evaluation may spend before a script is abandoned.
+ * @ingroup common
+ *
+ * Interpreter recursion runs on the C stack, and overrunning it resets the device rather
+ * than raising an error. The budget is in bytes, not levels of nesting, since a level that
+ * prints costs several times what a bare call costs.
+ *
+ * It is not simply the stack that is free. The guard measures from where lisp_eval() was
+ * entered and stops seeing anything once a primitive or the error path takes over, so the
+ * true peak is the budget plus roughly 600 bytes paid afterwards, during unwinding. Each
+ * value below is measured on target against the full firmware, not the standalone tool,
+ * with the probe in src/main.cpp; measure a budget before changing it rather than scaling
+ * it from another part.
+ *
+ * Keep the ESP32 branches separate: defined(ESP32) is true for the C3, so collapsing them
+ * means a retune of one silently retunes the other.
+ */
+#ifndef UNIOT_LISP_MAX_EVAL_STACK
+#if defined(ESP8266)
+#define UNIOT_LISP_MAX_EVAL_STACK 1280
+#elif defined(CONFIG_IDF_TARGET_ESP32C3)
+#define UNIOT_LISP_MAX_EVAL_STACK 3072
+#elif defined(ESP32)
+#define UNIOT_LISP_MAX_EVAL_STACK 3072
+#else
+// An unknown platform is assumed to be a small MCU, not a host: too little heap raises a
+// clean error, too much stack resets the device, so the fallbacks lean small. A host build
+// with room to spare should set both explicitly rather than inherit these.
+#define UNIOT_LISP_MAX_EVAL_STACK 2048
+#endif
+#endif
+
+/**
+ * @brief Keep the WiFi radio awake between beacon intervals (ESP32 only).
+ * @ingroup common
+ *
+ * Set to 1 to disable modem sleep once the station associates. This avoids
+ * association drops caused by missed DTIM beacons on a marginal link, at the
+ * cost of a significantly higher idle current. Leave at 0 on battery devices.
+ */
+#ifndef UNIOT_WIFI_NO_SLEEP
+#define UNIOT_WIFI_NO_SLEEP 0
+#endif
+
+/**
  * @brief Creates a four-character code (FourCC) value from template parameters.
  * @ingroup common
  *

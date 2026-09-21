@@ -135,7 +135,7 @@ class Storage {
   virtual bool store() {
     auto file = FileFS.open(mPath, "w");
     if (!file) {
-      UNIOT_LOG_WARN("Failed to open %s", mPath.c_str());
+      UNIOT_LOG_WARN("failed to open %s", mPath.c_str());
       return false;
     }
     file.write(mData.raw(), mData.size());
@@ -165,7 +165,7 @@ class Storage {
   virtual bool restore() {
     auto file = FileFS.open(mPath, "r");
     if (!file) {
-      UNIOT_LOG_WARN("Failed to open %s. It is ok on first start", mPath.c_str());
+      UNIOT_LOG_WARN("failed to open %s (expected on first start)", mPath.c_str());
       return false;
     }
 #ifdef UNIOT_USE_NVSFS
@@ -189,7 +189,7 @@ class Storage {
   virtual bool clean() {
     mData.clean();
     if (!FileFS.remove(mPath)) {
-      UNIOT_LOG_WARN("Failed to remove %s", mPath.c_str());
+      UNIOT_LOG_WARN("failed to remove %s", mPath.c_str());
       return false;
     }
     return true;
@@ -237,10 +237,18 @@ class Storage {
 #ifndef UNIOT_USE_NVSFS
   Bytes _readSmallFile(File &file) {
     auto toRead = file.size() - file.position();
-    char *buf = (char *)malloc(toRead);
-    auto countRead = file.readBytes(buf, toRead);
-    const Bytes data((uint8_t *)buf, countRead);
-    free(buf);
+
+    Bytes data(nullptr, toRead);
+    if (data.size() != toRead) {
+      UNIOT_LOG_ERROR("no memory to read %u bytes of %s", toRead, mPath.c_str());
+      return Bytes();
+    }
+
+    auto countRead = data.fill([&file](uint8_t *buf, size_t size) {
+      return file.readBytes(reinterpret_cast<char *>(buf), size);
+    });
+    data.prune(countRead);
+
     return data;
   }
 #endif

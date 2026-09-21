@@ -69,7 +69,8 @@ enum Topic {
  * operations, particularly time synchronization and clock management.
  */
 enum Msg {
-  SYNCED = 0  ///< System time has been successfully synchronized with time source
+  SYNCED      = 0,  ///< System time has been successfully synchronized with time source
+  SYNC_FAILED = 1,  ///< Forced NTP synchronization attempt failed (no response from any server)
 };
 
 }  // namespace uniot::events::date

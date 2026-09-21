@@ -118,6 +118,25 @@ class SchedulerTask : public Task {
   }
 
   /**
+   * @brief Run the task once on the scheduler's next pass
+   *
+   * Sets the same flag the task's timer sets when it fires, and nothing else, so it can be
+   * called from contexts where scheduler work is unsafe: an SDK callback running inside
+   * yield(), or another FreeRTOS task. The work itself still runs from TaskScheduler::loop().
+   * The timer is deliberately left alone -- on ESP32 attaching creates and deletes it, which
+   * two contexts arming the same task at once would race.
+   *
+   * Triggers that arrive before the next pass run the callback once. It receives the
+   * remaining repetitions as usual: 0 for a task that was never attached, and on a task
+   * attached with a repeat count the triggered run counts as one of them. A task that is
+   * only ever triggered must be pushed under a name, since the scheduler drops unnamed
+   * tasks that are not attached.
+   */
+  void trigger() {
+    mCanDoHardWork = true;
+  }
+
+  /**
    * @brief Main execution loop for the task
    *
    * Checks if the task is ready to execute and runs the callback if so.
@@ -244,7 +263,7 @@ class TaskScheduler {
         // auto wasSize = mTasks.calcSize();
         mTasks.deleteCurrent();
         // auto newSize = mTasks.calcSize();
-        // UNIOT_LOG_DEBUG("Anonymous task removed, size: %d -> %d", wasSize, newSize);
+        // UNIOT_LOG_DEBUG("anonymous task removed, size: %d -> %d", wasSize, newSize);
       } else {
         mTasks.next();
       }

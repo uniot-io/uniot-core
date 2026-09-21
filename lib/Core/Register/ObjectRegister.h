@@ -102,7 +102,7 @@ class ObjectRegister : public Register<Pair<uint32_t, RecordPtr>> {
         return Type::safeStaticCast<T>(record.second);
       }
       setRegisterValue(name, index, MakePair(FOURCC(dead), nullptr));
-      UNIOT_LOG_DEBUG("record is dead [%s][%d]", name.c_str(), index);
+      UNIOT_LOG_DEBUG("record is dead, register: '%s', index: %d", name.c_str(), index);
     }
     return nullptr;
   }

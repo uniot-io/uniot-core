@@ -55,7 +55,13 @@
 #include <PubSubClient.h>
 #include <TaskScheduler.h>
 
+#include <atomic>
 #include <functional>
+
+#if defined(ESP32)
+#include <lwip/tcp.h>
+#include <sys/socket.h>
+#endif
 
 #include "CallbackMQTTDevice.h"
 #include "MQTTDevice.h"
@@ -89,7 +95,8 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
         mInfoExtender(infoExtender),
         mPubSubClient(mWiFiClient),
         mNetworkConnected(false),
-        mConnectionId(0) {
+        mConnectionId(0),
+        mMqttConnected(false) {
     mPubSubClient.setCallback([this](char *topic, uint8_t *payload, unsigned int length) {
       mDevices.forEach([&](MQTTDevice *device) {
         if (device->isSubscribed(String(topic))) {
@@ -102,7 +109,7 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
           if (_readCOSEMessage(Bytes(payload, length), decoded)) {
             device->handle(topic, decoded);
           } else {
-            UNIOT_LOG_ERROR("Failed to decode message on topic: %s", topic);
+            UNIOT_LOG_ERROR("failed to decode message on topic: %s", topic);
           }
         }
       });
@@ -193,6 +200,7 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
    */
   virtual void pushTo(TaskScheduler &scheduler) override {
     scheduler.push("mqtt", mTaskMQTT);
+    scheduler.push("ntp_retry", mTaskNtpRetry);
   }
 
   /**
@@ -216,7 +224,11 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
       switch (msg) {
         case events::network::Msg::SUCCESS:
           mNetworkConnected = true;
-          Date::getInstance().forceSync();
+          // forceSync() blocks for up to ~2 s. Run it from a scheduler task
+          // rather than here, so the event bus dispatch is not stalled.
+          if (!mTaskNtpRetry->isAttached()) {
+            mTaskNtpRetry->once(1);
+          }
           break;
         case events::network::Msg::ACCESS_POINT:
         case events::network::Msg::AVAILABLE:
@@ -226,7 +238,9 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
         case events::network::Msg::FAILED:
         default:
           mNetworkConnected = false;
+          mMqttConnected.store(false);
           mTaskMQTT->detach();
+          mTaskNtpRetry->detach();
           break;
       }
       return;
@@ -234,15 +248,57 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
     if (events::date::Topic::TIME == topic) {
       switch (msg) {
         case events::date::Msg::SYNCED:
+          mTaskNtpRetry->detach();
           if (!mTaskMQTT->isAttached()) {
             mTaskMQTT->attach(10);
           }
+          break;
+        case events::date::Msg::SYNC_FAILED:
+          // MQTT cannot start without a valid clock, so keep retrying.
+          // Re-armed unconditionally: once() on an already-attached task simply
+          // restarts the timer, and guarding on isAttached() here would stall
+          // the retry chain permanently if the task were still attached.
+          mTaskNtpRetry->once(3000);
           break;
         default:
           break;
       }
       return;
     }
+  }
+
+  /**
+   * @brief Returns true if the MQTT broker connection is currently established
+   *
+   * Thread-safe: reads an atomic flag written by the MQTT task on connect and
+   * disconnect. Safe to call from any FreeRTOS task.
+   * @retval bool true if connected to the broker
+   */
+  bool isMqttConnected() const { return mMqttConnected.load(); }
+
+  /**
+   * @brief Publishes the retained offline status and closes the connection
+   *
+   * Use before a deliberate restart so the device does not appear to the
+   * broker as having crashed.
+   */
+  void forceDisconnect() {
+    Bytes packetExtention;
+    if (mInfoExtender) {
+      CBORObject packet;
+      mInfoExtender(packet);
+      packetExtention = packet.build();
+    }
+    CBORObject offlineCBOR(packetExtention);
+    _prepareOfflinePacket(offlineCBOR);
+    auto offlinePacket = _buildCOSEMessage(offlineCBOR.build());
+    mPubSubClient.publish(
+        mPath.buildDevicePath("status").c_str(),
+        offlinePacket.raw(),
+        offlinePacket.size(),
+        true);
+    mPubSubClient.disconnect();
+    mMqttConnected.store(false);
   }
 
  protected:
@@ -259,13 +315,23 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
    * @brief Initializes MQTT connection and maintenance tasks
    */
   inline void _initTasks() {
+    mTaskNtpRetry = TaskScheduler::make([this](SchedulerTask &self, short t) {
+      // Active only until NTP succeeds; detached on TIME/SYNCED. forceSync() is
+      // blocking, which a scheduler tick tolerates but the event bus does not.
+      if (mNetworkConnected) {
+        UNIOT_LOG_DEBUG("NTP retry, attempting forced sync");
+        Date::getInstance().forceSync();
+      }
+    });
+
     mTaskMQTT = TaskScheduler::make([this](SchedulerTask &self, short t) {
       if (!mNetworkConnected) {
-        UNIOT_LOG_DEBUG("MQTT: Network is not connected");
+        UNIOT_LOG_DEBUG("network is not connected");
         return;
       }
       if (!mPubSubClient.connected()) {
-        UNIOT_LOG_DEBUG("Attempting MQTT connection #%d...", mConnectionId);
+        mMqttConnected.store(false);
+        UNIOT_LOG_DEBUG("attempting MQTT connection #%d", mConnectionId);
         Bytes packetExtention;
         if (mInfoExtender) {
           CBORObject packet;
@@ -301,13 +367,42 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
               mPubSubClient.subscribe(topic.c_str());
             });
           });
+          _applyTcpKeepalive();
+          mMqttConnected.store(true);
           CoreEventEmitter::emitEvent(events::mqtt::Topic::CONNECTION, events::mqtt::Msg::SUCCESS);
         } else {
+          mMqttConnected.store(false);
           CoreEventEmitter::emitEvent(events::mqtt::Topic::CONNECTION, events::mqtt::Msg::FAILED);
         }
       }
       mPubSubClient.loop();
     });
+  }
+
+  /**
+   * @brief Applies TCP keepalive options to the active MQTT socket
+   *
+   * Called once per connection, immediately after a successful connect().
+   * Without it, a transient NAT or carrier outage can leave the TCP connection
+   * half-open for 75-90 seconds before lwIP gives up. No-op outside ESP32.
+   */
+  void _applyTcpKeepalive() {
+#if defined(ESP32)
+    int fd = mWiFiClient.fd();
+    if (fd < 0) {
+      UNIOT_LOG_WARN("TCP keepalive skipped, invalid socket fd");
+      return;
+    }
+    static constexpr int kEnable = 1;
+    static constexpr int kIdle = 10;   // seconds before the first probe; must be < MQTT_KEEPALIVE
+    static constexpr int kIntvl = 5;   // seconds between probes
+    static constexpr int kCount = 3;   // probes before giving up
+    setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &kEnable, sizeof(kEnable));
+    setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &kIdle, sizeof(kIdle));
+    setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &kIntvl, sizeof(kIntvl));
+    setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &kCount, sizeof(kCount));
+    UNIOT_LOG_DEBUG("TCP keepalive applied, idle: %ds, interval: %ds, count: %d", kIdle, kIntvl, kCount);
+#endif
   }
 
   /**
@@ -416,11 +511,13 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
 
   bool mNetworkConnected;           /**< Network connection status */
   int mConnectionId;                /**< Current connection sequence number */
+  std::atomic<bool> mMqttConnected; /**< True while the broker connection is established */
 
   WiFiClient mWiFiClient;           /**< TCP client for MQTT communication */
   // WiFiClientSecure mWiFiClient;  /**< Secure TCP client (commented out) */
-  ClearQueue<MQTTDevice *> mDevices; /**< List of managed MQTT devices */
-  TaskScheduler::TaskPtr mTaskMQTT;  /**< MQTT maintenance task */
+  ClearQueue<MQTTDevice *> mDevices;    /**< List of managed MQTT devices */
+  TaskScheduler::TaskPtr mTaskMQTT;     /**< MQTT maintenance task */
+  TaskScheduler::TaskPtr mTaskNtpRetry; /**< NTP retry task, active only until time is synced */
 };
 /** @} */
 }  // namespace uniot
