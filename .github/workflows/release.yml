@@ -1,0 +1,79 @@
+name: Release
+
+# Pushing a version tag is the single action that cuts a release: it runs the checks, creates
+# the GitHub Release from the CHANGELOG, publishes the package, and (through
+# generate-docs.yml, which triggers on the same tag) deploys the documentation.
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  # The same checks pull requests get. A release cannot proceed without them.
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: GitHub Release
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve the version
+        id: version
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF#refs/tags/}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "version: $version"
+
+      # pio pkg publish takes the version from library.json and ignores the tag, so this is
+      # what stops a release from shipping something other than what the tag says.
+      - name: Tag, library.json and UNIOT_CORE_VERSION agree
+        run: ./scripts/check_version.sh "${{ steps.version.outputs.version }}"
+
+      - name: Build the release notes
+        run: |
+          set -u
+          version="${{ steps.version.outputs.version }}"
+          if ./scripts/changelog-entry.sh "$version" > release-notes.md; then
+            cat release-notes.md
+          else
+            echo "::warning::no CHANGELOG.md section for $version; releasing without notes"
+            echo "Uniot Core $version" > release-notes.md
+          fi
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: false
+
+  publish:
+    name: PlatformIO registry
+    needs: release
+    runs-on: ubuntu-latest
+    # A published version can never be replaced or withdrawn, and the token can publish under
+    # the organisation. Add reviewers to this environment and it becomes the last point where
+    # a mistake can be stopped.
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install PlatformIO
+        run: pip install --upgrade platformio
+
+      # Add --owner uniot-io if the token's account is not itself the package owner.
+      - name: Publish
+        run: pio pkg publish --no-interactive
+        env:
+          PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
