@@ -97,7 +97,7 @@ Ready-made build environments live in `platformio.ini` as `ESP12E`, `ESP32` and 
    monitor_speed = 115200
 
    lib_deps =
-       uniot-io/uniot-core@^0.8.1
+       uniot-io/uniot-core@^0.9.0
 
    build_unflags =
        -std=gnu++11

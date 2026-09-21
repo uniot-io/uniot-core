@@ -45,7 +45,7 @@
  * describe the core that is running, not something a sketch chooses. Keep this in step with
  * the version in library.json.
  */
-#define UNIOT_CORE_VERSION UNIOT_SEMVER_TO_INT(0, 8, 1)
+#define UNIOT_CORE_VERSION UNIOT_SEMVER_TO_INT(0, 9, 0)
 
 /**
  * @brief Hostname of the MQTT broker the device connects to.
