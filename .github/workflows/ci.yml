@@ -47,5 +47,9 @@ jobs:
       - name: Install PlatformIO
         run: pip install --upgrade platformio
 
+      # ci/ depends on the library through library.json, the way a consumer does. The project
+      # in the root directory resolves its dependencies from sibling checkouts instead, so it
+      # only builds on a developer's machine.
       - name: Build
         run: pio run -e ${{ matrix.env }}
+        working-directory: ci

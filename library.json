@@ -64,6 +64,7 @@
       ".gitmodules",
       ".github",
       "platformio.ini",
+      "ci",
       "scripts",
       "src",
       "tools",
