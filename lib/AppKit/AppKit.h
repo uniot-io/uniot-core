@@ -205,7 +205,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     if (mpNetworkDevice) {
       scheduler.push(*mpNetworkDevice);
     } else {
-      UNIOT_LOG_WARN("Configure Network Controller before pushing to the scheduler");
+      UNIOT_LOG_WARN("configure the network controller before pushing to the scheduler");
     }
   }
 
@@ -255,7 +255,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
     if (mpNetworkDevice) {
       eventBus.registerEntity(mpNetworkDevice.get());
     } else {
-      UNIOT_LOG_WARN("Configure Network Controller before registering to the event bus");
+      UNIOT_LOG_WARN("configure the network controller before registering to the event bus");
     }
   }
 
@@ -328,7 +328,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
                                   uint32_t rebootWindowMs = UNIOT_WIFI_REBOOT_WINDOW_MS,
                                   bool registerLispBtn = true) {
     if (mpNetworkDevice) {
-      UNIOT_LOG_WARN("Network Controller already configured");
+      UNIOT_LOG_WARN("network controller already configured");
       return;
     }
 
@@ -492,10 +492,10 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
       if (events::network::Topic::CONNECTION == topic) {
         switch (msg) {
           case events::network::Msg::SUCCESS:
-            UNIOT_LOG_DEBUG("AppKit Subscriber, SUCCESS, ip: %s", WiFi.localIP().toString().c_str());
+            UNIOT_LOG_DEBUG("network connected, ip: %s", WiFi.localIP().toString().c_str());
             break;
           case events::network::Msg::ACCESS_POINT:
-            UNIOT_LOG_DEBUG("AppKit Subscriber, ACCESS_POINT");
+            UNIOT_LOG_DEBUG("access point mode");
             mpNetworkEventListener->receiveDataFromChannel(events::network::Channel::OUT_SSID, [this](unsigned int id, bool empty, Bytes data) {
               if (!empty) {
                 UNIOT_LOG_DEBUG("SSID: %s", data.terminate().c_str());
@@ -504,7 +504,7 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
             break;
 
           case events::network::Msg::CONNECTING:
-            UNIOT_LOG_DEBUG("AppKit Subscriber, CONNECTING");
+            UNIOT_LOG_DEBUG("connecting");
             mpNetworkEventListener->receiveDataFromChannel(events::network::Channel::OUT_SSID, [this](unsigned int id, bool empty, Bytes data) {
               if (!empty) {
                 UNIOT_LOG_DEBUG("SSID: %s", data.terminate().c_str());
@@ -513,20 +513,20 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
             break;
 
           case events::network::Msg::DISCONNECTING:
-            UNIOT_LOG_DEBUG("AppKit Subscriber, DISCONNECTING");
+            UNIOT_LOG_DEBUG("disconnecting");
             break;
 
           case events::network::Msg::DISCONNECTED:
-            UNIOT_LOG_DEBUG("AppKit Subscriber, DISCONNECTED");
+            UNIOT_LOG_DEBUG("disconnected");
             break;
 
           case events::network::Msg::AVAILABLE:
-            UNIOT_LOG_DEBUG("AppKit Subscriber, AVAILABLE");
+            UNIOT_LOG_DEBUG("network available");
             break;
 
           case events::network::Msg::FAILED:
           default:
-            UNIOT_LOG_DEBUG("AppKit Subscriber, FAILED");
+            UNIOT_LOG_DEBUG("connection failed");
             break;
         }
         return;
@@ -534,18 +534,18 @@ class AppKit : public ICoreEventBusConnectionKit, public ISchedulerConnectionKit
       if (events::mqtt::Topic::CONNECTION == topic) {
         switch (msg) {
           case events::mqtt::Msg::SUCCESS:
-            UNIOT_LOG_DEBUG("AppKit Subscriber, MQTT SUCCESS");
+            UNIOT_LOG_DEBUG("MQTT connected");
             if (mCredentials.isOwnerChanged()) {
-              UNIOT_LOG_INFO("Owner changed, renewing subscriptions");
+              UNIOT_LOG_INFO("owner changed, renewing subscriptions");
               mMQTT.renewSubscriptions();
               mCredentials.resetOwnerChanged();
             } else {
-              UNIOT_LOG_INFO("Owner not changed, do not renew subscriptions");
+              UNIOT_LOG_INFO("owner not changed, keeping subscriptions");
             }
             break;
           case events::mqtt::Msg::FAILED:
           default:
-            UNIOT_LOG_DEBUG("AppKit Subscriber, MQTT FAILED");
+            UNIOT_LOG_DEBUG("MQTT connection failed");
             break;
         }
         return;

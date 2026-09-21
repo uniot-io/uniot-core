@@ -50,7 +50,7 @@ class CBORObject {
    */
   CBORObject(const CBORObject &) : mDirty(false) {
     _create();
-    UNIOT_LOG_WARN("Copy constructor is not implemented!");
+    UNIOT_LOG_WARN("copy constructor is not implemented");
   }
 
   /**
@@ -60,7 +60,7 @@ class CBORObject {
    * @note This operator logs a warning since copying is not implemented
    */
   CBORObject &operator=(const CBORObject &) {
-    UNIOT_LOG_WARN("Copy assignment operator is not implemented!");
+    UNIOT_LOG_WARN("copy assignment operator is not implemented");
     return *this;
   }
 
@@ -534,7 +534,7 @@ class CBORObject {
    * @note This is useful when modifications were made outside the class's interface
    */
   void forceDirty() {
-    UNIOT_LOG_WARN("the data forced marked as dirty");
+    UNIOT_LOG_DEBUG("data marked dirty by force");
     _markAsDirty(true);
   }
 

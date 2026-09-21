@@ -135,7 +135,7 @@ class Storage {
   virtual bool store() {
     auto file = FileFS.open(mPath, "w");
     if (!file) {
-      UNIOT_LOG_WARN("Failed to open %s", mPath.c_str());
+      UNIOT_LOG_WARN("failed to open %s", mPath.c_str());
       return false;
     }
     file.write(mData.raw(), mData.size());
@@ -165,7 +165,7 @@ class Storage {
   virtual bool restore() {
     auto file = FileFS.open(mPath, "r");
     if (!file) {
-      UNIOT_LOG_WARN("Failed to open %s. It is ok on first start", mPath.c_str());
+      UNIOT_LOG_WARN("failed to open %s (expected on first start)", mPath.c_str());
       return false;
     }
 #ifdef UNIOT_USE_NVSFS
@@ -189,7 +189,7 @@ class Storage {
   virtual bool clean() {
     mData.clean();
     if (!FileFS.remove(mPath)) {
-      UNIOT_LOG_WARN("Failed to remove %s", mPath.c_str());
+      UNIOT_LOG_WARN("failed to remove %s", mPath.c_str());
       return false;
     }
     return true;

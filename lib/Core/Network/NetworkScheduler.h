@@ -193,7 +193,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
    */
   void config() {
     if (_tryToRecoverAp()) {
-      UNIOT_LOG_DEBUG("Config already in progress. AP recovered");
+      UNIOT_LOG_DEBUG("config already in progress, AP recovered");
       return;
     }
     mTaskConfigAp->once(100);
@@ -206,7 +206,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
    * Emits disconnecting event to notify other system components.
    */
   void forget() {
-    UNIOT_LOG_DEBUG("Forget credentials: %s", mWifiStorage.getSsid().c_str());
+    UNIOT_LOG_DEBUG("forgetting credentials: %s", mWifiStorage.getSsid().c_str());
     mWifiStorage.clean();
     CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::DISCONNECTING);
     mTaskConfigAp->once(500);
@@ -225,7 +225,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
       mTaskConnectSta->once(500);
 
       if (_tryToRecoverAp()) {
-        UNIOT_LOG_DEBUG("Reconnecting while AP is enabled. AP recovered");
+        UNIOT_LOG_DEBUG("reconnecting while AP is enabled, AP recovered");
       }
 
       return true;
@@ -333,7 +333,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
         mConfigServer.wsEnable(true);  // Ensure that WS are enabled after disabling them in "Step 1 of Stopping Configuration" during the AP recovery process
         mTaskServe->attach(10);
       } else {
-        UNIOT_LOG_WARN("Start server failed. Restarting...");
+        UNIOT_LOG_WARN("config server failed to start, restarting");
         self.once(1000);
       }
     });
@@ -342,7 +342,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
 
     mTaskStop = TaskScheduler::make([this](SchedulerTask &self, short t) {
       static bool wsClosed = false;
-      UNIOT_LOG_DEBUG("Stop server, state: %d", wsClosed);
+      UNIOT_LOG_DEBUG("stopping config server, state: %d", wsClosed);
       // 1: close websocket
       // 2: stop access point
       // 3: stop server
@@ -373,7 +373,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
         CoreEventEmitter::sendDataToChannel(events::network::Channel::OUT_SSID, Bytes(mApName));
         CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::ACCESS_POINT);
       } else {
-        UNIOT_LOG_WARN("Start server failed");
+        UNIOT_LOG_WARN("config server failed to start");
         mTaskConfigAp->attach(500, 1);
       }
     });
@@ -388,7 +388,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
       WiFi.disconnect(false, true);
 #if defined(ESP32)
       if (mUseFallbackScan) {
-        UNIOT_LOG_INFO("WiFi: connecting with WIFI_FAST_SCAN (fallback)");
+        UNIOT_LOG_INFO("connecting with WIFI_FAST_SCAN (fallback)");
         WiFi.setScanMethod(WIFI_FAST_SCAN);
       } else {
         WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);
@@ -416,13 +416,13 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
       auto __processFailure = [this](int triesBeforeGivingUp = 3) {
         static int tries = 0;
         if (++tries < triesBeforeGivingUp) {
-          UNIOT_LOG_INFO("Tries to connect until give up is %d", triesBeforeGivingUp - tries);
+          UNIOT_LOG_INFO("attempts left before giving up: %d", triesBeforeGivingUp - tries);
           mTaskConnectSta->attach(500, 1);
         } else {
           tries = 0;
 #if defined(ESP32)
           if (!mUseFallbackScan) {
-            UNIOT_LOG_WARN("WiFi: all-channel scan did not associate, retrying with fast scan");
+            UNIOT_LOG_WARN("all-channel scan did not associate, retrying with fast scan");
             mUseFallbackScan = true;
             mTaskConnectSta->attach(500, 1);
             return;
@@ -480,7 +480,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
           break;
 
         default:
-          UNIOT_LOG_WARN("Unexpected WiFi status: %d", WiFi.status());
+          UNIOT_LOG_WARN("unexpected WiFi status: %d", WiFi.status());
           break;
       }
     });
@@ -526,14 +526,14 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
     mTaskAvailabilityCheck = TaskScheduler::make([this](SchedulerTask &self, short times) {
       static int scanInProgressFuse = 0;
       if (scanInProgressFuse-- > 0) {
-        UNIOT_LOG_INFO("Availability check skipped, scan in progress");
+        UNIOT_LOG_INFO("availability check skipped, scan in progress");
         return;
       }
 
       if (mCanScan &&
           !mConfigServer.wsClientsActive() &&
           mWifiStorage.isCredentialsValid()) {
-        UNIOT_LOG_INFO("Checking availability of the network [%s]", mWifiStorage.getSsid().c_str());
+        UNIOT_LOG_INFO("checking availability of network '%s'", mWifiStorage.getSsid().c_str());
         scanInProgressFuse = 3;
 
         mWifiScan.scanNetworksAsync([&](int n) {
@@ -544,13 +544,13 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
               mWifiStorage.isCredentialsValid()) {
             for (auto i = 0; i < n; ++i) {
               if (WiFi.SSID(i) == mWifiStorage.getSsid()) {
-                UNIOT_LOG_INFO("Network [%s] is available", WiFi.SSID(i).c_str());
+                UNIOT_LOG_INFO("network '%s' is available", WiFi.SSID(i).c_str());
                 CoreEventEmitter::emitEvent(events::network::Topic::CONNECTION, events::network::Msg::AVAILABLE);
                 break;
               }
             }
           } else {
-            UNIOT_LOG_INFO("Scan done, skipping availability check");
+            UNIOT_LOG_INFO("scan done, skipping availability check");
           }
           WiFi.scanDelete();
         });
@@ -648,7 +648,7 @@ class NetworkScheduler : public ISchedulerConnectionKit, public CoreEventEmitter
               if (mWifiStorage.isCredentialsValid()) {
                 mTaskConnectSta->once(500);
                 mpCredentials->setOwnerId(msg.getString("acc"));
-                UNIOT_LOG_DEBUG("Is owner changed: %d", mpCredentials->isOwnerChanged());
+                UNIOT_LOG_DEBUG("owner changed: %d", mpCredentials->isOwnerChanged());
               }
               break;
             }

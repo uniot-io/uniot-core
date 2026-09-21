@@ -294,7 +294,7 @@ class NVSFileSystem {
 
     mInitialized = mPrefs.begin("uniot_files", false);
     if (!mInitialized) {
-      UNIOT_LOG_ERROR("Failed to open NVS namespace 'uniot_files'");
+      UNIOT_LOG_ERROR("failed to open NVS namespace 'uniot_files'");
     }
 
     return mInitialized;

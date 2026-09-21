@@ -10,7 +10,7 @@ Object filter_events(Root root, VarObject env, VarObject list) {
     return expeditor.makeBool(false);
   }
 
-  UNIOT_LOG_INFO("Filtering events: %s", events.c_str());
+  UNIOT_LOG_INFO("filtering events: %s", events.c_str());
 
   static ClearQueue<String> allowedEvents;
   allowedEvents.clean();
@@ -22,7 +22,7 @@ Object filter_events(Root root, VarObject env, VarObject list) {
     String eventName = events.substring(startPos, colonPos);
     if (eventName.length() > 0) {
       allowedEvents.push(eventName);
-      UNIOT_LOG_INFO("Added event filter: %s", eventName.c_str());
+      UNIOT_LOG_INFO("added event filter: %s", eventName.c_str());
     }
     startPos = colonPos + 1;
     colonPos = events.indexOf(':', startPos);
@@ -31,7 +31,7 @@ Object filter_events(Root root, VarObject env, VarObject list) {
   String lastEvent = events.substring(startPos);
   if (lastEvent.length() > 0) {
     allowedEvents.push(lastEvent);
-    UNIOT_LOG_INFO("Added event filter: %s", lastEvent.c_str());
+    UNIOT_LOG_INFO("added event filter: %s", lastEvent.c_str());
   }
 
   Uniot.setLispEventInterceptor([](const LispEvent& event) {
@@ -40,11 +40,11 @@ Object filter_events(Root root, VarObject env, VarObject list) {
     }
 
     if (allowedEvents.contains(event.eventID)) {
-      UNIOT_LOG_TRACE("Allowing event: %s", event.eventID.c_str());
+      UNIOT_LOG_TRACE("allowing event: %s", event.eventID.c_str());
       return true;
     }
 
-    UNIOT_LOG_TRACE("Filtering out event: %s", event.eventID.c_str());
+    UNIOT_LOG_TRACE("filtering out event: %s", event.eventID.c_str());
     return false;
   });
 

@@ -348,7 +348,7 @@ class NetworkController : public ISchedulerConnectionKit, public CoreEventListen
     if (_hasButton()) {
       mpTaskConfigBtn = TaskScheduler::make(*mpConfigBtn);
       mpTaskResetClickCounter = TaskScheduler::make([&](SchedulerTask &self, short t) {
-        UNIOT_LOG_DEBUG("ClickCounter = %d", mClickCounter);
+        UNIOT_LOG_DEBUG("click counter: %d", mClickCounter);
         mClickCounter = 0;
       });
     }

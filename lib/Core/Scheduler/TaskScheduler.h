@@ -263,7 +263,7 @@ class TaskScheduler {
         // auto wasSize = mTasks.calcSize();
         mTasks.deleteCurrent();
         // auto newSize = mTasks.calcSize();
-        // UNIOT_LOG_DEBUG("Anonymous task removed, size: %d -> %d", wasSize, newSize);
+        // UNIOT_LOG_DEBUG("anonymous task removed, size: %d -> %d", wasSize, newSize);
       } else {
         mTasks.next();
       }

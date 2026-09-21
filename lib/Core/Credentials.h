@@ -113,7 +113,7 @@ class Credentials : public CBORStorage, public ICOSESigner {
       // any other length is dropped rather than read past. The constructor then generates a
       // new one, which gives the device a new identity: the platform sees a new public key.
       if (mPrivateKey.size() && mPrivateKey.size() != PRIVATE_KEY_SIZE) {
-        UNIOT_LOG_ERROR("stored private key is %u bytes, expected %u; discarding it",
+        UNIOT_LOG_ERROR("stored private key is %u bytes, expected %u, discarding it",
                         mPrivateKey.size(), PRIVATE_KEY_SIZE);
         mPrivateKey.clean();
       }

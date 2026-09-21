@@ -207,7 +207,7 @@ class Date : public IExecutor, public CBORStorage, public Singleton<Date>, publi
    */
   void _timeSyncCallback() {
     execute(0);
-    UNIOT_LOG_INFO("Time is synchronized");
+    UNIOT_LOG_INFO("time synchronized");
     CoreEventEmitter::emitEvent(uniot::events::date::Topic::TIME, uniot::events::date::Msg::SYNCED);
   }
 
@@ -226,7 +226,7 @@ class Date : public IExecutor, public CBORStorage, public Singleton<Date>, publi
 #elif defined(ESP32)
     timeval tv = {epoch, 0};
     if (settimeofday(&tv, nullptr) != 0) {
-      UNIOT_LOG_ERROR("Failed to set system time");
+      UNIOT_LOG_ERROR("failed to set system time");
       return false;
     }
 #endif

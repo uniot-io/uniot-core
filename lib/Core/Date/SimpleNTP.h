@@ -62,7 +62,7 @@ class SimpleNTP {
     WiFiUDP udp;
     const unsigned short localUdpPort = 1234;
     if (!udp.begin(localUdpPort)) {
-      UNIOT_LOG_ERROR("Failed to initialize UDP on port %d.", localUdpPort);
+      UNIOT_LOG_ERROR("failed to initialize UDP on port %d", localUdpPort);
       return 0;
     }
 
@@ -78,7 +78,7 @@ class SimpleNTP {
     int maxRetries = 200;
     bool responseReceived = _waitForResponse(udp, 1500, maxRetries, 10);
     if (!responseReceived) {
-      UNIOT_LOG_ERROR("No UDP response received from NTP server after %d attempts.", maxRetries);
+      UNIOT_LOG_ERROR("no UDP response from NTP server after %d attempts", maxRetries);
       udp.stop();
       return 0;
     }
@@ -127,11 +127,11 @@ class SimpleNTP {
     udp.beginPacket(selectedServer, ntpUdpPort);
     size_t bytesWritten = udp.write(packet, sizeof(packet));
     if (bytesWritten != sizeof(packet)) {
-      UNIOT_LOG_ERROR("Failed to write NTP packet to UDP");
+      UNIOT_LOG_ERROR("failed to write NTP packet to UDP");
       return false;
     }
     udp.endPacket();
-    UNIOT_LOG_DEBUG("NTP packet sent to %s:%d.", selectedServer, ntpUdpPort);
+    UNIOT_LOG_DEBUG("NTP packet sent to %s:%d", selectedServer, ntpUdpPort);
     return true;
   }
 
@@ -149,19 +149,19 @@ class SimpleNTP {
    * @retval false Response wait timed out
    */
   bool _waitForResponse(WiFiUDP &udp, unsigned long timeout, int maxRetries, unsigned long retryDelay) {
-    UNIOT_LOG_TRACE("Waiting for NTP response with timeout %lu ms and max %d retries.", timeout, maxRetries);
+    UNIOT_LOG_TRACE("waiting for NTP response, timeout: %lu ms, retries: %d", timeout, maxRetries);
     unsigned long startTime = millis();
 
     for (int attempt = 1; attempt <= maxRetries; ++attempt) {
       unsigned long currentTime = millis();
       if (currentTime - startTime >= timeout) {
-        UNIOT_LOG_WARN("NTP response wait timed out on attempt %d.", attempt);
+        UNIOT_LOG_WARN("NTP response timed out on attempt %d", attempt);
         return false;
       }
 
       int packetSize = udp.parsePacket();
       if (packetSize >= 48) {
-        UNIOT_LOG_TRACE("NTP response received on attempt %d.", attempt);
+        UNIOT_LOG_TRACE("NTP response received on attempt %d", attempt);
         return true;
       }
 
@@ -185,7 +185,7 @@ class SimpleNTP {
     uint8_t packet[48];
     int len = udp.read(packet, sizeof(packet));
     if (len < 48) {
-      UNIOT_LOG_ERROR("Incomplete NTP packet received. Expected 48 bytes, got %d bytes.", len);
+      UNIOT_LOG_ERROR("incomplete NTP packet: expected 48 bytes, got %d", len);
       return 0;
     }
 
@@ -196,7 +196,7 @@ class SimpleNTP {
 
     // Convert NTP time to Unix epoch time
     time_t currentEpoch = secsSince1900 - 2208988800UL;
-    UNIOT_LOG_TRACE("NTP time (epoch): %ld", currentEpoch);
+    UNIOT_LOG_TRACE("NTP time, epoch: %ld", currentEpoch);
 
     return currentEpoch;
   }

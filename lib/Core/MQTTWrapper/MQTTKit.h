@@ -109,7 +109,7 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
           if (_readCOSEMessage(Bytes(payload, length), decoded)) {
             device->handle(topic, decoded);
           } else {
-            UNIOT_LOG_ERROR("Failed to decode message on topic: %s", topic);
+            UNIOT_LOG_ERROR("failed to decode message on topic: %s", topic);
           }
         }
       });
@@ -319,19 +319,19 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
       // Active only until NTP succeeds; detached on TIME/SYNCED. forceSync() is
       // blocking, which a scheduler tick tolerates but the event bus does not.
       if (mNetworkConnected) {
-        UNIOT_LOG_DEBUG("NTP retry: attempting forceSync");
+        UNIOT_LOG_DEBUG("NTP retry, attempting forced sync");
         Date::getInstance().forceSync();
       }
     });
 
     mTaskMQTT = TaskScheduler::make([this](SchedulerTask &self, short t) {
       if (!mNetworkConnected) {
-        UNIOT_LOG_DEBUG("MQTT: Network is not connected");
+        UNIOT_LOG_DEBUG("network is not connected");
         return;
       }
       if (!mPubSubClient.connected()) {
         mMqttConnected.store(false);
-        UNIOT_LOG_DEBUG("Attempting MQTT connection #%d...", mConnectionId);
+        UNIOT_LOG_DEBUG("attempting MQTT connection #%d", mConnectionId);
         Bytes packetExtention;
         if (mInfoExtender) {
           CBORObject packet;
@@ -390,7 +390,7 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
 #if defined(ESP32)
     int fd = mWiFiClient.fd();
     if (fd < 0) {
-      UNIOT_LOG_WARN("MQTT: TCP keepalive skipped, invalid socket fd");
+      UNIOT_LOG_WARN("TCP keepalive skipped, invalid socket fd");
       return;
     }
     static constexpr int kEnable = 1;
@@ -401,7 +401,7 @@ class MQTTKit : public ISchedulerConnectionKit, public CoreEventListener {
     setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &kIdle, sizeof(kIdle));
     setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &kIntvl, sizeof(kIntvl));
     setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &kCount, sizeof(kCount));
-    UNIOT_LOG_DEBUG("MQTT: TCP keepalive applied (idle=%ds, intvl=%ds, cnt=%d)", kIdle, kIntvl, kCount);
+    UNIOT_LOG_DEBUG("TCP keepalive applied, idle: %ds, interval: %ds, count: %d", kIdle, kIntvl, kCount);
 #endif
   }
 

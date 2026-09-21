@@ -84,7 +84,7 @@ const String &MQTTDevice::subscribeDevice(const String &subTopic) {
   if (mpKit) {
     return subscribe(mpKit->getPath().buildDevicePath(subTopic));
   } else {
-    UNIOT_LOG_WARN("use detailed subscription after adding device to kit");
+    UNIOT_LOG_WARN("subscribe after adding the device to the kit");
   }
   return sEmptyString;
 }
@@ -93,7 +93,7 @@ const String &MQTTDevice::subscribeGroup(const String &groupId, const String &su
   if (mpKit) {
     return subscribe(mpKit->getPath().buildGroupPath(groupId, subTopic));
   } else {
-    UNIOT_LOG_WARN("use detailed subscription after adding device to kit");
+    UNIOT_LOG_WARN("subscribe after adding the device to the kit");
   }
   return sEmptyString;
 }
