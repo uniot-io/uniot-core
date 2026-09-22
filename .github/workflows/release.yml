@@ -58,6 +58,9 @@ jobs:
     name: PlatformIO registry
     needs: release
     runs-on: ubuntu-latest
+    # This job needs nothing from GitHub beyond reading the code it publishes.
+    permissions:
+      contents: read
     # A published version can never be replaced or withdrawn, and the token can publish under
     # the organisation. Add reviewers to this environment and it becomes the last point where
     # a mistake can be stopped.
@@ -72,8 +75,39 @@ jobs:
       - name: Install PlatformIO
         run: pip install --upgrade platformio esptool
 
-      # Add --owner uniot-io if the token's account is not itself the package owner.
+      # pio pkg publish defaults to the token's own account, so a token from the wrong
+      # account would publish into a personal namespace rather than failing. This asks the
+      # registry whether the account may write to the package, before anything is uploaded.
+      - name: The token may publish to uniot-io
+        run: ./scripts/check_registry_access.sh uniot-io/uniot-core
+        env:
+          PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
+
       - name: Publish
-        run: pio pkg publish --no-interactive
+        run: pio pkg publish --owner uniot-io --no-interactive
+        env:
+          PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
+
+      # "It published" is not the same as "it published where we meant". The registry
+      # processes an upload asynchronously, so a version can take minutes to appear: this
+      # reports what it sees and warns if it has not caught up, rather than failing a release
+      # that already succeeded. The publish cannot land in the wrong namespace anyway, because
+      # --owner is explicit and the access check above runs first.
+      - name: Confirm the version landed under uniot-io
+        run: |
+          set -uo pipefail
+          expected="${GITHUB_REF#refs/tags/}"
+          for attempt in $(seq 1 10); do
+            published=$(pio pkg show uniot-io/uniot-core 2>/dev/null | sed -n 's/^Library • \([0-9][0-9.]*\) .*/\1/p')
+            echo "attempt $attempt: registry reports '${published:-nothing}', expected $expected"
+            if [ "$published" = "$expected" ]; then
+              echo "uniot-io/uniot-core is at $expected"
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "::warning::uniot-io/uniot-core still reports '${published:-nothing}' after 5 minutes. \
+          The registry may simply be processing; confirm at \
+          https://registry.platformio.org/libraries/uniot-io/uniot-core"
         env:
           PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
