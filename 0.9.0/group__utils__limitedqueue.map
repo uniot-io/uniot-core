@@ -1,0 +1,4 @@
+<map id="LimitedQueue" name="LimitedQueue">
+<area shape="rect" id="Node000002" href="$group__utils.html" title="Common utility components and functions for the Uniot Core." alt="" coords="5,5,79,31"/>
+<area shape="rect" id="Node000001" title="A queue with a maximum size limit that automatically removes oldest elements when full." alt="" coords="127,5,240,31"/>
+</map>

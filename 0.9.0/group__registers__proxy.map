@@ -1,0 +1,4 @@
+<map id="Register Manager Proxy" name="Register Manager Proxy">
+<area shape="rect" id="Node000002" href="$group__registers.html" title="Named registers for storing and managing collections of values." alt="" coords="5,5,140,31"/>
+<area shape="rect" id="Node000001" title="Proxy class for RegisterManager that provides scoped access to a named register." alt="" coords="188,5,367,31"/>
+</map>

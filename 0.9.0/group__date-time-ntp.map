@@ -1,0 +1,4 @@
+<map id="Simple NTP" name="Simple NTP">
+<area shape="rect" id="Node000002" href="$group__date-time.html" title="A class for managing date and time in Uniot devices." alt="" coords="5,5,213,31"/>
+<area shape="rect" id="Node000001" title="Simple Network Time Protocol client for obtaining time from NTP servers." alt="" coords="261,5,359,31"/>
+</map>

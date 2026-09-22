@@ -1,0 +1,4 @@
+<map id="Emitter" name="Emitter">
+<area shape="rect" id="Node000001" title="A template class for emitting events to registered event buses." alt="" coords="155,5,225,31"/>
+<area shape="rect" id="Node000002" href="$group__event__bus__entity.html" title="Entity that can connect to and interact with EventBus instances." alt="" coords="5,5,107,31"/>
+</map>

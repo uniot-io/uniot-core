@@ -1,0 +1,6 @@
+<map id="Internal Communication" name="Internal Communication">
+<area shape="rect" id="Node000002" href="$group__data__channels.html" title="A templated class that manages multiple data channels with queue&#45;like behavior." alt="" coords="232,5,349,31"/>
+<area shape="rect" id="Node000001" title="Event&#45;driven communication module for component interactions." alt="" coords="5,55,184,80"/>
+<area shape="rect" id="Node000004" href="$group__event__bus__entity.html" title="Entity that can connect to and interact with EventBus instances." alt="" coords="240,55,341,80"/>
+<area shape="rect" id="Node000003" href="$group__event__bus__main.html" title="The EventBus is a central communication hub for event&#45;driven architecture." alt="" coords="247,104,334,129"/>
+</map>

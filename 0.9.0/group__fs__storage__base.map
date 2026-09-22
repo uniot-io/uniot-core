@@ -1,0 +1,4 @@
+<map id="Storage" name="Storage">
+<area shape="rect" id="Node000002" href="$group__fs__storage.html" title="File system storage management for Uniot devices." alt="" coords="5,5,157,31"/>
+<area shape="rect" id="Node000001" title="Manages data persistence to file system on ESP8266/ESP32 devices." alt="" coords="205,5,277,31"/>
+</map>

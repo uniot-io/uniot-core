@@ -1,0 +1,13 @@
+<map id="uniot::MQTTKit" name="uniot::MQTTKit">
+<area shape="rect" id="Node000001" title=" " alt="" coords="160,357,279,383"/>
+<area shape="rect" id="Node000002" href="$classuniot_1_1_i_scheduler_connection_kit.html" title="Interface for connecting components to the TaskScheduler." alt="" coords="5,284,228,309"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="146,315,204,355,201,359,143,319"/>
+<area shape="rect" id="Node000003" href="$classuniot_1_1_event_listener.html" title=" " alt="" coords="251,284,393,309"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="296,319,238,359,235,355,293,315"/>
+<area shape="rect" id="Node000004" href="$classuniot_1_1_event_emitter.html" title=" " alt="" coords="248,181,396,236"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="325,250,325,284,319,284,319,250"/>
+<area shape="rect" id="Node000005" href="$classuniot_1_1_event_entity.html" title="Entity that can connect to and interact with EventBus instances." alt="" coords="247,79,397,133"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="325,147,325,181,319,181,319,147"/>
+<area shape="rect" id="Node000006" href="$classuniot_1_1_i_with_type.html" title="Interface for objects that expose their runtime type information." alt="" coords="259,5,385,31"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="325,44,325,79,319,79,319,44"/>
+</map>

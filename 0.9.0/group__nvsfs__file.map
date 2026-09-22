@@ -1,0 +1,4 @@
+<map id="NVSFile" name="NVSFile">
+<area shape="rect" id="Node000001" title="Experimental file&#45;like interface for NVS storage operations." alt="" coords="172,5,244,31"/>
+<area shape="rect" id="Node000002" href="$group__nvsfs__storage.html" title="Experimental NVS&#45;based file system interface for ESP32 devices." alt="" coords="5,5,124,31"/>
+</map>

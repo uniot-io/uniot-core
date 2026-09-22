@@ -1,0 +1,40 @@
+<map id="CBORStorage.h" name="CBORStorage.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="237,5,358,31"/>
+<area shape="rect" id="Node000002" href="$_credentials_8h.html" title=" " alt="" coords="493,79,601,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="352,32,507,76,506,81,350,37"/>
+<area shape="rect" id="Node000010" href="$_network_controller_8h.html" title="High&#45;level network management controller with user interface." alt="" coords="330,225,482,251"/>
+<area shape="poly" id="edge22_Node000001_Node000010" title=" " alt="" coords="299,44,302,107,310,143,325,176,351,204,382,223,379,227,348,208,321,179,305,145,297,108,293,44"/>
+<area shape="rect" id="Node000011" href="$_date_8h.html" title=" " alt="" coords="140,152,205,177"/>
+<area shape="poly" id="edge13_Node000001_Node000011" title=" " alt="" coords="273,41,230,80,201,119,181,153,176,150,197,116,226,77,269,37"/>
+<area shape="rect" id="Node000012" href="$_lisp_device_8h.html" title=" " alt="" coords="200,225,305,251"/>
+<area shape="poly" id="edge21_Node000001_Node000012" title=" " alt="" coords="292,45,282,79,265,163,256,225,251,225,260,162,276,78,287,43"/>
+<area shape="rect" id="Node000014" href="$_wifi_storage_8h.html" title=" " alt="" coords="346,79,455,104"/>
+<area shape="poly" id="edge23_Node000001_Node000014" title=" " alt="" coords="327,36,385,76,382,81,324,41"/>
+<area shape="rect" id="Node000003" href="$_m_q_t_t_path_8h.html" title=" " alt="" coords="512,152,612,177"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="555,117,562,151,557,152,550,118"/>
+<area shape="rect" id="Node000006" href="$_uniot_8h.html" title="Main API interface for the Uniot IoT platform." alt="" coords="218,372,287,397"/>
+<area shape="poly" id="edge12_Node000002_Node000006" title=" " alt="" coords="585,109,608,127,627,151,648,199,658,242,658,262,653,283,642,304,626,326,602,343,566,357,522,367,472,375,370,383,288,386,287,381,369,378,471,370,521,362,565,352,600,339,623,322,638,301,648,281,652,262,653,242,643,200,622,153,605,130,582,113"/>
+<area shape="rect" id="Node000009" href="$_network_scheduler_8h.html" title="Complete WiFi network management and configuration system." alt="" coords="335,152,487,177"/>
+<area shape="poly" id="edge8_Node000002_Node000009" title=" " alt="" coords="515,113,435,154,432,149,512,108"/>
+<area shape="rect" id="Node000004" href="$_m_q_t_t_kit_8h.html" title=" " alt="" coords="506,225,596,251"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="561,192,555,226,550,225,555,191"/>
+<area shape="rect" id="Node000005" href="$_app_kit_8h.html" title=" " alt="" coords="214,299,291,324"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="493,256,292,303,291,298,492,251"/>
+<area shape="rect" id="Node000008" href="$_m_q_t_t_device_8cpp.html" title=" " alt="" coords="480,299,612,324"/>
+<area shape="poly" id="edge7_Node000004_Node000008" title=" " alt="" coords="552,265,549,299,544,298,547,264"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="255,338,255,372,250,372,250,338"/>
+<area shape="rect" id="Node000007" href="$_uniot_8cpp.html" title=" " alt="" coords="210,445,294,471"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="255,411,255,445,250,445,250,411"/>
+<area shape="poly" id="edge9_Node000009_Node000004" title=" " alt="" coords="447,181,529,223,527,227,445,186"/>
+<area shape="poly" id="edge10_Node000009_Node000010" title=" " alt="" coords="412,191,409,225,404,225,407,191"/>
+<area shape="poly" id="edge11_Node000010_Node000005" title=" " alt="" coords="370,259,279,301,276,296,368,254"/>
+<area shape="poly" id="edge17_Node000011_Node000004" title=" " alt="" coords="219,172,494,223,506,225,505,230,493,228,218,177"/>
+<area shape="poly" id="edge14_Node000011_Node000005" title=" " alt="" coords="175,191,179,220,189,249,211,276,235,296,232,300,207,280,185,252,174,221,170,192"/>
+<area shape="poly" id="edge20_Node000011_Node000006" title=" " alt="" coords="127,174,81,184,38,199,22,209,11,221,8,234,13,249,33,276,56,298,112,334,169,359,218,373,217,379,167,364,109,339,53,303,29,279,9,252,3,234,7,218,18,205,35,194,79,179,126,169"/>
+<area shape="poly" id="edge15_Node000011_Node000012" title=" " alt="" coords="197,184,241,223,238,227,194,188"/>
+<area shape="rect" id="Node000013" href="$_top_device_8h.html" title=" " alt="" coords="23,225,124,251"/>
+<area shape="poly" id="edge18_Node000011_Node000013" title=" " alt="" coords="147,187,91,227,88,223,144,183"/>
+<area shape="poly" id="edge16_Node000012_Node000005" title=" " alt="" coords="255,264,255,299,250,299,250,264"/>
+<area shape="poly" id="edge19_Node000013_Node000005" title=" " alt="" coords="116,253,224,296,222,301,114,258"/>
+<area shape="poly" id="edge24_Node000014_Node000009" title=" " alt="" coords="407,117,412,151,407,152,402,118"/>
+</map>

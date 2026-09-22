@@ -1,0 +1,4 @@
+<map id="Hardware" name="Hardware">
+<area shape="rect" id="Node000001" title="Hardware&#45;related components and functions for the Uniot Core." alt="" coords="5,5,91,31"/>
+<area shape="rect" id="Node000002" href="$group__hardware__button.html" title="Button input handler with support for click and long press detection." alt="" coords="139,5,204,31"/>
+</map>

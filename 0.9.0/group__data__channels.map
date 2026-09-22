@@ -1,0 +1,4 @@
+<map id="Data Channels" name="Data Channels">
+<area shape="rect" id="Node000001" title="A templated class that manages multiple data channels with queue&#45;like behavior." alt="" coords="232,5,349,31"/>
+<area shape="rect" id="Node000002" href="$group__event__bus.html" title="Event&#45;driven communication module for component interactions." alt="" coords="5,5,184,31"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="GPIO Register" name="GPIO Register">
+<area shape="rect" id="Node000002" href="$group__registers.html" title="Named registers for storing and managing collections of values." alt="" coords="5,5,140,31"/>
+<area shape="rect" id="Node000001" title="Specialized GpioRegister class for GPIO pin management." alt="" coords="188,5,300,31"/>
+</map>

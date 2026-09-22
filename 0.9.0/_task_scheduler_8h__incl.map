@@ -1,0 +1,37 @@
+<map id="TaskScheduler.h" name="TaskScheduler.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="765,5,891,31"/>
+<area shape="rect" id="Node000002" href="$_e_s_p8266_task_8h.html" title=" " alt="" coords="298,79,417,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="765,32,431,82,430,76,764,26"/>
+<area shape="rect" id="Node000009" href="$_common_8h.html" title=" " alt="" coords="664,79,757,104"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="811,33,743,74,740,69,808,28"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="631,152,708,177"/>
+<area shape="poly" id="edge18_Node000001_Node000010" title=" " alt="" coords="765,25,735,32,704,42,676,58,654,80,649,94,648,109,658,139,653,141,643,110,643,93,650,77,673,54,702,37,733,26,764,20"/>
+<area shape="rect" id="Node000012" href="$_i_executor_8h.html" title=" " alt="" coords="781,79,875,104"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="831,31,831,65,825,65,825,31"/>
+<area shape="rect" id="Node000013" href="$_i_scheduler_connection_kit_8h.html" title=" " alt="" coords="899,79,1093,104"/>
+<area shape="poly" id="edge12_Node000001_Node000013" title=" " alt="" coords="856,28,957,71,955,76,854,33"/>
+<area shape="rect" id="Node000014" href="$_iterable_queue_8h.html" title=" " alt="" coords="1117,79,1243,104"/>
+<area shape="poly" id="edge13_Node000001_Node000014" title=" " alt="" coords="885,28,1110,73,1109,79,884,33"/>
+<area shape="rect" id="Node000017" title=" " alt="" coords="1238,225,1325,251"/>
+<area shape="poly" id="edge17_Node000001_Node000017" title=" " alt="" coords="892,17,986,20,1094,28,1192,46,1230,60,1257,77,1277,108,1287,144,1290,181,1288,212,1283,211,1284,181,1282,145,1273,110,1253,81,1228,65,1191,51,1094,34,986,25,892,22"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,152,80,177"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="307,107,94,154,93,149,305,101"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="105,152,175,177"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="323,107,189,150,187,145,322,101"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="199,152,283,177"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="340,106,273,147,271,142,337,102"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="308,152,407,177"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="360,104,360,138,355,138,355,104"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="431,152,513,177"/>
+<area shape="poly" id="edge6_Node000002_Node000007" title=" " alt="" coords="377,102,443,142,440,147,374,106"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="537,152,607,177"/>
+<area shape="poly" id="edge7_Node000002_Node000008" title=" " alt="" coords="393,101,525,145,523,150,391,107"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="706,106,685,141,681,139,702,103"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="733,152,793,177"/>
+<area shape="poly" id="edge10_Node000009_Node000011" title=" " alt="" coords="721,103,748,139,744,142,717,106"/>
+<area shape="rect" id="Node000015" href="$_clear_queue_8h.html" title=" " alt="" coords="1125,152,1235,177"/>
+<area shape="poly" id="edge14_Node000014_Node000015" title=" " alt="" coords="1183,104,1183,138,1177,138,1177,104"/>
+<area shape="rect" id="Node000016" title=" " alt="" coords="1130,225,1214,251"/>
+<area shape="poly" id="edge15_Node000015_Node000016" title=" " alt="" coords="1181,178,1177,212,1172,212,1176,177"/>
+<area shape="poly" id="edge16_Node000015_Node000017" title=" " alt="" coords="1198,175,1255,215,1252,219,1195,180"/>
+</map>

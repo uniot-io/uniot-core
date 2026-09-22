@@ -1,0 +1,6 @@
+<map id="NVSFS Storage" name="NVSFS Storage">
+<area shape="rect" id="Node000002" href="$group__fs__storage.html" title="File system storage management for Uniot devices." alt="" coords="5,31,157,56"/>
+<area shape="rect" id="Node000001" title="Experimental NVS&#45;based file system interface for ESP32 devices." alt="" coords="205,31,324,56"/>
+<area shape="rect" id="Node000003" href="$group__nvsfs__file.html" title="Experimental file&#45;like interface for NVS storage operations." alt="" coords="397,5,469,31"/>
+<area shape="rect" id="Node000004" href="$group__nvsfs__filesystem.html" title="Experimental NVS&#45;based file system interface for ESP32." alt="" coords="372,55,493,80"/>
+</map>

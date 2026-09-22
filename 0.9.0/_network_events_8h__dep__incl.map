@@ -1,0 +1,20 @@
+<map id="NetworkEvents.h" name="NetworkEvents.h">
+<area shape="rect" id="Node000001" title="Network event definitions for the Uniot event system." alt="" coords="78,5,211,31"/>
+<area shape="rect" id="Node000002" href="$_m_q_t_t_kit_8h.html" title=" " alt="" coords="26,152,117,177"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="103,39,78,57,59,80,54,98,55,117,67,151,62,153,50,118,49,97,54,77,75,53,100,35"/>
+<area shape="rect" id="Node000007" href="$_network_controller_8h.html" title="High&#45;level network management controller with user interface." alt="" coords="141,152,293,177"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="189,35,215,53,235,77,240,97,239,118,226,153,221,151,233,117,235,98,230,80,211,57,186,39"/>
+<area shape="rect" id="Node000008" href="$_network_scheduler_8h.html" title="Complete WiFi network management and configuration system." alt="" coords="69,79,221,104"/>
+<area shape="poly" id="edge8_Node000001_Node000008" title=" " alt="" coords="147,44,147,79,142,79,142,44"/>
+<area shape="rect" id="Node000003" href="$_app_kit_8h.html" title=" " alt="" coords="170,225,247,251"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="107,181,187,223,185,227,104,186"/>
+<area shape="rect" id="Node000006" href="$_m_q_t_t_device_8cpp.html" title=" " alt="" coords="5,225,137,251"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="74,191,74,225,69,225,69,191"/>
+<area shape="rect" id="Node000004" href="$_uniot_8h.html" title="Main API interface for the Uniot IoT platform." alt="" coords="174,299,243,324"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="211,264,211,299,206,299,206,264"/>
+<area shape="rect" id="Node000005" href="$_uniot_8cpp.html" title=" " alt="" coords="167,372,251,397"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="211,338,211,372,206,372,206,338"/>
+<area shape="poly" id="edge7_Node000007_Node000003" title=" " alt="" coords="216,191,213,226,207,225,211,191"/>
+<area shape="poly" id="edge9_Node000008_Node000002" title=" " alt="" coords="125,116,85,154,81,150,121,112"/>
+<area shape="poly" id="edge10_Node000008_Node000007" title=" " alt="" coords="168,112,207,150,203,154,165,116"/>
+</map>

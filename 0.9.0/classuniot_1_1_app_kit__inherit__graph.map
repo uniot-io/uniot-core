@@ -1,0 +1,9 @@
+<map id="uniot::AppKit" name="uniot::AppKit">
+<area shape="rect" id="Node000001" title=" " alt="" coords="276,55,383,80"/>
+<area shape="rect" id="Node000002" href="$classuniot_1_1_i_event_bus_connection_kit.html" title=" " alt="" coords="13,5,221,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="192,31,229,39,280,52,279,57,227,45,191,36"/>
+<area shape="rect" id="Node000003" href="$classuniot_1_1_i_scheduler_connection_kit.html" title="Interface for connecting components to the TaskScheduler." alt="" coords="5,55,228,80"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="242,65,276,65,276,70,242,70"/>
+<area shape="rect" id="Node000004" href="$classuniot_1_1_singleton.html" title=" " alt="" coords="18,104,215,129"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="187,98,227,89,275,77,276,83,229,94,188,103"/>
+</map>

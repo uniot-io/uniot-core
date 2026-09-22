@@ -1,0 +1,25 @@
+<map id="RegisterManager.h" name="RegisterManager.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="169,5,313,31"/>
+<area shape="rect" id="Node000002" href="$_register_manager_proxy_8h.html" title=" " alt="" coords="151,79,331,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="243,44,243,79,238,79,238,44"/>
+<area shape="rect" id="Node000003" href="$_primitive_expeditor_8h.html" title=" " alt="" coords="163,152,318,177"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="243,118,243,152,238,152,238,118"/>
+<area shape="rect" id="Node000004" href="$_lisp_primitives_8h.html" title=" " alt="" coords="5,225,132,251"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="202,185,98,228,96,223,200,180"/>
+<area shape="rect" id="Node000009" href="$_primitive_expeditor_8cpp.html" title=" " alt="" coords="156,225,325,251"/>
+<area shape="poly" id="edge8_Node000003_Node000009" title=" " alt="" coords="243,191,243,225,238,225,238,191"/>
+<area shape="rect" id="Node000010" href="$un_lisp_8h.html" title=" " alt="" coords="349,225,425,251"/>
+<area shape="poly" id="edge9_Node000003_Node000010" title=" " alt="" coords="277,181,364,223,362,228,275,186"/>
+<area shape="rect" id="Node000005" href="$_app_kit_8h.html" title=" " alt="" coords="258,372,335,397"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="73,264,79,294,86,309,96,322,133,349,176,366,220,376,258,380,258,385,219,381,175,371,131,354,92,326,82,312,74,296,67,265"/>
+<area shape="rect" id="Node000008" href="$_lisp_primitives_8cpp.html" title=" " alt="" coords="106,299,247,324"/>
+<area shape="poly" id="edge7_Node000004_Node000008" title=" " alt="" coords="99,256,160,296,158,301,96,260"/>
+<area shape="rect" id="Node000006" href="$_uniot_8h.html" title="Main API interface for the Uniot IoT platform." alt="" coords="262,445,331,471"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="299,411,299,445,294,445,294,411"/>
+<area shape="rect" id="Node000007" href="$_uniot_8cpp.html" title=" " alt="" coords="255,519,339,544"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="299,484,299,519,294,519,294,484"/>
+<area shape="poly" id="edge10_Node000010_Node000005" title=" " alt="" coords="361,261,341,279,324,300,308,338,301,372,296,371,303,337,320,297,337,275,357,257"/>
+<area shape="rect" id="Node000011" href="$_lisp_device_8h.html" title=" " alt="" coords="335,299,440,324"/>
+<area shape="poly" id="edge11_Node000010_Node000011" title=" " alt="" coords="390,264,390,299,385,299,385,264"/>
+<area shape="poly" id="edge12_Node000011_Node000005" title=" " alt="" coords="363,335,313,374,310,370,360,330"/>
+</map>

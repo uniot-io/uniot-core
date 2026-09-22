@@ -1,0 +1,11 @@
+<map id="uniot::CallbackEventListener&lt; T_topic, T_msg, T_data &gt;" name="uniot::CallbackEventListener&lt; T_topic, T_msg, T_data &gt;">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,372,213,412"/>
+<area shape="rect" id="Node000002" href="$classuniot_1_1_event_listener.html" title=" " alt="" coords="8,284,211,324"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="112,338,112,372,107,372,107,338"/>
+<area shape="rect" id="Node000003" href="$classuniot_1_1_event_emitter.html" title=" " alt="" coords="34,181,185,236"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="112,250,112,284,107,284,107,250"/>
+<area shape="rect" id="Node000004" href="$classuniot_1_1_event_entity.html" title="Entity that can connect to and interact with EventBus instances." alt="" coords="34,79,185,133"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="112,147,112,181,107,181,107,147"/>
+<area shape="rect" id="Node000005" href="$classuniot_1_1_i_with_type.html" title="Interface for objects that expose their runtime type information." alt="" coords="46,5,173,31"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="112,44,112,79,107,79,107,44"/>
+</map>

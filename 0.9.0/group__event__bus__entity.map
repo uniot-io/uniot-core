@@ -1,0 +1,6 @@
+<map id="Event Entity" name="Event Entity">
+<area shape="rect" id="Node000002" href="$group__event__bus.html" title="Event&#45;driven communication module for component interactions." alt="" coords="5,31,184,56"/>
+<area shape="rect" id="Node000001" title="Entity that can connect to and interact with EventBus instances." alt="" coords="232,31,333,56"/>
+<area shape="rect" id="Node000003" href="$group__event__bus__emitter.html" title="A template class for emitting events to registered event buses." alt="" coords="383,5,454,31"/>
+<area shape="rect" id="Node000004" href="$group__event__bus__listener.html" title="Listener for EventBus events that can subscribe to specific topics." alt="" coords="381,55,456,80"/>
+</map>

@@ -1,0 +1,17 @@
+<map id="Utilities" name="Utilities">
+<area shape="rect" id="Node000004" href="$group__common.html" title="Common utilities and macros for the Uniot Core." alt="" coords="190,5,271,31"/>
+<area shape="rect" id="Node000005" href="$group__date-time.html" title="A class for managing date and time in Uniot devices." alt="" coords="127,55,335,80"/>
+<area shape="rect" id="Node000013" href="$group__json.html" title="Lightweight JSON generation utilities for Uniot devices." alt="" coords="203,104,258,129"/>
+<area shape="rect" id="Node000001" title="Common utility components and functions for the Uniot Core." alt="" coords="5,347,79,372"/>
+<area shape="rect" id="Node000006" href="$group__utils__array.html" title="A simple Array class that manages a dynamically allocated array and its size." alt="" coords="202,153,259,179"/>
+<area shape="rect" id="Node000007" href="$group__utils__bytes.html" title="A class for managing and manipulating byte arrays." alt="" coords="201,203,260,228"/>
+<area shape="rect" id="Node000002" href="$group__utils__cbor__wrapper.html" title="A wrapper class for CBOR (Concise Binary Object Representation) data manipulation." alt="" coords="143,253,319,293"/>
+<area shape="rect" id="Node000008" href="$group__utils__clearqueue.html" title="A lightweight queue implementation optimized for resource&#45;constrained environments." alt="" coords="181,317,280,343"/>
+<area shape="rect" id="Node000003" href="$group__utils__cose.html" title="CBOR Object Signing and Encryption (COSE) implementation." alt="" coords="130,367,331,407"/>
+<area shape="rect" id="Node000010" href="$group__utils__iterablequeue.html" title="A queue implementation with iteration capabilities." alt="" coords="173,432,288,457"/>
+<area shape="rect" id="Node000011" href="$group__utils__limitedqueue.html" title="A queue with a maximum size limit that automatically removes oldest elements when full." alt="" coords="174,481,287,507"/>
+<area shape="rect" id="Node000012" href="$group__utils__map.html" title="A simple map class that associates keys with values using an iterable queue." alt="" coords="205,531,256,556"/>
+<area shape="rect" id="Node000009" href="$group__utils__memory__manager.html" title="Memory manager for a global static buffer with dynamic allocation capabilities." alt="" coords="162,580,299,605"/>
+<area shape="rect" id="Node000014" href="$group__utils__singleton.html" title="Template class implementing the Singleton design pattern." alt="" coords="189,629,272,655"/>
+<area shape="rect" id="Node000015" href="$group__utils__typeid.html" title="Provides a lightweight type identification system for runtime type checking and safe casting." alt="" coords="199,679,263,704"/>
+</map>

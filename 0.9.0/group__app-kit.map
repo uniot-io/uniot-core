@@ -1,0 +1,7 @@
+<map id="Application Kit" name="Application Kit">
+<area shape="rect" id="Node000001" title="Application Kit for Uniot Core." alt="" coords="5,80,123,105"/>
+<area shape="rect" id="Node000003" href="$group__app-kit-lisp-device.html" title="A device class that integrates MQTT connectivity with unLisp scripting capabilities." alt="" coords="193,5,291,31"/>
+<area shape="rect" id="Node000002" href="$group__app-kit-main.html" title="Main application toolkit that integrates various components of the Uniot system." alt="" coords="209,55,275,80"/>
+<area shape="rect" id="Node000004" href="$group__app-kit-primitives.html" title="Contains Lisp primitive functions for hardware interaction." alt="" coords="198,104,286,129"/>
+<area shape="rect" id="Node000005" href="$group__app-kit-top-device.html" title="Device class for system monitoring and diagnostics." alt="" coords="171,153,313,179"/>
+</map>

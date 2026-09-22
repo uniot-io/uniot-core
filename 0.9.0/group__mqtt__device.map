@@ -1,0 +1,4 @@
+<map id="MQTT Device" name="MQTT Device">
+<area shape="rect" id="Node000002" href="$group__mqtt__communication.html" title=" " alt="" coords="5,5,172,31"/>
+<area shape="rect" id="Node000001" title="Base class for MQTT&#45;enabled devices in the Uniot ecosystem." alt="" coords="220,5,329,31"/>
+</map>
