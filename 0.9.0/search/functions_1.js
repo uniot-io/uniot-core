@@ -3,7 +3,7 @@ var searchData=
   ['addcustompage_0',['addCustomPage',['../classuniot_1_1_app_kit.html#a3b7add47601b47faea4c3bea1e03fa46',1,'uniot::AppKit::addCustomPage()'],['../classuniot_1_1_network_scheduler.html#a1f2253ae49848e7d1204439190757dc3',1,'uniot::NetworkScheduler::addCustomPage()'],['../class_uniot_core.html#a12f4c51a69e11af0bfa61d2c7953c173',1,'UniotCore::addCustomPage()']]],
   ['addcustomroute_1',['addCustomRoute',['../classuniot_1_1_app_kit.html#a2d569a9e83204fd26a00157f7dbd19f3',1,'uniot::AppKit::addCustomRoute()'],['../classuniot_1_1_network_scheduler.html#a963ed5ba40e63505c3d1322753af050f',1,'uniot::NetworkScheduler::addCustomRoute()'],['../class_uniot_core.html#a6a086ffe3b58484b66f657a8bebe380b',1,'UniotCore::addCustomRoute(const String &amp;path, ArRequestHandlerFunction handler)'],['../class_uniot_core.html#a4dacd91f4da1ac0a2e071604e9308015',1,'UniotCore::addCustomRoute(const String &amp;path, WebRequestMethodComposite method, ArRequestHandlerFunction handler)']]],
   ['adddevice_2',['addDevice',['../classuniot_1_1_m_q_t_t_kit.html#aa97e2a3c3a8a2b465dda7d08d7d4a92d',1,'uniot::MQTTKit']]],
-  ['addlispbutton_3',['addLispButton',['../class_uniot_core.html#a220d8c8e56c81b0fc8eed6103b9c032b',1,'UniotCore']]],
+  ['addlispbutton_3',['addLispButton',['../class_uniot_core.html#a6c5bf703699dce42dbcdc9681f73d16b',1,'UniotCore']]],
   ['addlispprimitive_4',['addLispPrimitive',['../class_uniot_core.html#a6a39cc45832843f5ff8708bbd20aa431',1,'UniotCore']]],
   ['addmqttdevice_5',['addMQTTDevice',['../class_uniot_core.html#a8b043439bd56da2f076dc58c8c7f5a19',1,'UniotCore']]],
   ['addsystemlistener_6',['addSystemListener',['../class_uniot_core.html#a16a1d9dd79ed68c3b2a93650f2655dea',1,'UniotCore']]],

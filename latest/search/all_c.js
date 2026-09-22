@@ -6,7 +6,7 @@ var searchData=
   ['limitedqueue_3',['LimitedQueue',['../class_limited_queue.html',1,'LimitedQueue&lt; T &gt;'],['../class_limited_queue.html#ab24f8b37482b5a8f436eea494f5f9c26',1,'LimitedQueue::LimitedQueue()'],['../group__utils__limitedqueue.html',1,'LimitedQueue']]],
   ['limitedqueue_2eh_4',['LimitedQueue.h',['../_limited_queue_8h.html',1,'']]],
   ['limitedqueue_3c_20uniot_3a_3aincomingeventmanager_3a_3aincomingevent_20_3e_5',['LimitedQueue&lt; uniot::IncomingEventManager::IncomingEvent &gt;',['../class_limited_queue.html',1,'']]],
-  ['link_6',['link',['../classuniot_1_1_object_register.html#a5f0f3d0cb0c4ffdad97f2d421eb685a8',1,'uniot::ObjectRegister::link()'],['../classuniot_1_1_register_manager.html#a81291bf288f10c0db025306d31a469f0',1,'uniot::RegisterManager::link()']]],
+  ['link_6',['link',['../classuniot_1_1_object_register.html#a25061bc3cf1d45206602b2f6eab88f76',1,'uniot::ObjectRegister::link()'],['../classuniot_1_1_register_manager.html#af26290f0330c6fdb810cc3cd2348e5dc',1,'uniot::RegisterManager::link()']]],
   ['lisp_7',['Lisp',['../classuniot_1_1_lisp.html',1,'uniot::Lisp'],['../group__uniot-lisp.html',1,'Uniot Lisp']]],
   ['lisp_20device_8',['Lisp Device',['../group__app-kit-lisp-device.html',1,'']]],
   ['lisp_20events_9',['Lisp Events',['../group__lisp__events.html',1,'']]],

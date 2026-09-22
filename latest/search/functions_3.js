@@ -24,7 +24,7 @@ var searchData=
   ['configuser_21',['configUser',['../class_uniot_core.html#a10d3d0d43e5fa7ef0e250c197fb6e43a',1,'UniotCore']]],
   ['configwificredentials_22',['configWiFiCredentials',['../class_uniot_core.html#a6d483fd41ec2560ce5edec2b02dac445',1,'UniotCore']]],
   ['configwifiresetbutton_23',['configWiFiResetButton',['../class_uniot_core.html#ac1b52fe0165dc0cc681803c2e0ca2fd2',1,'UniotCore']]],
-  ['configwifiresetonreboot_24',['configWiFiResetOnReboot',['../class_uniot_core.html#a84b1e8c87bf1f14c741f7a3d684362b3',1,'UniotCore']]],
+  ['configwifiresetonreboot_24',['configWiFiResetOnReboot',['../class_uniot_core.html#aba5ea188f3837ddd28079130d88ad854',1,'UniotCore']]],
   ['configwifistatusled_25',['configWiFiStatusLed',['../class_uniot_core.html#ad3fb1cb0467ad7e73af25e01acd003d4',1,'UniotCore']]],
   ['connectunique_26',['connectUnique',['../classuniot_1_1_event_entity.html#a2e4b0954199ea6a665c8c4675a610979',1,'uniot::EventEntity']]],
   ['contains_27',['contains',['../class_clear_queue.html#a1828db6d5374dbce3005b1f80cfb8d25',1,'ClearQueue']]],

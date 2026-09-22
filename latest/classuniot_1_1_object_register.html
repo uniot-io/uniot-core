@@ -205,9 +205,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a5b3d37591199fae4e680b5bcb36f6aff" id="r_a5b3d37591199fae4e680b5bcb36f6aff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5b3d37591199fae4e680b5bcb36f6aff">operator=</a> (<a class="el" href="classuniot_1_1_object_register.html">ObjectRegister</a> const &amp;)=delete</td></tr>
 <tr class="memdesc:a5b3d37591199fae4e680b5bcb36f6aff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deleted assignment operator to prevent copying.  <br /></td></tr>
 <tr class="separator:a5b3d37591199fae4e680b5bcb36f6aff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5f0f3d0cb0c4ffdad97f2d421eb685a8" id="r_a5f0f3d0cb0c4ffdad97f2d421eb685a8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5f0f3d0cb0c4ffdad97f2d421eb685a8">link</a> (const String &amp;name, <a class="el" href="group__registers__object__register.html#gaf895a0d329e916dcc178e8459d867d82">RecordPtr</a> link, uint32_t id=<a class="el" href="struct_four_c_c.html">FourCC</a>&lt;((&quot;____&quot;)[(((0)&lt;(sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0]))) ?(0) :((sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0])) - 1))]),((&quot;____&quot;)[(((1)&lt;(sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0]))) ?(1) :((sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0])) - 1))]),((&quot;____&quot;)[(((2)&lt;(sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0]))) ?(2) :((sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0])) - 1))]),((&quot;____&quot;)[(((3)&lt;(sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0]))) ?(3) :((sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0])) - 1))])&gt;::Value)</td></tr>
-<tr class="memdesc:a5f0f3d0cb0c4ffdad97f2d421eb685a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Links an object to a name in the register.  <br /></td></tr>
-<tr class="separator:a5f0f3d0cb0c4ffdad97f2d421eb685a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a25061bc3cf1d45206602b2f6eab88f76" id="r_a25061bc3cf1d45206602b2f6eab88f76"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a25061bc3cf1d45206602b2f6eab88f76">link</a> (const String &amp;name, <a class="el" href="group__registers__object__register.html#gaf895a0d329e916dcc178e8459d867d82">RecordPtr</a> link, uint32_t id=<a class="el" href="group__common.html#ga848200da0c950d753656e2dedfce7c6f">FOURCC</a>(____))</td></tr>
+<tr class="memdesc:a25061bc3cf1d45206602b2f6eab88f76"><td class="mdescLeft">&#160;</td><td class="mdescRight">Links an object to a name in the register.  <br /></td></tr>
+<tr class="separator:a25061bc3cf1d45206602b2f6eab88f76"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1a166f3186eff3024561f98bebbbf54e" id="r_a1a166f3186eff3024561f98bebbbf54e"><td class="memTemplParams" colspan="2">template&lt;typename T&gt; </td></tr>
 <tr class="memitem:a1a166f3186eff3024561f98bebbbf54e"><td class="memTemplItemLeft" align="right" valign="top">T *&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#a1a166f3186eff3024561f98bebbbf54e">get</a> (const String &amp;name, size_t index)</td></tr>
 <tr class="memdesc:a1a166f3186eff3024561f98bebbbf54e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves a registered object by name and index with type casting.  <br /></td></tr>
@@ -389,8 +389,8 @@ template&lt;typename T&gt; </div>
 
 </div>
 </div>
-<a id="a5f0f3d0cb0c4ffdad97f2d421eb685a8" name="a5f0f3d0cb0c4ffdad97f2d421eb685a8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5f0f3d0cb0c4ffdad97f2d421eb685a8">&#9670;&#160;</a></span>link()</h2>
+<a id="a25061bc3cf1d45206602b2f6eab88f76" name="a25061bc3cf1d45206602b2f6eab88f76"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a25061bc3cf1d45206602b2f6eab88f76">&#9670;&#160;</a></span>link()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -411,7 +411,7 @@ template&lt;typename T&gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>id</em></span><span class="paramdefsep"> = </span><span class="paramdefval"><a class="el" href="struct_four_c_c.html">FourCC</a>&lt;&#160;((&quot;____&quot;)[(((0)&#160;&lt;&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;)&#160;?&#160;(0)&#160;:&#160;(&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;-&#160;1))]),&#160;((&quot;____&quot;)[(((1)&#160;&lt;&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;)&#160;?&#160;(1)&#160;:&#160;(&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;-&#160;1))]),&#160;((&quot;____&quot;)[(((2)&#160;&lt;&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;)&#160;?&#160;(2)&#160;:&#160;(&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;-&#160;1))]),&#160;((&quot;____&quot;)[(((3)&#160;&lt;&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;)&#160;?&#160;(3)&#160;:&#160;(&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;-&#160;1))])&gt;::Value</span>&#160;)</td>
+          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>id</em></span><span class="paramdefsep"> = </span><span class="paramdefval"><a class="el" href="group__common.html#ga848200da0c950d753656e2dedfce7c6f">FOURCC</a>(____)</span>&#160;)</td>
         </tr>
       </table>
   </td>

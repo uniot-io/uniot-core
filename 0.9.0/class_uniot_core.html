@@ -211,9 +211,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ad3fb1cb0467ad7e73af25e01acd003d4" id="r_ad3fb1cb0467ad7e73af25e01acd003d4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad3fb1cb0467ad7e73af25e01acd003d4">configWiFiStatusLed</a> (uint8_t pinLed, uint8_t activeLevelLed=HIGH)</td></tr>
 <tr class="memdesc:ad3fb1cb0467ad7e73af25e01acd003d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Configure WiFi status LED.  <br /></td></tr>
 <tr class="separator:ad3fb1cb0467ad7e73af25e01acd003d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84b1e8c87bf1f14c741f7a3d684362b3" id="r_a84b1e8c87bf1f14c741f7a3d684362b3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a84b1e8c87bf1f14c741f7a3d684362b3">configWiFiResetOnReboot</a> (uint8_t maxRebootCount=5, uint32_t rebootWindowMs=10000)</td></tr>
-<tr class="memdesc:a84b1e8c87bf1f14c741f7a3d684362b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Configure automatic WiFi reset on repeated reboots.  <br /></td></tr>
-<tr class="separator:a84b1e8c87bf1f14c741f7a3d684362b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba5ea188f3837ddd28079130d88ad854" id="r_aba5ea188f3837ddd28079130d88ad854"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aba5ea188f3837ddd28079130d88ad854">configWiFiResetOnReboot</a> (uint8_t maxRebootCount=<a class="el" href="group__common.html#gad98f0ff7078ea3512fdb519dc186de19">UNIOT_WIFI_REBOOT_RESET_COUNT</a>, uint32_t rebootWindowMs=<a class="el" href="group__common.html#ga5c9c94579cbe133919a37efe424ec069">UNIOT_WIFI_REBOOT_WINDOW_MS</a>)</td></tr>
+<tr class="memdesc:aba5ea188f3837ddd28079130d88ad854"><td class="mdescLeft">&#160;</td><td class="mdescRight">Configure automatic WiFi reset on repeated reboots.  <br /></td></tr>
+<tr class="separator:aba5ea188f3837ddd28079130d88ad854"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6d483fd41ec2560ce5edec2b02dac445" id="r_a6d483fd41ec2560ce5edec2b02dac445"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6d483fd41ec2560ce5edec2b02dac445">configWiFiCredentials</a> (const String &amp;ssid, const String &amp;password=&quot;&quot;)</td></tr>
 <tr class="memdesc:a6d483fd41ec2560ce5edec2b02dac445"><td class="mdescLeft">&#160;</td><td class="mdescRight">Configure WiFi network credentials.  <br /></td></tr>
 <tr class="separator:a6d483fd41ec2560ce5edec2b02dac445"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -266,18 +266,18 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a3ae75f5dcd0f7c484200cff0894bb774"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#a3ae75f5dcd0f7c484200cff0894bb774">registerLispAnalogOutput</a> (uint8_t first, Pins... pins)</td></tr>
 <tr class="memdesc:a3ae75f5dcd0f7c484200cff0894bb774"><td class="mdescLeft">&#160;</td><td class="mdescRight">Register GPIO pins as analog outputs for Lisp access.  <br /></td></tr>
 <tr class="separator:a3ae75f5dcd0f7c484200cff0894bb774"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4623ef6693b6c68fbb03ec5feffeb9a2" id="r_a4623ef6693b6c68fbb03ec5feffeb9a2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4623ef6693b6c68fbb03ec5feffeb9a2">registerLispButton</a> (<a class="el" href="classuniot_1_1_button.html">uniot::Button</a> *button, uint32_t id=<a class="el" href="struct_four_c_c.html">FourCC</a>&lt;((&quot;_btn&quot;)[(((0)&lt;(sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0]))) ?(0) :((sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0])) - 1))]),((&quot;_btn&quot;)[(((1)&lt;(sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0]))) ?(1) :((sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0])) - 1))]),((&quot;_btn&quot;)[(((2)&lt;(sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0]))) ?(2) :((sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0])) - 1))]),((&quot;_btn&quot;)[(((3)&lt;(sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0]))) ?(3) :((sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0])) - 1))])&gt;::Value)</td></tr>
-<tr class="memdesc:a4623ef6693b6c68fbb03ec5feffeb9a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Register a button object with the Lisp interpreter.  <br /></td></tr>
-<tr class="separator:a4623ef6693b6c68fbb03ec5feffeb9a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a220d8c8e56c81b0fc8eed6103b9c032b" id="r_a220d8c8e56c81b0fc8eed6103b9c032b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a220d8c8e56c81b0fc8eed6103b9c032b">addLispButton</a> (uint8_t pin, uint8_t activeLevel=LOW, uint32_t id=<a class="el" href="struct_four_c_c.html">FourCC</a>&lt;((&quot;_btn&quot;)[(((0)&lt;(sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0]))) ?(0) :((sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0])) - 1))]),((&quot;_btn&quot;)[(((1)&lt;(sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0]))) ?(1) :((sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0])) - 1))]),((&quot;_btn&quot;)[(((2)&lt;(sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0]))) ?(2) :((sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0])) - 1))]),((&quot;_btn&quot;)[(((3)&lt;(sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0]))) ?(3) :((sizeof(&quot;_btn&quot;)/sizeof(&quot;_btn&quot;[0])) - 1))])&gt;::Value, <a class="el" href="classuniot_1_1_button.html#a0a649271b1a16926629107895e2a267b">uniot::Button::ButtonCallback</a> callback=nullptr)</td></tr>
-<tr class="memdesc:a220d8c8e56c81b0fc8eed6103b9c032b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a button on a pin and expose it to Lisp scripts.  <br /></td></tr>
-<tr class="separator:a220d8c8e56c81b0fc8eed6103b9c032b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aedbbc882a0268d18ef0b887198d2b7f3" id="r_aedbbc882a0268d18ef0b887198d2b7f3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aedbbc882a0268d18ef0b887198d2b7f3">registerLispButton</a> (<a class="el" href="classuniot_1_1_button.html">uniot::Button</a> *button, uint32_t id=<a class="el" href="group__common.html#ga848200da0c950d753656e2dedfce7c6f">FOURCC</a>(_btn))</td></tr>
+<tr class="memdesc:aedbbc882a0268d18ef0b887198d2b7f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Register a button object with the Lisp interpreter.  <br /></td></tr>
+<tr class="separator:aedbbc882a0268d18ef0b887198d2b7f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c5bf703699dce42dbcdc9681f73d16b" id="r_a6c5bf703699dce42dbcdc9681f73d16b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6c5bf703699dce42dbcdc9681f73d16b">addLispButton</a> (uint8_t pin, uint8_t activeLevel=LOW, uint32_t id=<a class="el" href="group__common.html#ga848200da0c950d753656e2dedfce7c6f">FOURCC</a>(_btn), <a class="el" href="classuniot_1_1_button.html#a0a649271b1a16926629107895e2a267b">uniot::Button::ButtonCallback</a> callback=nullptr)</td></tr>
+<tr class="memdesc:a6c5bf703699dce42dbcdc9681f73d16b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a button on a pin and expose it to Lisp scripts.  <br /></td></tr>
+<tr class="separator:a6c5bf703699dce42dbcdc9681f73d16b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9f69e5cad070fd91b9bffc4341f5a1cc" id="r_a9f69e5cad070fd91b9bffc4341f5a1cc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9f69e5cad070fd91b9bffc4341f5a1cc">resetLispButtons</a> ()</td></tr>
 <tr class="memdesc:a9f69e5cad070fd91b9bffc4341f5a1cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clear pending clicks and long presses on every Lisp button.  <br /></td></tr>
 <tr class="separator:a9f69e5cad070fd91b9bffc4341f5a1cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a639870f9ddf9b7389663dceda0cbe4" id="r_a1a639870f9ddf9b7389663dceda0cbe4"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1a639870f9ddf9b7389663dceda0cbe4">registerLispObject</a> (const String &amp;primitiveName, <a class="el" href="group__registers__object__register.html#gaf895a0d329e916dcc178e8459d867d82">uniot::RecordPtr</a> link, uint32_t id=<a class="el" href="struct_four_c_c.html">FourCC</a>&lt;((&quot;____&quot;)[(((0)&lt;(sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0]))) ?(0) :((sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0])) - 1))]),((&quot;____&quot;)[(((1)&lt;(sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0]))) ?(1) :((sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0])) - 1))]),((&quot;____&quot;)[(((2)&lt;(sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0]))) ?(2) :((sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0])) - 1))]),((&quot;____&quot;)[(((3)&lt;(sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0]))) ?(3) :((sizeof(&quot;____&quot;)/sizeof(&quot;____&quot;[0])) - 1))])&gt;::Value)</td></tr>
-<tr class="memdesc:a1a639870f9ddf9b7389663dceda0cbe4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Register a generic object with the Lisp interpreter.  <br /></td></tr>
-<tr class="separator:a1a639870f9ddf9b7389663dceda0cbe4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f3b5148a6de6188a6635831fa4a7091" id="r_a7f3b5148a6de6188a6635831fa4a7091"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7f3b5148a6de6188a6635831fa4a7091">registerLispObject</a> (const String &amp;primitiveName, <a class="el" href="group__registers__object__register.html#gaf895a0d329e916dcc178e8459d867d82">uniot::RecordPtr</a> link, uint32_t id=<a class="el" href="group__common.html#ga848200da0c950d753656e2dedfce7c6f">FOURCC</a>(____))</td></tr>
+<tr class="memdesc:a7f3b5148a6de6188a6635831fa4a7091"><td class="mdescLeft">&#160;</td><td class="mdescRight">Register a generic object with the Lisp interpreter.  <br /></td></tr>
+<tr class="separator:a7f3b5148a6de6188a6635831fa4a7091"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a24686dd94d9db1961661b2c0e6b3a5ab" id="r_a24686dd94d9db1961661b2c0e6b3a5ab"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#ad24b0b937775f7d3d5619ff559db8518">TimerId</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a24686dd94d9db1961661b2c0e6b3a5ab">setInterval</a> (std::function&lt; void()&gt; callback, uint32_t intervalMs, short times=0)</td></tr>
 <tr class="memdesc:a24686dd94d9db1961661b2c0e6b3a5ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a repeating timer.  <br /></td></tr>
 <tr class="separator:a24686dd94d9db1961661b2c0e6b3a5ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -347,7 +347,7 @@ Static Public Attributes</h2></td></tr>
 <tr class="memdesc:a581238e6317e6af9e6d179c57019a047"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invalid listener ID constant.  <br /></td></tr>
 <tr class="separator:a581238e6317e6af9e6d179c57019a047"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2bef695a02533fc3b0a53cb6c9d69bd6" id="r_a2bef695a02533fc3b0a53cb6c9d69bd6"><td class="memItemLeft" align="right" valign="top">static constexpr uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2bef695a02533fc3b0a53cb6c9d69bd6">REBOOT_RESET_DISABLED</a> = UINT8_MAX</td></tr>
-<tr class="memdesc:a2bef695a02533fc3b0a53cb6c9d69bd6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sentinel value for <a class="el" href="#a84b1e8c87bf1f14c741f7a3d684362b3" title="Configure automatic WiFi reset on repeated reboots.">configWiFiResetOnReboot()</a>: disables reboot-reset entirely.  <br /></td></tr>
+<tr class="memdesc:a2bef695a02533fc3b0a53cb6c9d69bd6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sentinel value for <a class="el" href="#aba5ea188f3837ddd28079130d88ad854" title="Configure automatic WiFi reset on repeated reboots.">configWiFiResetOnReboot()</a>: disables reboot-reset entirely.  <br /></td></tr>
 <tr class="separator:a2bef695a02533fc3b0a53cb6c9d69bd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -568,8 +568,8 @@ Static Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a220d8c8e56c81b0fc8eed6103b9c032b" name="a220d8c8e56c81b0fc8eed6103b9c032b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a220d8c8e56c81b0fc8eed6103b9c032b">&#9670;&#160;</a></span>addLispButton()</h2>
+<a id="a6c5bf703699dce42dbcdc9681f73d16b" name="a6c5bf703699dce42dbcdc9681f73d16b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c5bf703699dce42dbcdc9681f73d16b">&#9670;&#160;</a></span>addLispButton()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -590,7 +590,7 @@ Static Public Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>id</em></span><span class="paramdefsep"> = </span><span class="paramdefval"><a class="el" href="struct_four_c_c.html">FourCC</a>&lt;&#160;((&quot;_btn&quot;)[(((0)&#160;&lt;&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;)&#160;?&#160;(0)&#160;:&#160;(&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;-&#160;1))]),&#160;((&quot;_btn&quot;)[(((1)&#160;&lt;&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;)&#160;?&#160;(1)&#160;:&#160;(&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;-&#160;1))]),&#160;((&quot;_btn&quot;)[(((2)&#160;&lt;&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;)&#160;?&#160;(2)&#160;:&#160;(&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;-&#160;1))]),&#160;((&quot;_btn&quot;)[(((3)&#160;&lt;&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;)&#160;?&#160;(3)&#160;:&#160;(&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;-&#160;1))])&gt;::Value</span>, </td>
+          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>id</em></span><span class="paramdefsep"> = </span><span class="paramdefval"><a class="el" href="group__common.html#ga848200da0c950d753656e2dedfce7c6f">FOURCC</a>(_btn)</span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -621,7 +621,7 @@ Static Public Attributes</h2></td></tr>
   </table>
   </dd>
 </dl>
-<p>Everything a button needs, in one call: the Button is created and owned here, polled every 100 ms, and linked into the bclicked register. A long press is 3 seconds, the same as the WiFi reset button. For a button with other timing, create it yourself and use <a class="el" href="#a4623ef6693b6c68fbb03ec5feffeb9a2" title="Register a button object with the Lisp interpreter.">registerLispButton()</a>.</p>
+<p>Everything a button needs, in one call: the Button is created and owned here, polled every 100 ms, and linked into the bclicked register. A long press is 3 seconds, the same as the WiFi reset button. For a button with other timing, create it yourself and use <a class="el" href="#aedbbc882a0268d18ef0b887198d2b7f3" title="Register a button object with the Lisp interpreter.">registerLispButton()</a>.</p>
 <p>The index is the button's position in the bclicked register, so it follows registration order. The WiFi reset button from <a class="el" href="#ac1b52fe0165dc0cc681803c2e0ca2fd2" title="Configure WiFi reset button.">configWiFiResetButton()</a> is linked during <a class="el" href="#a795f1451b3464622196b22fc4c3d6768" title="Initialize and start the Uniot platform.">begin()</a>, so buttons added before <a class="el" href="#a795f1451b3464622196b22fc4c3d6768" title="Initialize and start the Uniot platform.">begin()</a> come before it and buttons added after it follow. Adding buttons after <a class="el" href="#a795f1451b3464622196b22fc4c3d6768" title="Initialize and start the Uniot platform.">begin()</a>, at the end of setup(), keeps the reset button at index 0.</p>
 <p>Add buttons in setup(). Registers are reported to the platform when MQTT connects, which happens once <a class="el" href="#a0a06b2d2e722b1d01c9e793979ded10b" title="Process scheduled tasks and events.">loop()</a> is running, so a button added later is not reported until the device reconnects.</p>
 <p>The pin gets the internal pull its active level needs: a pull-up for LOW, a pull-down for HIGH. Pins without that pull need an external resistor; see Button::applyPinMode().</p>
@@ -790,7 +790,7 @@ template&lt;typename... Topics&gt; </div>
   </dd>
 </dl>
 <p>Convenience method for listening to WiFi status LED events. The callback receives a boolean indicating the desired LED state.</p>
-<p>These events come from the network controller, which exists only once one of the configWiFi* methods has asked for it. A device with no button and no LED &ndash; a bulb driving its own light as the indicator, say &ndash; still gets one from <a class="el" href="#a84b1e8c87bf1f14c741f7a3d684362b3" title="Configure automatic WiFi reset on repeated reboots.">configWiFiResetOnReboot()</a>. Without any of them this callback never fires; the missing controller is reported by AppKit when the scheduler is populated. </p>
+<p>These events come from the network controller, which exists only once one of the configWiFi* methods has asked for it. A device with no button and no LED &ndash; a bulb driving its own light as the indicator, say &ndash; still gets one from <a class="el" href="#aba5ea188f3837ddd28079130d88ad854" title="Configure automatic WiFi reset on repeated reboots.">configWiFiResetOnReboot()</a>. Without any of them this callback never fires; the missing controller is reported by AppKit when the scheduler is populated. </p>
 
 </div>
 </div>
@@ -983,12 +983,12 @@ template&lt;typename... Topics&gt; </div>
   </dd>
 </dl>
 <p>Configures a hardware button for WiFi network reset functionality. The button provides both manual reconnection (single press) and configuration reset (multiple rapid presses followed by long press).</p>
-<p>With registerLispBtn, the button is linked into the bclicked register during <a class="el" href="#a795f1451b3464622196b22fc4c3d6768" title="Initialize and start the Uniot platform.">begin()</a>. Buttons added with <a class="el" href="#a220d8c8e56c81b0fc8eed6103b9c032b" title="Create a button on a pin and expose it to Lisp scripts.">addLispButton()</a> before <a class="el" href="#a795f1451b3464622196b22fc4c3d6768" title="Initialize and start the Uniot platform.">begin()</a> therefore come before it; add them after <a class="el" href="#a795f1451b3464622196b22fc4c3d6768" title="Initialize and start the Uniot platform.">begin()</a>, still in setup(), to keep this button at index 0. </p>
+<p>With registerLispBtn, the button is linked into the bclicked register during <a class="el" href="#a795f1451b3464622196b22fc4c3d6768" title="Initialize and start the Uniot platform.">begin()</a>. Buttons added with <a class="el" href="#a6c5bf703699dce42dbcdc9681f73d16b" title="Create a button on a pin and expose it to Lisp scripts.">addLispButton()</a> before <a class="el" href="#a795f1451b3464622196b22fc4c3d6768" title="Initialize and start the Uniot platform.">begin()</a> therefore come before it; add them after <a class="el" href="#a795f1451b3464622196b22fc4c3d6768" title="Initialize and start the Uniot platform.">begin()</a>, still in setup(), to keep this button at index 0. </p>
 
 </div>
 </div>
-<a id="a84b1e8c87bf1f14c741f7a3d684362b3" name="a84b1e8c87bf1f14c741f7a3d684362b3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a84b1e8c87bf1f14c741f7a3d684362b3">&#9670;&#160;</a></span>configWiFiResetOnReboot()</h2>
+<a id="aba5ea188f3837ddd28079130d88ad854" name="aba5ea188f3837ddd28079130d88ad854"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aba5ea188f3837ddd28079130d88ad854">&#9670;&#160;</a></span>configWiFiResetOnReboot()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -999,12 +999,12 @@ template&lt;typename... Topics&gt; </div>
         <tr>
           <td class="memname">void UniotCore::configWiFiResetOnReboot </td>
           <td>(</td>
-          <td class="paramtype">uint8_t</td>          <td class="paramname"><span class="paramname"><em>maxRebootCount</em></span><span class="paramdefsep"> = </span><span class="paramdefval">5</span>, </td>
+          <td class="paramtype">uint8_t</td>          <td class="paramname"><span class="paramname"><em>maxRebootCount</em></span><span class="paramdefsep"> = </span><span class="paramdefval"><a class="el" href="group__common.html#gad98f0ff7078ea3512fdb519dc186de19">UNIOT_WIFI_REBOOT_RESET_COUNT</a></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>rebootWindowMs</em></span><span class="paramdefsep"> = </span><span class="paramdefval">10000</span>&#160;)</td>
+          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>rebootWindowMs</em></span><span class="paramdefsep"> = </span><span class="paramdefval"><a class="el" href="group__common.html#ga5c9c94579cbe133919a37efe424ec069">UNIOT_WIFI_REBOOT_WINDOW_MS</a></span>&#160;)</td>
         </tr>
       </table>
   </td>
@@ -1590,8 +1590,8 @@ template&lt;typename... Pins&gt; </div>
 
 </div>
 </div>
-<a id="a4623ef6693b6c68fbb03ec5feffeb9a2" name="a4623ef6693b6c68fbb03ec5feffeb9a2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4623ef6693b6c68fbb03ec5feffeb9a2">&#9670;&#160;</a></span>registerLispButton()</h2>
+<a id="aedbbc882a0268d18ef0b887198d2b7f3" name="aedbbc882a0268d18ef0b887198d2b7f3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aedbbc882a0268d18ef0b887198d2b7f3">&#9670;&#160;</a></span>registerLispButton()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1607,7 +1607,7 @@ template&lt;typename... Pins&gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>id</em></span><span class="paramdefsep"> = </span><span class="paramdefval"><a class="el" href="struct_four_c_c.html">FourCC</a>&lt;&#160;((&quot;_btn&quot;)[(((0)&#160;&lt;&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;)&#160;?&#160;(0)&#160;:&#160;(&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;-&#160;1))]),&#160;((&quot;_btn&quot;)[(((1)&#160;&lt;&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;)&#160;?&#160;(1)&#160;:&#160;(&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;-&#160;1))]),&#160;((&quot;_btn&quot;)[(((2)&#160;&lt;&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;)&#160;?&#160;(2)&#160;:&#160;(&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;-&#160;1))]),&#160;((&quot;_btn&quot;)[(((3)&#160;&lt;&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;)&#160;?&#160;(3)&#160;:&#160;(&#160;(sizeof(&quot;_btn&quot;)&#160;/&#160;sizeof(&quot;_btn&quot;[0]))&#160;-&#160;1))])&gt;::Value</span>&#160;)</td>
+          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>id</em></span><span class="paramdefsep"> = </span><span class="paramdefval"><a class="el" href="group__common.html#ga848200da0c950d753656e2dedfce7c6f">FOURCC</a>(_btn)</span>&#160;)</td>
         </tr>
       </table>
   </td>
@@ -1718,8 +1718,8 @@ template&lt;typename... Pins&gt; </div>
 
 </div>
 </div>
-<a id="a1a639870f9ddf9b7389663dceda0cbe4" name="a1a639870f9ddf9b7389663dceda0cbe4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1a639870f9ddf9b7389663dceda0cbe4">&#9670;&#160;</a></span>registerLispObject()</h2>
+<a id="a7f3b5148a6de6188a6635831fa4a7091" name="a7f3b5148a6de6188a6635831fa4a7091"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7f3b5148a6de6188a6635831fa4a7091">&#9670;&#160;</a></span>registerLispObject()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1740,7 +1740,7 @@ template&lt;typename... Pins&gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>id</em></span><span class="paramdefsep"> = </span><span class="paramdefval"><a class="el" href="struct_four_c_c.html">FourCC</a>&lt;&#160;((&quot;____&quot;)[(((0)&#160;&lt;&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;)&#160;?&#160;(0)&#160;:&#160;(&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;-&#160;1))]),&#160;((&quot;____&quot;)[(((1)&#160;&lt;&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;)&#160;?&#160;(1)&#160;:&#160;(&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;-&#160;1))]),&#160;((&quot;____&quot;)[(((2)&#160;&lt;&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;)&#160;?&#160;(2)&#160;:&#160;(&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;-&#160;1))]),&#160;((&quot;____&quot;)[(((3)&#160;&lt;&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;)&#160;?&#160;(3)&#160;:&#160;(&#160;(sizeof(&quot;____&quot;)&#160;/&#160;sizeof(&quot;____&quot;[0]))&#160;-&#160;1))])&gt;::Value</span>&#160;)</td>
+          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>id</em></span><span class="paramdefsep"> = </span><span class="paramdefval"><a class="el" href="group__common.html#ga848200da0c950d753656e2dedfce7c6f">FOURCC</a>(____)</span>&#160;)</td>
         </tr>
       </table>
   </td>
@@ -2210,7 +2210,7 @@ template&lt;typename... Topics&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Sentinel value for <a class="el" href="#a84b1e8c87bf1f14c741f7a3d684362b3" title="Configure automatic WiFi reset on repeated reboots.">configWiFiResetOnReboot()</a>: disables reboot-reset entirely. </p>
+<p>Sentinel value for <a class="el" href="#aba5ea188f3837ddd28079130d88ad854" title="Configure automatic WiFi reset on repeated reboots.">configWiFiResetOnReboot()</a>: disables reboot-reset entirely. </p>
 <p>Pass this as maxRebootCount to opt out of the automatic configuration-reset mechanism. No reboot counts are stored, read, or compared, and the device will never be force-reset due to repeated reboots.</p>
 <div class="fragment"><div class="line"><a class="code hl_variable" href="group__uniot__core.html#gaec3ee866675ee46bd9d8123cf07cf536">Uniot</a>.configWiFiResetOnReboot(<a class="code hl_variable" href="#a2bef695a02533fc3b0a53cb6c9d69bd6">UniotCore::REBOOT_RESET_DISABLED</a>);</div>
 <div class="ttc" id="aclass_uniot_core_html_a2bef695a02533fc3b0a53cb6c9d69bd6"><div class="ttname"><a href="#a2bef695a02533fc3b0a53cb6c9d69bd6">UniotCore::REBOOT_RESET_DISABLED</a></div><div class="ttdeci">static constexpr uint8_t REBOOT_RESET_DISABLED</div><div class="ttdoc">Sentinel value for configWiFiResetOnReboot(): disables reboot-reset entirely.</div><div class="ttdef"><b>Definition</b> Uniot.h:158</div></div>

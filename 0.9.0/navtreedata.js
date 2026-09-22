@@ -68,7 +68,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "_app_kit_8h.html",
-"class_uniot_core.html#a9c5348d82b804b18f14184758641deef",
+"class_uniot_core.html#aacb48579fc06de8638dbe0918913474c",
 "classuniot_1_1_e_s_p8266_task.html#acf3d6b3b81063514cd06bcd524ad154e",
 "classuniot_1_1_object_register.html#afa88707b8c3440bf82c3448828043ebe",
 "group__fs__storage__base.html",

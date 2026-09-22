@@ -72,7 +72,7 @@ var searchData=
   ['configuser_69',['configUser',['../class_uniot_core.html#a10d3d0d43e5fa7ef0e250c197fb6e43a',1,'UniotCore']]],
   ['configwificredentials_70',['configWiFiCredentials',['../class_uniot_core.html#a6d483fd41ec2560ce5edec2b02dac445',1,'UniotCore']]],
   ['configwifiresetbutton_71',['configWiFiResetButton',['../class_uniot_core.html#ac1b52fe0165dc0cc681803c2e0ca2fd2',1,'UniotCore']]],
-  ['configwifiresetonreboot_72',['configWiFiResetOnReboot',['../class_uniot_core.html#a84b1e8c87bf1f14c741f7a3d684362b3',1,'UniotCore']]],
+  ['configwifiresetonreboot_72',['configWiFiResetOnReboot',['../class_uniot_core.html#aba5ea188f3837ddd28079130d88ad854',1,'UniotCore']]],
   ['configwifistatusled_73',['configWiFiStatusLed',['../class_uniot_core.html#ad3fb1cb0467ad7e73af25e01acd003d4',1,'UniotCore']]],
   ['connecting_74',['CONNECTING',['../namespaceuniot_1_1events_1_1network.html#a68765a5088502451435aa3f3db6b4c60aefa4866a547c4e2a32cdc6338ccfd4f8',1,'uniot::events::network']]],
   ['connection_75',['CONNECTION',['../namespaceuniot_1_1events_1_1mqtt.html#a484f6c127140e271b5943185360907e0ab0c725780c9a25291d439bc52d339941',1,'uniot::events::mqtt::CONNECTION'],['../namespaceuniot_1_1events_1_1network.html#a7fd31e870b4e2b4a62897dc49e65b359a8b0b72ad5733ace21ded9f2a42847f4e',1,'uniot::events::network::CONNECTION']]],
