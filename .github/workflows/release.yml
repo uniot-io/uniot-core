@@ -70,7 +70,7 @@ jobs:
           python-version: "3.x"
 
       - name: Install PlatformIO
-        run: pip install --upgrade platformio
+        run: pip install --upgrade platformio esptool
 
       # Add --owner uniot-io if the token's account is not itself the package owner.
       - name: Publish
