@@ -44,8 +44,11 @@ jobs:
           key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini', 'library.json') }}
           restore-keys: pio-${{ runner.os }}-
 
+      # esptool is invoked by the espressif platforms through the same interpreter that runs
+      # PlatformIO, but its dependencies (intelhex and friends) are not pulled in by
+      # platformio itself, so they have to be installed alongside it.
       - name: Install PlatformIO
-        run: pip install --upgrade platformio
+        run: pip install --upgrade platformio esptool
 
       # ci/ depends on the library through library.json, the way a consumer does. The project
       # in the root directory resolves its dependencies from sibling checkouts instead, so it
