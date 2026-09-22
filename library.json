@@ -1,20 +1,27 @@
 {
   "name": "Uniot",
-  "description": "Deprecated: Please use `uniot-core` for new projects.",
-  "keywords": "iot,m2m,automation,async,wifi,app,cloud,web,control",
-  "authors": {
-    "name": "Uniot Team",
-    "url": "https://github.com/uniot-io",
-    "maintainer": true
-  },
+  "description": "Deprecated: this library was renamed to `uniot-core`. It only forwards to the new package and is no longer maintained.",
+  "keywords": [
+    "deprecated",
+    "uniot",
+    "uniot-core",
+    "iot"
+  ],
+  "authors": [
+    {
+      "name": "Uniot Labs",
+      "url": "https://github.com/uniot-io",
+      "maintainer": true
+    }
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/uniot-io/uniot-core.git"
   },
   "export": {
     "exclude": [
-      "src",
-      "test"
+      ".git",
+      ".gitignore"
     ]
   },
   "build": {
@@ -33,9 +40,11 @@
     }
   ],
   "homepage": "https://uniot.io",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "license": "GPL-3.0",
-  "frameworks": "arduino",
+  "frameworks": [
+    "arduino"
+  ],
   "platforms": [
     "espressif8266",
     "espressif32"
