@@ -1,62 +1,41 @@
 {
   "name": "uniot-core",
-  "description": "Uniot is a comprehensive IoT platform framework designed to enable seamless automation, edge device networking, and task scheduling. With its native task scheduler and integrated Lisp interpreter, Uniot provides a robust, flexible environment for building connected applications.",
-  "keywords": "iot,m2m,automation,async,wifi,app,cloud,web,control,edge-computing",
-  "authors": {
-    "name": "Uniot Labs",
-    "url": "https://github.com/uniot-io",
-    "maintainer": true
-  },
+  "version": "0.9.0",
+  "description": "Firmware framework for ESP8266 and ESP32 devices on the Uniot platform: a non-blocking task scheduler, an event bus, WiFi provisioning with a captive portal, MQTT with COSE-signed messages, CBOR storage, and an embedded Lisp interpreter that runs scripts delivered over the air without reflashing.",
+  "keywords": [
+    "iot",
+    "m2m",
+    "automation",
+    "async",
+    "wifi",
+    "app",
+    "cloud",
+    "web",
+    "control",
+    "edge-computing"
+  ],
+  "authors": [
+    {
+      "name": "Uniot Labs",
+      "url": "https://github.com/uniot-io",
+      "maintainer": true
+    }
+  ],
+  "license": "GPL-3.0",
+  "homepage": "https://uniot.io",
   "repository": {
     "type": "git",
     "url": "https://github.com/uniot-io/uniot-core.git"
   },
-  "export": {
-    "exclude": [
-      "src",
-      "tools"
-    ]
-  },
-  "build": {
-    "flags": [
-      "-I lib/Uniot",
-      "-I lib/Core",
-      "-I lib/AppKit",
-      "-I lib/WebPages",
-
-      "-I lib/Core/EventBus",
-      "-I lib/Core/Scheduler",
-      "-I lib/Core/Network",
-      "-I lib/Core/Storage",
-      "-I lib/Core/Utils",
-      "-I lib/Core/CBORWrapper",
-      "-I lib/Core/LispWrapper",
-      "-I lib/Core/MQTTWrapper",
-      "-I lib/Core/Register",
-      "-I lib/Core/Hardware",
-      "-I lib/Core/Date"
-    ],
-    "srcDir": ".",
-    "srcFilter": [
-      "+<lib/Uniot/*>",
-      "+<lib/Core/*>",
-      "+<lib/AppKit/*>",
-      "+<lib/WebPages/*>",
-
-      "+<lib/Core/EventBus/*>",
-      "+<lib/Core/Scheduler/*>",
-      "+<lib/Core/Network/*>",
-      "+<lib/Core/Storage/*>",
-      "+<lib/Core/Utils/*>",
-      "+<lib/Core/CBORWrapper/*>",
-      "+<lib/Core/LispWrapper/*>",
-      "+<lib/Core/MQTTWrapper/*>",
-      "+<lib/Core/Register/*>",
-      "+<lib/Core/Hardware/*>",
-      "+<lib/Core/Date/*>"
-    ]
-  },
-  "dependencies": [{
+  "frameworks": [
+    "arduino"
+  ],
+  "platforms": [
+    "espressif8266",
+    "espressif32"
+  ],
+  "dependencies": [
+    {
       "name": "uniot-cbor",
       "version": "https://github.com/uniot-io/uniot-cbor.git#0.2.4"
     },
@@ -77,12 +56,45 @@
       "version": "https://github.com/uniot-io/uniot-esp-async-web-server.git#3.7.7"
     }
   ],
-  "homepage": "https://uniot.io",
-  "version": "0.9.0",
-  "license": "GPL-3.0",
-  "frameworks": "arduino",
-  "platforms": [
-    "espressif8266",
-    "espressif32"
-  ]
+  "export": {
+    "exclude": [
+      ".clang-format",
+      ".git",
+      ".gitignore",
+      ".gitmodules",
+      ".github",
+      "platformio.ini",
+      "ci",
+      "scripts",
+      "src",
+      "tools",
+      "lib/WebPages/web-pages"
+    ]
+  },
+  "build": {
+    "srcDir": ".",
+    "flags": [
+      "-I lib/Uniot",
+      "-I lib/Core",
+      "-I lib/AppKit",
+      "-I lib/WebPages",
+      "-I lib/Core/EventBus",
+      "-I lib/Core/Scheduler",
+      "-I lib/Core/Network",
+      "-I lib/Core/Storage",
+      "-I lib/Core/Utils",
+      "-I lib/Core/CBORWrapper",
+      "-I lib/Core/LispWrapper",
+      "-I lib/Core/MQTTWrapper",
+      "-I lib/Core/Register",
+      "-I lib/Core/Hardware",
+      "-I lib/Core/Date"
+    ],
+    "srcFilter": [
+      "+<lib/Uniot/*>",
+      "+<lib/Core/*>",
+      "+<lib/AppKit/*>",
+      "+<lib/WebPages/*>"
+    ]
+  }
 }
