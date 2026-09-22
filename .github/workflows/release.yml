@@ -88,17 +88,21 @@ jobs:
         env:
           PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
 
-      # "It published" is not the same as "it published where we meant". The registry
-      # processes an upload asynchronously, so a version can take minutes to appear: this
-      # reports what it sees and warns if it has not caught up, rather than failing a release
-      # that already succeeded. The publish cannot land in the wrong namespace anyway, because
-      # --owner is explicit and the access check above runs first.
+      # "It published" is not the same as "it published where we meant".
+      #
+      # Asked through the registry API rather than `pio pkg show`: the CLI caches registry
+      # responses on disk, and the access check above primes that cache, so the CLI reports
+      # the version from before the publish however long we wait for it.
+      #
+      # Warns rather than fails. The upload is processed asynchronously, and a release that
+      # has already succeeded must not go red because the registry is still catching up.
       - name: Confirm the version landed under uniot-io
         run: |
           set -uo pipefail
           expected="${GITHUB_REF#refs/tags/}"
-          for attempt in $(seq 1 10); do
-            published=$(pio pkg show uniot-io/uniot-core 2>/dev/null | sed -n 's/^Library • \([0-9][0-9.]*\) .*/\1/p')
+          api="https://api.registry.platformio.org/v3/packages/uniot-io/library/uniot-core"
+          for attempt in $(seq 1 5); do
+            published=$(curl -fsS "$api" | jq -r '.version.name' 2>/dev/null)
             echo "attempt $attempt: registry reports '${published:-nothing}', expected $expected"
             if [ "$published" = "$expected" ]; then
               echo "uniot-io/uniot-core is at $expected"
@@ -106,8 +110,8 @@ jobs:
             fi
             sleep 30
           done
-          echo "::warning::uniot-io/uniot-core still reports '${published:-nothing}' after 5 minutes. \
-          The registry may simply be processing; confirm at \
+          echo "::warning::uniot-io/uniot-core still reports '${published:-nothing}'. \
+          The registry may still be processing the upload; confirm at \
           https://registry.platformio.org/libraries/uniot-io/uniot-core"
         env:
           PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
