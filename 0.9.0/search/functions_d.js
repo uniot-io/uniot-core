@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['networkcontroller_0',['NetworkController',['../classuniot_1_1_network_controller.html#abdc05a680396f4ce2205bd4882d241f8',1,'uniot::NetworkController']]],
+  ['networkcontroller_0',['NetworkController',['../classuniot_1_1_network_controller.html#ab15b6c107e7e0ce2a2437ad3330345d0',1,'uniot::NetworkController']]],
   ['networkscheduler_1',['NetworkScheduler',['../classuniot_1_1_network_scheduler.html#a224c0e0adb992282d33a14296b201ecf',1,'uniot::NetworkScheduler']]],
   ['next_2',['next',['../class_iterable_queue.html#a0b5b84ff46269c09654a100a325e1151',1,'IterableQueue']]],
   ['normalizepath_3',['normalizePath',['../classuniot_1_1_n_v_s_file.html#aa1f4ded293bf1c0836594a3ead43e4ee',1,'uniot::NVSFile']]],

@@ -1,6 +1,6 @@
 var classuniot_1_1_network_controller =
 [
-    [ "NetworkController", "classuniot_1_1_network_controller.html#abdc05a680396f4ce2205bd4882d241f8", null ],
+    [ "NetworkController", "classuniot_1_1_network_controller.html#ab15b6c107e7e0ce2a2437ad3330345d0", null ],
     [ "~NetworkController", "classuniot_1_1_network_controller.html#a11544e529350663f6c2e0b7b50c9db7d", null ],
     [ "attach", "classuniot_1_1_network_controller.html#aecff366f41602634af2ca227b62e9465", null ],
     [ "getButton", "classuniot_1_1_network_controller.html#acc4883e94e2db855cb15e67e8978ddc3", null ],

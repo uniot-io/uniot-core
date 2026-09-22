@@ -5,7 +5,7 @@ var group__registers__object__register =
       [ "~ObjectRegister", "classuniot_1_1_object_register.html#a494f5c4b5aea93015f08c198b36c8b38", null ],
       [ "ObjectRegister", "classuniot_1_1_object_register.html#afa88707b8c3440bf82c3448828043ebe", null ],
       [ "get", "classuniot_1_1_object_register.html#a1a166f3186eff3024561f98bebbbf54e", null ],
-      [ "link", "classuniot_1_1_object_register.html#a25061bc3cf1d45206602b2f6eab88f76", null ],
+      [ "link", "classuniot_1_1_object_register.html#a5f0f3d0cb0c4ffdad97f2d421eb685a8", null ],
       [ "operator=", "classuniot_1_1_object_register.html#a5b3d37591199fae4e680b5bcb36f6aff", null ]
     ] ],
     [ "uniot::RecordPtr", "group__registers__object__register.html#gaf895a0d329e916dcc178e8459d867d82", null ]

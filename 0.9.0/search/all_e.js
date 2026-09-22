@@ -5,7 +5,7 @@ var searchData=
   ['network_20events_2',['Network Events',['../group__network__events.html',1,'']]],
   ['network_20scanning_3',['WiFi Network Scanning',['../group__wifi__scan.html',1,'']]],
   ['network_20scheduler_4',['Network Scheduler',['../group__network__scheduler.html',1,'']]],
-  ['networkcontroller_5',['NetworkController',['../classuniot_1_1_network_controller.html',1,'uniot::NetworkController'],['../classuniot_1_1_network_controller.html#abdc05a680396f4ce2205bd4882d241f8',1,'uniot::NetworkController::NetworkController()']]],
+  ['networkcontroller_5',['NetworkController',['../classuniot_1_1_network_controller.html',1,'uniot::NetworkController'],['../classuniot_1_1_network_controller.html#ab15b6c107e7e0ce2a2437ad3330345d0',1,'uniot::NetworkController::NetworkController()']]],
   ['networkcontroller_2eh_6',['NetworkController.h',['../_network_controller_8h.html',1,'']]],
   ['networkcontrollerconfig_7',['NetworkControllerConfig',['../structuniot_1_1_app_kit_1_1_network_controller_config.html',1,'uniot::AppKit']]],
   ['networkevents_2eh_8',['NetworkEvents.h',['../_network_events_8h.html',1,'']]],
